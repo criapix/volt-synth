@@ -1,5 +1,6 @@
 #include "dsp_probe.h"
 #include "engine.h"
+#include "filter.h"
 #include "test.h"
 
 using namespace volt;
@@ -39,7 +40,7 @@ TEST(engine_plays_a_note_at_concert_pitch) {
   r.on(69);
   r.play(0.1f);
   auto x = r.play(1.0f);
-  CHECK(probe::rms(x) > 0.05);
+  CHECK(probe::rms(x) > 0.02);  // the default Ladder filter has ~0.5 passband gain (see NOTES.md)
   CHECK_NEAR(probe::zeroCrossHz(x, 48000.0), 440.0, 1.5);
   CHECK(r.e.activeVoices() == 1);
 }
@@ -155,4 +156,49 @@ TEST(engine_reports_a_peak_level) {
   r.on(60);
   r.play(0.2f);
   CHECK(r.e.peak() > 0.01f);
+}
+
+TEST(engine_closing_the_filter_removes_the_highs) {
+  auto brightness = [](float cutoff) {
+    Rig r;
+    r.set(kVoiceDrift, 0.0f);
+    r.set(kFilterCutoff, cutoff);
+    r.set(kFilterKeytrack, 0.0f);
+    r.play(0.05f);
+    r.on(45);  // A2 saw, 110 Hz
+    r.play(0.2f);
+    auto x = r.play(1.0f);
+    return probe::tone(x, 3300.0, 48000.0) / probe::tone(x, 110.0, 48000.0);  // 30th harmonic vs fundamental
+  };
+  CHECK(brightness(20000.0f) > 10.0 * brightness(400.0f));
+}
+
+TEST(engine_every_filter_model_makes_sound) {
+  for (int model = 0; model < kNumFilterModels; ++model) {
+    Rig r;
+    r.set(kFilterModel, (float)model);
+    r.set(kFilterCutoff, 2000.0f);
+    r.play(0.05f);
+    r.on(57);
+    r.play(0.1f);
+    auto x = r.play(0.5f);
+    CHECK(probe::rms(x) > 0.02);
+    CHECK(probe::finite(x));
+  }
+}
+
+TEST(engine_filter_envelope_opens_the_filter) {
+  auto level = [](float amount) {
+    Rig r;
+    r.set(kVoiceDrift, 0.0f);
+    r.set(kFilterCutoff, 200.0f);
+    r.set(kFilterKeytrack, 0.0f);
+    r.set(kFilterEnv, amount);
+    r.set(kFenvSustain, 1.0f);
+    r.play(0.05f);
+    r.on(57);
+    r.play(0.3f);
+    return probe::tone(r.play(1.0f), 2200.0, 48000.0);  // 10th harmonic of 220 Hz
+  };
+  CHECK(level(0.8f) > 5.0 * level(0.0f));
 }

@@ -2,6 +2,7 @@
 #include <atomic>
 #include <mutex>
 #include "event_queue.h"
+#include "filter.h"
 #include "params.h"
 #include "voice.h"
 
@@ -50,6 +51,8 @@ class Engine {
   bool sustain_ = false;
   float bend_ = 0.0f, modWheel_ = 0.0f;
   Lfo globalLfo_;
+  QuadFilter filters_[kMaxVoices / 4];
+  int model_ = -1;
 
   alignas(16) float io_[kMaxVoices / 4][kBlock][4];
   float blockL_[kBlock], blockR_[kBlock];

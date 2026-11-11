@@ -1,0 +1,9 @@
+[submodule "third_party/sst-filters"]
+	path = third_party/sst-filters
+	url = https://github.com/surge-synthesizer/sst-filters.git
+[submodule "third_party/sst-basic-blocks"]
+	path = third_party/sst-basic-blocks
+	url = https://github.com/surge-synthesizer/sst-basic-blocks.git
+[submodule "third_party/simde"]
+	path = third_party/simde
+	url = https://github.com/simd-everywhere/simde.git

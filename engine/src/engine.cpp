@@ -20,6 +20,7 @@ void Engine::setSampleRate(float sr) {
   sr_ = sr;
   smooth_ = 1.0f - std::exp(-(float)kBlock / (0.010f * sr));  // 10 ms time constant
   blockPos_ = kBlock;
+  for (auto& f : filters_) f.setSampleRate(sr);
 }
 
 bool Engine::post(const Event& e) {
@@ -73,6 +74,10 @@ void Engine::handle(const Event& e) {
 
 void Engine::startVoice(Voice& v, int note, float velocity, float detune, float pan, float gain) {
   const bool glide = value_[kVoiceGlide] > 0.001f && anyNoteYet_ && value_[kVoiceGlideLegato] < 0.5f;
+  if (!v.active) {
+    const int index = (int)(&v - voices_);
+    filters_[index / 4].resetLane(index % 4);
+  }
   v.start(note, velocity, glide ? lastPitch_ : (float)note, detune, pan, gain);
   v.age = ++counter_;
 }
@@ -140,6 +145,9 @@ void Engine::renderBlock() {
   for (int i = 0; i < kNumParams; ++i)
     if (kParams[i].curve != Curve::Step) value_[i] += (target_[i] - value_[i]) * smooth_;
 
+  const int model = (int)value_[kFilterModel];
+  if (model != model_) { model_ = model; for (auto& f : filters_) f.setModel(model); }
+
   BlockCtx c;
   c.p = value_;
   c.sr = sr_;
@@ -161,7 +169,10 @@ void Engine::renderBlock() {
       else for (int s = 0; s < kBlock; ++s) io_[q][s][lane] = 0.0f;
     }
     if (!any) continue;
-    (void)cutoff;  // Task 9 puts the filter here.
+    for (int lane = 0; lane < 4; ++lane)
+      if (voices_[q * 4 + lane].active) filters_[q].setLane(lane, cutoff[lane], value_[kFilterReso]);
+    filters_[q].process(io_[q]);
+    filters_[q].endBlock();
     for (int lane = 0; lane < 4; ++lane) {
       Voice& v = voices_[q * 4 + lane];
       if (!v.active) continue;

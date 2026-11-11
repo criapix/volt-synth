@@ -10,6 +10,7 @@ option(VOLT_TESTS "Build the engine unit tests" OFF)
 add_library(volt_engine STATIC
   src/params.cpp
   src/voice.cpp
+  src/engine.cpp
 )
 target_include_directories(volt_engine PUBLIC src)
 if (MSVC)
@@ -28,6 +29,7 @@ if (VOLT_TESTS)
     tests/test_osc.cpp
     tests/test_adsr.cpp
     tests/test_lfo.cpp
+    tests/test_engine.cpp
   )
   target_link_libraries(volt_tests PRIVATE volt_engine)
 endif()

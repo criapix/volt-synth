@@ -41,4 +41,6 @@ if (VOLT_TESTS)
     tests/test_filter.cpp
   )
   target_link_libraries(volt_tests PRIVATE volt_engine)
+  add_executable(volt_bench tests/bench.cpp)
+  target_link_libraries(volt_bench PRIVATE volt_engine)
 endif()

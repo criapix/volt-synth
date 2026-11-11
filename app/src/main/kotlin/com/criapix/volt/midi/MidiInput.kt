@@ -12,7 +12,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 /** Every MIDI device that sends (USB and paired BLE keyboards) feeds [sink] (the MidiRouter). */
-class MidiInput(context: Context, private val sink: (ByteArray, Int, Int) -> Unit) {
+class MidiInput(
+  context: Context,
+  private val onDisconnect: () -> Unit = {},  // a device went away: release every note
+  private val sink: (ByteArray, Int, Int) -> Unit,
+) {
   private val manager = context.getSystemService(Context.MIDI_SERVICE) as? MidiManager
   private val handler = Handler(Looper.getMainLooper())
   private val open = HashMap<Int, Pair<MidiDevice, List<MidiOutputPort>>>()
@@ -54,6 +58,7 @@ class MidiInput(context: Context, private val sink: (ByteArray, Int, Int) -> Uni
     open.remove(id)?.let { (dev, ports) ->
       ports.forEach { runCatching { it.disconnect(receiver); it.close() } }
       runCatching { dev.close() }
+      onDisconnect()
     }
     _count.value = open.size
   }

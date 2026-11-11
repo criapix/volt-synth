@@ -30,6 +30,7 @@ if (VOLT_TESTS)
     tests/test_adsr.cpp
     tests/test_lfo.cpp
     tests/test_engine.cpp
+    tests/test_alloc.cpp
   )
   target_link_libraries(volt_tests PRIVATE volt_engine)
 endif()

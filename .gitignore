@@ -1,1 +1,9 @@
 .worktrees/
+.gradle/
+build/
+.cxx/
+.kotlin/
+local.properties
+*.jks
+.idea/
+*.iml

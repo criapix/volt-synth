@@ -24,6 +24,7 @@ if (VOLT_TESTS)
     tests/test_main.cpp
     tests/test_params.cpp
     tests/test_queue.cpp
+    tests/test_osc.cpp
   )
   target_link_libraries(volt_tests PRIVATE volt_engine)
 endif()

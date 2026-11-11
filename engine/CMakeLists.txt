@@ -23,6 +23,7 @@ if (VOLT_TESTS)
   add_executable(volt_tests
     tests/test_main.cpp
     tests/test_params.cpp
+    tests/test_queue.cpp
   )
   target_link_libraries(volt_tests PRIVATE volt_engine)
 endif()

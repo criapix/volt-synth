@@ -30,6 +30,10 @@ class MidiDispatch(private val synth: Synth, params: Params, private val log: (S
   /** -1 = omni, else 0..15. */
   @Volatile var channel = -1
 
+  private val _activity = MutableStateFlow(0L)
+  /** Grows on every channel message that passes the channel filter (the MIDI light). */
+  val activity: StateFlow<Long> = _activity
+
   private val _last = MutableStateFlow("")
   /** Human-readable last note or controller, for the "última mensagem recebida" monitor. */
   val lastMessage: StateFlow<String> = _last
@@ -52,6 +56,7 @@ class MidiDispatch(private val synth: Synth, params: Params, private val log: (S
     }
     val ch = status and 0x0F
     if (channel >= 0 && ch != channel) return
+    _activity.value = _activity.value + 1
     val d1 = if (len > 1) m[1].toInt() and 0x7F else 0
     val d2 = if (len > 2) m[2].toInt() and 0x7F else 0
     when (status and 0xF0) {

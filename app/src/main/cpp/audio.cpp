@@ -47,6 +47,7 @@ bool Audio::open() {
   // Start with the smallest buffer; the tuner grows it only if the device glitches.
   stream_->setBufferSizeInFrames(stream_->getFramesPerBurst());
   tuner_ = std::make_unique<oboe::LatencyTuner>(*stream_);
+  governor_ = volt::LoadGovernor{};
   r = stream_->requestStart();
   if (r != oboe::Result::OK) {
     __android_log_print(ANDROID_LOG_ERROR, "volt", "requestStart: %s", oboe::convertToText(r));
@@ -78,7 +79,12 @@ oboe::DataCallbackResult Audio::onAudioReady(oboe::AudioStream* stream, void* da
   if (tuner_) tuner_->tune();
   const double period = (double)frames / (double)stream->getSampleRate();
   const float used = (float)((nowSeconds() - t0) / period);
-  load_.store(0.95f * load_.load(std::memory_order_relaxed) + 0.05f * used, std::memory_order_relaxed);
+  const float load = 0.95f * load_.load(std::memory_order_relaxed) + 0.05f * used;
+  load_.store(load, std::memory_order_relaxed);
+  auto x = stream->getXRunCount();
+  const int governed = governor_.update(load, x ? x.value() : 0, (float)period);
+  const int cap = maxVoices_.load(std::memory_order_relaxed);
+  engine_.setVoiceLimit(governed < cap ? governed : cap);
   return oboe::DataCallbackResult::Continue;
 }
 
@@ -111,5 +117,7 @@ std::string Audio::info() {
   add("load", std::to_string(load_.load()));
   add("restarts", std::to_string(restarts_.load()));
   add("voices", std::to_string(engine_.activeVoices()));
+  add("voiceLimit", std::to_string(engine_.voiceLimit()));
+  add("maxVoices", std::to_string(maxVoices_.load()));
   return s;
 }

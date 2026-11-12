@@ -73,6 +73,7 @@ class MainActivity : ComponentActivity() {
     }
 
     prefs = Prefs(this)
+    Native.setMaxVoices(prefs.maxVoices)
     val params = Params.parse(Native.paramTable())
     val state = SynthState(params, NativeSynth)
     val library = PresetLibrary(AssetFactory(assets), File(filesDir, "presets/user"), prefs)
@@ -112,6 +113,12 @@ class MainActivity : ComponentActivity() {
     val io = ScreenIo(
       midiDevices = midi.count, midiActivity = dispatch.activity, lastMidi = dispatch.lastMessage,
       peak = Native::peak, voices = Native::activeVoices, audioInfo = Native::audioInfo,
+      voiceLimit = Native::voiceLimit,
+      maxVoices = object : com.criapix.volt.ui.MaxVoices {
+        override var value: Int
+          get() = prefs.maxVoices
+          set(v) { prefs.maxVoices = v; Native.setMaxVoices(v); AppLog.log("polifonia máxima: $v") }
+      },
       haptics = Haptics(this, prefs),
       learn = learn, pickup = dispatch.pickup, midiSettings = midiSettings,
       onExport = { exportLauncher.launch("volt-presets.json") },

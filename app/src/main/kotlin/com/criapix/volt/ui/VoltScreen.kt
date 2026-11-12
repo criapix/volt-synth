@@ -61,7 +61,15 @@ class ScreenIo(
   val midiSettings: MidiSettings,
   val onExport: () -> kotlin.Unit,
   val onImport: () -> kotlin.Unit,
+  val voiceLimit: () -> Int = { 16 },
+  val maxVoices: MaxVoices = MaxVoices.Fixed,
 )
+
+/** The polyphony cap setting, behind an interface so the UI does not touch Prefs or Native. */
+interface MaxVoices {
+  var value: Int
+  object Fixed : MaxVoices { override var value: Int = 16 }
+}
 
 @Composable
 fun VoltScreen(model: AppModel, io: ScreenIo) {
@@ -86,6 +94,7 @@ fun VoltScreen(model: AppModel, io: ScreenIo) {
   var midiLit by remember { mutableStateOf(false) }
   var level by remember { mutableFloatStateOf(0f) }
   var voices by remember { mutableIntStateOf(0) }
+  var voiceLimit by remember { mutableIntStateOf(16) }
   var browser by remember { mutableStateOf(false) }
   var saving by remember { mutableStateOf(false) }
   var settings by remember { mutableStateOf(false) }
@@ -101,7 +110,7 @@ fun VoltScreen(model: AppModel, io: ScreenIo) {
     var n = 0
     while (true) {
       level = maxOf(io.peak(), level * 0.85f)  // fast attack, slow fall
-      if (n++ % 8 == 0) voices = io.voices()
+      if (n++ % 8 == 0) { voices = io.voices(); voiceLimit = io.voiceLimit() }
       delay(33)
     }
   }
@@ -129,7 +138,7 @@ fun VoltScreen(model: AppModel, io: ScreenIo) {
       Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.displayCutout)) {
         TopBar(
           number = model.number(current.id), name = current.name, category = current.category, dirty = dirty,
-          midiDevices = devices, midiLit = midiLit, voices = voices, level = level,
+          midiDevices = devices, midiLit = midiLit, voices = voices, voiceLimit = voiceLimit, level = level,
           onPrev = { model.step(-1) }, onNext = { model.step(1) }, onBrowse = { browser = true },
           onSave = { saving = true }, onPanic = { state.allNotesOff() }, onMenu = { settings = true },
           learnActive = learnActive, onMidi = { io.learn.setActive(!learnActive) },

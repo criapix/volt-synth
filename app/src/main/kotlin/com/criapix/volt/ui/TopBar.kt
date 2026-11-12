@@ -31,7 +31,7 @@ import com.criapix.volt.midi.Target
 @Composable
 fun TopBar(
   number: Int, name: String, category: String, dirty: Boolean,
-  midiDevices: Int, midiLit: Boolean, voices: Int, level: Float,
+  midiDevices: Int, midiLit: Boolean, voices: Int, voiceLimit: Int = 16, level: Float,
   onPrev: () -> kotlin.Unit, onNext: () -> kotlin.Unit, onBrowse: () -> kotlin.Unit,
   onSave: () -> kotlin.Unit, onPanic: () -> kotlin.Unit, onMenu: () -> kotlin.Unit,
   learnActive: Boolean, onMidi: () -> kotlin.Unit,
@@ -71,7 +71,12 @@ fun TopBar(
         fontSize = 12.sp, lineHeight = 15.sp, color = if (learnActive) Color.Black else VoltColors.text,
       )
     }
-    Text("$voices vozes", fontSize = 11.sp, color = VoltColors.dim, modifier = Modifier.width(54.dp))
+    val reduced = voiceLimit < 16
+    Text(
+      if (reduced) "$voices/$voiceLimit vozes" else "$voices vozes",
+      fontSize = 11.sp, lineHeight = 14.sp, color = if (reduced) VoltColors.danger else VoltColors.dim,
+      modifier = Modifier.width(66.dp),
+    )
     Box(Modifier.width(56.dp).height(8.dp).background(VoltColors.raised, RoundedCornerShape(4.dp))) {
       Box(Modifier.fillMaxHeight().fillMaxWidth(level.coerceIn(0f, 1f)).background(if (level > 0.95f) VoltColors.danger else VoltColors.accent2, RoundedCornerShape(4.dp)))
     }

@@ -43,3 +43,5 @@ JNI(jboolean, loadPatch)(JNIEnv* env, jobject, jfloatArray values) {
   return g_audio.engine().postPatch(buf, count) ? JNI_TRUE : JNI_FALSE;
 }
 JNI(jint, activeVoices)(JNIEnv*, jobject) { return g_audio.engine().activeVoices(); }
+JNI(jint, voiceLimit)(JNIEnv*, jobject) { return g_audio.engine().voiceLimit(); }
+JNI(void, setMaxVoices)(JNIEnv*, jobject, jint n) { g_audio.setMaxVoices(n); }

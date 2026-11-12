@@ -97,6 +97,18 @@ fun SettingsDialog(state: SynthState, io: ScreenIo, onClose: () -> kotlin.Unit, 
           var on by remember { mutableStateOf(io.haptics.enabled) }
           Switch(on, { on = it; io.haptics.enabled = it })
         }
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+          Text("Polifonia máxima", modifier = Modifier.weight(1f))
+          var cap by remember { mutableStateOf(io.maxVoices.value) }
+          listOf(8, 12, 16).forEach { n ->
+            Text(
+              "$n", fontSize = 14.sp,
+              color = if (n == cap) Color.Black else VoltColors.text,
+              modifier = Modifier.background(if (n == cap) VoltColors.accent else VoltColors.raised, RoundedCornerShape(14.dp))
+                .clickable { cap = n; io.maxVoices.value = n }.padding(horizontal = 14.dp, vertical = 6.dp),
+            )
+          }
+        }
         TextButton(onClick = { allParams = true }) { Text("Todos os parâmetros (lista)") }
         TextButton(onClick = { onClose(); onMidiMap() }) { Text("Controle MIDI (mapa, canal, captura suave)") }
       }

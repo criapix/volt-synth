@@ -1,0 +1,10 @@
+{ "format": 1, "name": "Cordas Altas", "category": "Strings", "params": {
+  "voice.drift": 0.25,
+  "osc1.wave": 0, "osc1.fine": -4,
+  "osc2.wave": 0, "osc2.octave": 1, "osc2.fine": 5, "osc2.level": 0.7,
+  "hpf.cutoff": 300,
+  "filter.model": 1, "filter.cutoff": 4000, "filter.reso": 0.1, "filter.env": 0.05, "filter.keytrack": 0.5,
+  "aenv.attack": 0.35, "aenv.decay": 0.5, "aenv.sustain": 0.9, "aenv.release": 1.2,
+  "lfo1.wave": 1, "lfo1.rate": 5.5, "lfo1.delay": 0.6, "lfo1.pitch": 0.04,
+  "fx.chorus.on": 1, "fx.chorus.mode": 2, "fx.chorus.mix": 0.5,
+  "fx.reverb.on": 1, "fx.reverb.decay": 3.0, "fx.reverb.mix": 0.3 } }

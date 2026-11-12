@@ -1,0 +1,9 @@
+{ "format": 1, "name": "Baixo Sync", "category": "Bass", "params": {
+  "voice.mode": 1, "voice.drift": 0.05,
+  "osc1.wave": 0, "osc1.octave": -1, "osc1.sync": 1,
+  "osc2.wave": 0, "osc2.octave": -1, "osc2.level": 0.3,
+  "mix.sub": 0.5,
+  "pmod.fenv.pitch": 0.3,
+  "filter.model": 2, "filter.cutoff": 900, "filter.reso": 0.2, "filter.env": 0.25, "filter.keytrack": 0.5,
+  "fenv.attack": 0.001, "fenv.decay": 0.25, "fenv.sustain": 0.0, "fenv.release": 0.1,
+  "aenv.attack": 0.002, "aenv.decay": 0.3, "aenv.sustain": 0.8, "aenv.release": 0.08, "aenv.vel": 0.4 } }

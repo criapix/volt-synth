@@ -1,0 +1,11 @@
+{ "format": 1, "name": "Pad Coral", "category": "Pad", "params": {
+  "voice.drift": 0.3,
+  "osc1.wave": 1, "osc1.pw": 0.45,
+  "osc2.wave": 0, "osc2.fine": 9, "osc2.level": 0.6,
+  "hpf.cutoff": 180,
+  "filter.model": 1, "filter.cutoff": 1100, "filter.reso": 0.45, "filter.env": 0.05, "filter.keytrack": 0.6,
+  "aenv.attack": 0.7, "aenv.decay": 1.0, "aenv.sustain": 0.9, "aenv.release": 2.0,
+  "lfo1.wave": 0, "lfo1.rate": 4.8, "lfo1.delay": 0.8, "lfo1.pitch": 0.06,
+  "lfo2.wave": 1, "lfo2.rate": 0.2, "lfo2.cutoff": 0.08,
+  "fx.chorus.on": 1, "fx.chorus.mode": 1, "fx.chorus.mix": 0.45,
+  "fx.reverb.on": 1, "fx.reverb.decay": 5.0, "fx.reverb.damp": 0.6, "fx.reverb.mix": 0.35 } }

@@ -1,0 +1,8 @@
+{ "format": 1, "name": "Pluck com Eco", "category": "Pluck", "params": {
+  "osc1.wave": 0,
+  "osc2.wave": 1, "osc2.pw": 0.3, "osc2.fine": 6, "osc2.level": 0.9,
+  "filter.model": 2, "filter.cutoff": 500, "filter.reso": 0.2, "filter.env": 0.5, "filter.keytrack": 0.7, "filter.vel": 0.3,
+  "fenv.attack": 0.001, "fenv.decay": 0.25, "fenv.sustain": 0.0, "fenv.release": 0.2,
+  "aenv.attack": 0.001, "aenv.decay": 0.5, "aenv.sustain": 0.0, "aenv.release": 0.3, "aenv.vel": 0.6,
+  "master.volume": 1.0, "fx.delay.on": 1, "fx.delay.time": 0.375, "fx.delay.feedback": 0.45, "fx.delay.mix": 0.3,
+  "fx.reverb.on": 1, "fx.reverb.decay": 1.5, "fx.reverb.mix": 0.15 } }

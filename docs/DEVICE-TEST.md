@@ -1,3 +1,30 @@
+# Teste no aparelho (plano 2: tela e presets)
+
+Instalar: `adb install -r app\build\outputs\apk\debug\app-debug.apk`. Depois do teste, rodar `tools\pull-log.ps1`.
+
+| # | Passo | Esperado | Resultado |
+|---|---|---|---|
+| 1 | Abrir o app | Tela cheia em paisagem; barra superior com preset; abas OSC · FILTRO · ENV · MOD | |
+| 2 | Girar knobs arrastando para cima/baixo | Responde ao dedo sem pular; o valor aparece grande acima do knob | |
+| 3 | Arrastar para o lado depois de tocar | Ajuste fino (bem mais lento) | |
+| 4 | Dois toques num knob | Volta ao valor padrão | |
+| 5 | Dois knobs ao mesmo tempo com dois dedos | Os dois se movem | |
+| 6 | Tamanho dos knobs e textos | Anotar: confortável / pequeno demais; alguma aba rola? (no emulador, só o LFO 1 rola na aba MOD) | |
+| 7 | Aba FILTRO: mexer em cutoff e ressonância | A curva acompanha; o som acompanha | |
+| 8 | Aba ENV: arrastar os pontos do desenho | Os knobs abaixo acompanham | |
+| 9 | ◀ ▶ com uma nota soando (pedal) | Troca de som sem estalo; a nota continua | |
+| 10 | Ouvir os 10 presets de fábrica com o CK61 | Anotar por preset: bom / ajustar (o quê) / ruim | |
+| 11 | Lead Sync: tocar e segurar | O timbre "varre" no ataque sem mudar a nota (sync com poly-mod) | |
+| 12 | Trocar o modelo do filtro com o mesmo preset | Volume parecido entre os quatro modelos | |
+| 13 | CK61: mexer no knob que manda CC 74 (cutoff) estando na aba OSC | A aba FILTRO pisca; na aba FILTRO, o knob Cutoff gira junto | |
+| 14 | Salvar como novo, renomear, favoritar, apagar | Tudo funciona; o preset apagado some da lista | |
+| 15 | Exportar e importar (navegador de presets) | Arquivo criado; importar de volta cria cópias "(2)" | |
+| 16 | Fechar o app (botão home) com edição não salva e abrir de novo | Volta no mesmo preset, com a edição e o "• editado" | |
+| 17 | Vibração | Tique nos seletores, abas e knobs de passo; desligável em ⋮ | |
+| 18 | Salvar preset com o teclado virtual aberto | Anotar se o botão "Salvar como novo" fica escondido atrás do teclado (visto no emulador) | |
+
+---
+
 # Teste no aparelho (plano 1)
 
 Instalar: `adb install -r app\build\outputs\apk\debug\app-debug.apk`. Anotar os resultados em `docs/NOTES.md`.

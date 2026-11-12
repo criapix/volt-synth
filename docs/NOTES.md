@@ -1,15 +1,15 @@
 # Notas de execução
 
-## Estado (plano 1: motor e app tocável)
-- O que existe: motor C++ (16 vozes, 3 osciladores, filtro Ladder/Roland 12/Roland 24/Prophet, 2 envelopes, 2 LFOs, poly-mod, poly/mono/legato/unison), saída Oboe de baixa latência, entrada MIDI USB com o mapa de fábrica, tela de depuração com um controle por parâmetro.
-- O que não existe ainda: a tela de toque com abas, presets, MIDI Learn, Program Change, efeitos, arpejador, teclado na tela, banco de fábrica.
-- Verificado por: 48 testes do motor no PC (`.\tools\test-engine.ps1`), 16 testes Kotlin (`gradlew :app:testDebugUnitTest`), e a tela no emulador x86_64 (stream aberto, `Vozes: 1` depois de "Tocar Lá", sem crash no logcat). **Nada foi ouvido nem medido no celular.** A "latência de saída" mostrada no emulador (~112 ms) é do emulador e não diz nada sobre o S25 Ultra.
+## Estado (plano 2: tela de toque e presets)
+- O que existe: tudo do plano 1 mais a tela de toque (barra superior, abas OSC · FILTRO · ENV · MOD, knobs, seletores, curva do filtro e desenhos de envelope ao vivo), presets (formato JSON, 10 de fábrica, presets do usuário, navegador com busca, categorias e favoritos, salvar/renomear/apagar, importar/exportar, restauração da sessão) e troca de preset sem estalo no motor.
+- O que não existe ainda: MIDI Learn, Program Change, efeitos, arpejador, teclado na tela, banco de fábrica completo (~64).
+- Verificado por: 56 testes do motor no PC (`.\tools\test-engine.ps1`), 68 testes Kotlin (`gradlew :app:testDebugUnitTest`) e capturas de tela no emulador (S25 Ultra e 16:9). **Nada foi tocado nem ouvido no celular**; o som dos presets, o toque dos knobs e a ausência de estalo na troca de preset são para você julgar (`docs/DEVICE-TEST.md`, plano 2).
 
 ## Diferenças em relação ao design
 - Oscilador 3 como fonte de modulação: não feito (os dois LFOs e o poly-mod cobrem).
 - Poly-mod do oscilador 2 para o cutoff: não feito (os coeficientes do filtro são atualizados a cada 16 amostras).
 - Hard sync sem anti-aliasing no reinício.
-- Ganho dos filtros: Ladder e Prophet saem ~6 dB mais baixos que os Roland (ver "Filtros"). Não compensado.
+- Ganho dos filtros: Ladder e Prophet saíam ~6 dB mais baixos que os Roland; compensado no plano 2 (ver "Plano 2").
 - O reference (FM1 Droid) não tinha teste do parser MIDI; escrevi `MidiParserTest` do zero (5 casos). `MidiInput` ganhou o parâmetro `onDisconnect` (desplugar o teclado chama `Native.allNotesOff()`).
 
 ## Ambiente (Windows)
@@ -24,7 +24,7 @@
 - `updateState(state, lane)` copia `C`/`dC` do maker para a faixa `lane`; `updateCoefficients(state, lane)` copia a faixa de volta. Funciona como o plano supunha, sem adaptação.
 - `sst/basic-blocks/simd/setup.h` seleciona simde sozinho em arm64; nenhuma macro extra foi necessária.
 - Spike A (MSVC x64): os 6 testes `filter_` passaram de primeira. Spike B (NDK arm64-v8a e x86_64): `libvolt_engine.a` compila nos dois. Plano B (filtro escalar) NÃO foi necessário.
-- Ganho na banda passante (medido a 440 Hz, ressonância 0.1, cutoff aberto): Ladder 0,51, Roland 12 dB 1,00, Roland 24 dB 0,99, Prophet 0,51. Ou seja, Ladder e Prophet soam ~6 dB mais baixos que os Roland no mesmo preset. Por isso o teste `engine_plays_a_note_at_concert_pitch` passou de RMS > 0,05 para > 0,02 (a afinação em 440 Hz continua checada). Possível melhoria futura: compensar o ganho por modelo.
+- Ganho na banda passante (medido a 440 Hz, ressonância 0.1, cutoff aberto): Ladder 0,51, Roland 12 dB 1,00, Roland 24 dB 0,99, Prophet 0,51. Ou seja, Ladder e Prophet soam ~6 dB mais baixos que os Roland no mesmo preset. Por isso o teste `engine_plays_a_note_at_concert_pitch` passou de RMS > 0,05 para > 0,02 (a afinação em 440 Hz continua checada). (Compensado no plano 2.)
 
 ## Desempenho
 Números do **PC** (`volt_bench.exe`, 16 vozes, osc 2 e 3 ligados, cutoff 2 kHz, 10 s de áudio a 48 kHz). Não valem para o celular:
@@ -53,6 +53,19 @@ Fonte: log do app coletado por USB (`tools\pull-log.ps1`), sessão das 10:12 às
 - Sistema: o CK61 manda Active Sensing (0xFE) e uma mensagem SysEx (0xF0 … 0xF7); o app ignora, sem problema.
 - **Não aparece no log:** nenhum pitch bend e nenhum CC 1 (roda de modulação). Ou não foram usados no teste, ou o CK61 não os enviou. Vale repetir só isso.
 - **Decisão do usuário (2026-11-12):** os testes de pitch bend / roda de modulação e de carga com 16 vozes não serão feitos; foram dados como aprovados por decisão do usuário. **Não há medição por trás disso:** o log não tem nenhum evento de bend ou CC 1, e a carga máxima observada foi 27 % com 8 vozes (10 vozes no pico).
+
+## Plano 2 (tela de toque e presets) — 2026-11-12
+- Mudanças no motor: compensação de ganho do Ladder e do Prophet (x1,96, +5,8 dB; os quatro modelos agora têm ganho ~1 na banda passante, e o teste `engine_plays_a_note_at_concert_pitch` voltou a exigir RMS > 0,05); sync no estilo Prophet (o osc 1 segue o osc 2; parâmetro renomeado de `osc2.sync` para `osc1.sync`); troca de preset atômica (`postPatch`), com fade de ~5 ms quando há vozes soando.
+- Presets: JSON com nome permanente do parâmetro → valor real; parâmetro ausente = padrão do motor. **Depois de publicar, não mudar um padrão em `params.def` sem revisar os presets de fábrica.**
+- Banco de fábrica: 10 presets iniciais escritos por valores, sem audição. O banco completo é o plano 5.
+- Tamanhos de knob observados no emulador (capturas em `build/`, não versionadas):
+  - **S25 Ultra (1440×3120, 560 dpi, ~891×411 dp):** abas OSC, FILTRO e ENV cabem sem rolagem. Na aba MOD o **LFO 1** (seletor + 7 knobs) cai no modo de rolagem vertical com knobs de 52 dp (o último, "Roda", fica abaixo da borda até rolar); LFO 2, POLY-MOD e VOZ cabem.
+  - **16:9 (1080×1920, 420 dpi, ~731×411 dp):** rolam OSC 1, OSC 2 e OSC 3 (aba OSC) e LFO 1, LFO 2 e VOZ (aba MOD). MIXER e POLY-MOD cabem. Os rótulos dos seletores ficam apertados ("Legato Unison") mas legíveis.
+- Navegação verificada no emulador: arrastar knob (Cutoff 20 kHz → 1,1 kHz, a barra mostra "• editado", a curva acompanha), `▶` (carrega `002 Baixo Gordo`, "editado" some, knobs vão aos valores do preset), navegador (10 cartões, favoritar, prateleira Favoritos), salvar como novo (`011 Teste`), reabrir o app depois de HOME + force-stop (volta `011 Teste` com "• editado" e os valores). O log do app tem as linhas `PRESET` e o logcat não tem crash.
+- Defeito achado e corrigido nas capturas: o `Text` do Material mantém a altura de linha de 24 sp do estilo padrão quando só o `fontSize` muda, então rótulo e valor de um knob ocupavam ~48 dp e não os 30 dp de `KnobGrid.LABEL`; a última linha de knobs ficava cortada. Fixei `lineHeight` nos textos pequenos.
+- Limitação vista: com o teclado virtual aberto em paisagem, o diálogo "Salvar preset" sobe e o botão "Salvar como novo" fica atrás do teclado até fechá-lo (botão voltar). Não corrigido neste plano.
+- Não testado: arrastar com dois dedos, toque duplo para voltar ao padrão, ajuste fino horizontal, arrastar os pontos do desenho de envelope, importar/exportar (seletor de arquivos do Android), renomear/apagar, vibração, troca de preset com nota soando. `adb input` só simula um toque por vez e ninguém ouviu nada.
+- Commit `wip(app): groups, top bar and main screen` não existe: o `git add` falhou por causa do `DebugScreen.kt` já removido e esses arquivos entraram no commit final `feat(app): touch interface with presets replaces the debug screen`.
 
 ## Plano 2: desvios do plano escrito (registrados durante a execução)
 - **`enum class Unit` em `ui/ParamUi.kt`** escondia `kotlin.Unit` no pacote `ui` e quebrava todo `@Composable` (erro de tipo em `VoltTheme`). Renomeado para `ValueUnit`. Nenhum teste muda.

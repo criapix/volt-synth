@@ -35,6 +35,7 @@ fun TopBar(
   onPrev: () -> kotlin.Unit, onNext: () -> kotlin.Unit, onBrowse: () -> kotlin.Unit,
   onSave: () -> kotlin.Unit, onPanic: () -> kotlin.Unit, onMenu: () -> kotlin.Unit,
   learnActive: Boolean, onMidi: () -> kotlin.Unit,
+  keyboardOpen: Boolean = false, onKeyboard: () -> kotlin.Unit = {},
 ) {
   Row(
     Modifier.fillMaxWidth().height(52.dp).background(VoltColors.panel).padding(horizontal = 8.dp),
@@ -56,6 +57,7 @@ fun TopBar(
     LearnTarget(Target.Action(MidiAction.NEXT)) { TextButton(onClick = onNext) { Text("▶", fontSize = 20.sp) } }
     Button(onClick = onSave) { Text("Salvar") }
     LearnTarget(Target.Action(MidiAction.PANIC)) { TextButton(onClick = onPanic) { Text("Pânico", color = VoltColors.danger) } }
+    TextButton(onClick = onKeyboard) { Text("Teclas", color = if (keyboardOpen) VoltColors.accent else VoltColors.text) }
     Row(
       Modifier.height(34.dp)
         .background(if (learnActive) VoltColors.accent else VoltColors.raised, RoundedCornerShape(17.dp))

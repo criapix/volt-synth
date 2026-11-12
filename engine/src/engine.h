@@ -26,6 +26,9 @@ class Engine {
 
   // Any thread.
   int activeVoices() const { return activeVoices_.load(std::memory_order_relaxed); }
+  // Any thread. How many voices new notes may use (4..16). Voices above a lowered limit fade out in 15 ms.
+  void setVoiceLimit(int n) { voiceLimitReq_.store(n < 4 ? 4 : (n > kMaxVoices ? kMaxVoices : n), std::memory_order_relaxed); }
+  int voiceLimit() const { return voiceLimitReq_.load(std::memory_order_relaxed); }
   float peak() const { return peak_.load(std::memory_order_relaxed); }  // last block's peak, 0..1
 
   // Any non-audio thread. Loads a whole patch (normalized values for ids 0..count-1) as one unit:
@@ -85,6 +88,8 @@ class Engine {
   float blockL_[kBlock], blockR_[kBlock];
   int blockPos_ = kBlock;  // kBlock = nothing buffered
 
+  std::atomic<int> voiceLimitReq_{kMaxVoices};
+  int voiceLimit_ = kMaxVoices;  // audio thread's copy
   std::atomic<int> activeVoices_{0};
   std::atomic<float> peak_{0.0f};
 };

@@ -1,3 +1,4 @@
+#include <cmath>
 #include "dsp_probe.h"
 #include "engine.h"
 #include "filter.h"
@@ -254,4 +255,52 @@ TEST(engine_arp_notes_ignore_the_sustain_pedal) {
   r.on(60); r.on(64); r.on(67);
   r.play(1.0f);
   CHECK(r.e.activeVoices() <= 2);  // with the pedal holding them, every step would pile up a voice
+}
+
+TEST(engine_voice_limit_caps_new_notes) {
+  Rig r;
+  r.e.setVoiceLimit(8);
+  r.play(0.01f);
+  for (int n = 40; n < 52; ++n) r.on(n);
+  r.play(0.1f);
+  CHECK(r.e.activeVoices() == 8);
+  CHECK(r.e.voiceLimit() == 8);
+}
+
+TEST(engine_lowering_the_limit_fades_extra_voices_quickly_without_a_click) {
+  Rig r;
+  r.set(kAenvRelease, 5.0f);  // a long pad release must not keep the extra voices alive
+  r.set(kOsc1Wave, 3);
+  for (int n = 40; n < 56; ++n) r.on(n);
+  r.play(0.3f);
+  CHECK(r.e.activeVoices() == 16);
+  r.e.setVoiceLimit(8);
+  auto x = r.play(0.1f);
+  CHECK(r.e.activeVoices() == 8);
+  CHECK(probe::finite(x));
+  double step = 0;
+  for (size_t i = 1; i < x.size(); ++i) step = std::fmax(step, std::fabs((double)x[i] - x[i - 1]));
+  CHECK(step < 0.1);
+}
+
+TEST(engine_raising_the_limit_again_allows_sixteen_voices) {
+  Rig r;
+  r.e.setVoiceLimit(8);
+  r.play(0.01f);
+  r.e.setVoiceLimit(16);
+  r.play(0.01f);
+  for (int n = 40; n < 60; ++n) r.on(n);
+  r.play(0.1f);
+  CHECK(r.e.activeVoices() == 16);
+}
+
+TEST(engine_unison_uses_no_more_voices_than_the_limit) {
+  Rig r;
+  r.set(kVoiceMode, 3);
+  r.set(kVoiceUnison, 8);
+  r.e.setVoiceLimit(4);
+  r.play(0.01f);
+  r.on(60);
+  r.play(0.1f);
+  CHECK(r.e.activeVoices() == 4);
 }

@@ -1,0 +1,8 @@
+{ "format": 1, "name": "Cordas Suaves", "category": "Strings", "params": {
+  "voice.drift": 0.25,
+  "osc1.wave": 0, "osc2.wave": 0, "osc2.fine": 10, "osc2.level": 0.7,
+  "hpf.cutoff": 150,
+  "filter.model": 2, "filter.cutoff": 3000, "filter.reso": 0.05, "filter.env": 0.1, "filter.keytrack": 0.5,
+  "fenv.attack": 0.5, "fenv.decay": 1.0, "fenv.sustain": 0.8, "fenv.release": 1.0,
+  "aenv.attack": 0.45, "aenv.decay": 0.5, "aenv.sustain": 1.0, "aenv.release": 1.2,
+  "lfo1.wave": 0, "lfo1.rate": 5.0, "lfo1.delay": 1.5, "lfo1.pitch": 0.08 } }

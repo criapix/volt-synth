@@ -25,8 +25,17 @@ class Engine {
   int activeVoices() const { return activeVoices_.load(std::memory_order_relaxed); }
   float peak() const { return peak_.load(std::memory_order_relaxed); }  // last block's peak, 0..1
 
+  // Any non-audio thread. Loads a whole patch (normalized values for ids 0..count-1) as one unit:
+  // either every value is queued or none is (returns false). Sounding voices fade out, the patch
+  // snaps into place, and they fade back in. A later post() of the same parameter wins.
+  bool postPatch(const float* normalized, int count);
+
+  // Tests only, not thread-safe: the smoothed real value the voices read.
+  float value(int id) const { return value_[id]; }
+
  private:
   void renderBlock();
+  void applyPending();
   void handle(const Event& e);
   void noteOn(int note, float velocity);
   void noteOff(int note);
@@ -41,6 +50,11 @@ class Engine {
   float target_[kNumParams];  // real values the parameters are heading to
   float value_[kNumParams];   // smoothed real values the voices read
   float smooth_ = 1.0f;
+  float pending_[kNumParams];
+  bool pendingSet_[kNumParams] = {};
+  enum class Fade { None, Out, In };
+  Fade fade_ = Fade::None;
+  float fadeGain_ = 1.0f;
 
   Voice voices_[kMaxVoices];
   uint64_t counter_ = 0;

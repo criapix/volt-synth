@@ -39,6 +39,7 @@ if (VOLT_TESTS)
     tests/test_engine.cpp
     tests/test_alloc.cpp
     tests/test_filter.cpp
+    tests/test_patch.cpp
   )
   target_link_libraries(volt_tests PRIVATE volt_engine)
   add_executable(volt_bench tests/bench.cpp)

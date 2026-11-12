@@ -5,7 +5,7 @@
 namespace volt {
 
 struct Event {
-  enum Type : int32_t { NoteOn, NoteOff, SetParam, PitchBend, ModWheel, Sustain, AllNotesOff };
+  enum Type : int32_t { NoteOn, NoteOff, SetParam, PitchBend, ModWheel, Sustain, AllNotesOff, PatchParam, PatchCommit };
   Type type;
   int32_t a;  // note, or parameter id
   float b;    // velocity 0..1, normalized parameter value, bend -1..1, wheel 0..1, sustain 0/1
@@ -23,6 +23,13 @@ class EventQueue {
     buf_[w] = e;
     write_.store(next, std::memory_order_release);
     return true;
+  }
+
+  // Producer side: how many more events push() would accept right now.
+  int freeSpace() const {
+    uint32_t w = write_.load(std::memory_order_relaxed);
+    uint32_t r = read_.load(std::memory_order_acquire);
+    return (int)((r - w - 1) & (kCapacity - 1));
   }
 
   bool pop(Event& e) {

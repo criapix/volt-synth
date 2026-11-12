@@ -6,6 +6,7 @@ namespace volt {
 namespace {
 enum Mode { kPoly = 0, kMono = 1, kLegato = 2, kUnison = 3 };
 const float kVoiceGain = 0.35f;
+const int kFadeSamples = 256;  // ~5 ms at 48 kHz
 }  // namespace
 
 Engine::Engine() {
@@ -26,6 +27,20 @@ void Engine::setSampleRate(float sr) {
 bool Engine::post(const Event& e) {
   std::lock_guard<std::mutex> lock(postMutex_);
   return queue_.push(e);
+}
+
+bool Engine::postPatch(const float* n, int count) {
+  if (count > kNumParams) count = kNumParams;
+  std::lock_guard<std::mutex> lock(postMutex_);
+  if (queue_.freeSpace() < count + 1) return false;
+  for (int i = 0; i < count; ++i) queue_.push({Event::PatchParam, i, n[i]});
+  queue_.push({Event::PatchCommit, 0, 0.0f});
+  return true;
+}
+
+void Engine::applyPending() {
+  for (int i = 0; i < kNumParams; ++i)
+    if (pendingSet_[i]) { target_[i] = value_[i] = pending_[i]; pendingSet_[i] = false; }
 }
 
 void Engine::render(float* out, int frames) {
@@ -56,8 +71,19 @@ void Engine::handle(const Event& e) {
       if (e.a >= 0 && e.a < kNumParams) {
         target_[e.a] = denorm(e.a, e.b);
         if (kParams[e.a].curve == Curve::Step) value_[e.a] = target_[e.a];
+        pendingSet_[e.a] = false;  // an explicit change after a patch overrides the patch's value
       }
       break;
+    case Event::PatchParam:
+      if (e.a >= 0 && e.a < kNumParams) { pending_[e.a] = denorm(e.a, e.b); pendingSet_[e.a] = true; }
+      break;
+    case Event::PatchCommit: {
+      bool sounding = false;
+      for (auto& v : voices_) if (v.active) { sounding = true; break; }
+      if (sounding) fade_ = Fade::Out;
+      else { applyPending(); fade_ = Fade::None; fadeGain_ = 1.0f; }
+      break;
+    }
     case Event::PitchBend: bend_ = clampf(e.b, -1.0f, 1.0f); break;
     case Event::ModWheel: modWheel_ = clampf(e.b, 0.0f, 1.0f); break;
     case Event::Sustain:
@@ -142,6 +168,7 @@ void Engine::noteOff(int note) {
 }
 
 void Engine::renderBlock() {
+  if (fade_ == Fade::Out && fadeGain_ <= 0.0f) { applyPending(); fade_ = Fade::In; }
   for (int i = 0; i < kNumParams; ++i)
     if (kParams[i].curve != Curve::Step) value_[i] += (target_[i] - value_[i]) * smooth_;
 
@@ -183,9 +210,12 @@ void Engine::renderBlock() {
 
   // Master volume, then a soft limiter so no preset can clip the output.
   const float vol = value_[kMasterVolume] * value_[kMasterVolume] * 2.0f;
+  const float fadeStep = 1.0f / (float)kFadeSamples;
   float pk = 0.0f;
   for (int s = 0; s < kBlock; ++s) {
-    float l = std::tanh(blockL_[s] * vol), r = std::tanh(blockR_[s] * vol);
+    if (fade_ == Fade::Out) { fadeGain_ -= fadeStep; if (fadeGain_ < 0.0f) fadeGain_ = 0.0f; }
+    else if (fade_ == Fade::In) { fadeGain_ += fadeStep; if (fadeGain_ >= 1.0f) { fadeGain_ = 1.0f; fade_ = Fade::None; } }
+    float l = std::tanh(blockL_[s] * vol) * fadeGain_, r = std::tanh(blockR_[s] * vol) * fadeGain_;
     blockL_[s] = l; blockR_[s] = r;
     const float a = std::fabs(l) > std::fabs(r) ? std::fabs(l) : std::fabs(r);
     if (a > pk) pk = a;

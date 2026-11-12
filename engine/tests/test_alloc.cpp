@@ -26,6 +26,11 @@ TEST(alloc_render_never_touches_the_heap) {
     // post() is a non-audio call but must not allocate either.
     e.post({Event::SetParam, (int)(rng.next() % kNumParams), rng.unipolar()});
     e.post({(rng.next() & 1) ? Event::NoteOn : Event::NoteOff, 30 + (int)(rng.next() % 70), 0.7f});
+    if (round % 50 == 0) {
+      static float patch[kNumParams];
+      for (int i = 0; i < kNumParams; ++i) patch[i] = rng.unipolar();
+      e.postPatch(patch, kNumParams);
+    }
     e.render(buf, 1 + (int)(rng.next() % 512));
   }
   CHECK(g_allocs.load() == before);

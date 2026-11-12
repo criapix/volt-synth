@@ -11,6 +11,12 @@ class PanelTest {
     assertEquals(names.sorted(), placed.sorted())
   }
 
+  @Test fun groupOfFindsTheGroup() {
+    assertEquals("FILTRO", Panel.groupOf("filter.cutoff")?.title)
+    assertEquals("ENVELOPE DE AMPLITUDE", Panel.groupOf("aenv.attack")?.title)
+    assertEquals(null, Panel.groupOf("no.such"))
+  }
+
   @Test fun tabOfFindsTheTab() {
     assertEquals(Tab.FILTER, Panel.tabOf("filter.cutoff"))
     assertEquals(Tab.ENV, Panel.tabOf("aenv.release"))

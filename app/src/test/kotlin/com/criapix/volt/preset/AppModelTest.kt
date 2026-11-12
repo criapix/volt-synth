@@ -68,6 +68,15 @@ class AppModelTest {
     assertEquals(3, m.number(m.current.value.id))
   }
 
+  @Test fun programChangeLoadsThePresetAtThatPosition() {
+    val m = model().apply { restore() }
+    m.programChange(2)                       // third in library order
+    assertEquals("Claro", m.current.value.name)
+    m.programChange(99)
+    assertEquals("Claro", m.current.value.name)
+    assertNotNull(m.message.value)
+  }
+
   @Test fun editingMarksDirtyAndSelectingClears() {
     val m = model().apply { restore() }
     m.state.set(cutoff.id, 0.2f)

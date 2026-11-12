@@ -62,6 +62,13 @@ class AppModel(
     select(list[next].id)
   }
 
+  /** MIDI Program Change [program] (0-based) loads the preset at position program+1 in library order. */
+  fun programChange(program: Int) {
+    val ref = _presets.value.getOrNull(program)
+    if (ref == null) { _message.value = "Programa ${program + 1}: não há preset nessa posição"; return }
+    select(ref.id)
+  }
+
   /** 1-based position in library order, or 0 when the current sound is not a stored preset. */
   fun number(id: String?): Int = _presets.value.indexOfFirst { it.id == id } + 1
 

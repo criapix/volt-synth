@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -34,6 +35,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.criapix.volt.midi.MidiDispatch
+import com.criapix.volt.midi.MidiLearn
+import com.criapix.volt.midi.MidiSettings
+import com.criapix.volt.midi.describe
 import com.criapix.volt.preset.AppModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
@@ -47,6 +52,9 @@ class ScreenIo(
   val voices: () -> Int,
   val audioInfo: () -> String,
   val haptics: Haptics,
+  val learn: MidiLearn,
+  val pickup: StateFlow<MidiDispatch.Pickup?>,
+  val midiSettings: MidiSettings,
   val onExport: () -> kotlin.Unit,
   val onImport: () -> kotlin.Unit,
 )
@@ -60,6 +68,14 @@ fun VoltScreen(model: AppModel, io: ScreenIo) {
   val devices by io.midiDevices.collectAsStateWithLifecycle()
   val activity by io.midiActivity.collectAsStateWithLifecycle()
   val message by model.message.collectAsStateWithLifecycle()
+  val learnActive by io.learn.active.collectAsStateWithLifecycle()
+  val armed by io.learn.armed.collectAsStateWithLifecycle()
+  val bindings by io.learn.bindings.collectAsStateWithLifecycle()
+  val learned by io.learn.learned.collectAsStateWithLifecycle()
+  val pickup by io.pickup.collectAsStateWithLifecycle()
+  var confirmation by remember { mutableStateOf<String?>(null) }
+  var pickupHint by remember { mutableStateOf<String?>(null) }
+  var midiMap by remember { mutableStateOf(false) }
 
   var tab by rememberSaveable { mutableStateOf(Tab.OSC) }
   var flash by remember { mutableStateOf<Tab?>(null) }
@@ -84,16 +100,34 @@ fun VoltScreen(model: AppModel, io: ScreenIo) {
       delay(33)
     }
   }
+  LaunchedEffect(learned?.seq) {
+    val l = learned ?: return@LaunchedEffect
+    confirmation = "${targetLabel(l.target)} ← ${describe(l.source)}"
+    io.haptics.tick()
+    delay(2000); confirmation = null
+  }
+  LaunchedEffect(pickup) {
+    val pk = pickup ?: return@LaunchedEffect
+    val prm = state.params.all[pk.param]
+    pickupHint = "${ParamUi.of(prm.name).label}: leve o controle até ${ParamUi.format(prm, prm.toReal(pk.value))} para assumir"
+    delay(2000); pickupHint = null
+  }
+  val learnUi = if (learnActive) {
+    LearnUi(armed, bindings.groupBy({ it.second.target }, { it.first })) { t -> io.learn.arm(t); io.haptics.tick() }
+  } else null
+
   LaunchedEffect(message) { if (message != null) { delay(3000); model.clearMessage() } }
 
   VoltTheme {
     Surface(Modifier.fillMaxSize(), color = VoltColors.background) {
+      CompositionLocalProvider(LocalLearn provides learnUi) {
       Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.displayCutout)) {
         TopBar(
           number = model.number(current.id), name = current.name, category = current.category, dirty = dirty,
           midiDevices = devices, midiLit = midiLit, voices = voices, level = level,
           onPrev = { model.step(-1) }, onNext = { model.step(1) }, onBrowse = { browser = true },
           onSave = { saving = true }, onPanic = { state.allNotesOff() }, onMenu = { settings = true },
+          learnActive = learnActive, onMidi = { io.learn.setActive(!learnActive) },
         )
         Row(Modifier.fillMaxWidth().height(40.dp).padding(horizontal = 8.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
           Tab.entries.forEach { t ->
@@ -109,10 +143,20 @@ fun VoltScreen(model: AppModel, io: ScreenIo) {
             }
           }
         }
+        if (learnActive) LearnBanner(
+          armed = armed, armedHasBindings = armed != null && bindings.any { it.second.target == armed }, confirmation = confirmation,
+          onForget = { armed?.let { io.learn.clear(it) } }, onMap = { midiMap = true }, onDone = { io.learn.setActive(false) },
+        )
         Row(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
           Panel.groups.getValue(tab).forEach { g ->
             GroupPanel(g, state, onStep = io.haptics::tick, modifier = Modifier.weight(g.weight).fillMaxHeight())
           }
+        }
+      }
+      }
+      if (!learnActive) pickupHint?.let { h ->
+        Box(Modifier.fillMaxSize().padding(bottom = 64.dp), contentAlignment = Alignment.BottomCenter) {
+          Text(h, color = VoltColors.text, fontSize = 13.sp, modifier = Modifier.background(VoltColors.raised, RoundedCornerShape(8.dp)).padding(10.dp))
         }
       }
       message?.let { m ->
@@ -122,7 +166,8 @@ fun VoltScreen(model: AppModel, io: ScreenIo) {
       }
       if (browser) PresetBrowser(model, io, onClose = { browser = false })
       if (saving) SaveDialog(model, onClose = { saving = false })
-      if (settings) SettingsDialog(state, io, onClose = { settings = false })
+      if (settings) SettingsDialog(state, io, onClose = { settings = false }, onMidiMap = { midiMap = true })
+      if (midiMap) MidiMapDialog(state, io, onClose = { midiMap = false })
     }
   }
 }

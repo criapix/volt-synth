@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.criapix.volt.midi.Target
 import com.criapix.volt.state.SynthState
 
 @Composable
@@ -32,9 +33,9 @@ fun GroupPanel(group: Group, state: SynthState, onStep: () -> kotlin.Unit, modif
   Column(modifier.background(VoltColors.panel, RoundedCornerShape(10.dp)).padding(8.dp)) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
       Text(group.title, fontSize = 11.sp, lineHeight = 14.sp, fontWeight = FontWeight.Bold, color = VoltColors.dim, modifier = Modifier.weight(1f))
-      toggles.forEach { Toggle(it, ParamUi.of(it.name) as ToggleUi, state, onStep) }
+      toggles.forEach { LearnTarget(Target.Param(it.name)) { Toggle(it, ParamUi.of(it.name) as ToggleUi, state, onStep) } }
     }
-    choices.forEach { Selector(it, ParamUi.of(it.name) as ChoiceUi, state, onStep) }
+    choices.forEach { LearnTarget(Target.Param(it.name), Modifier.fillMaxWidth()) { Selector(it, ParamUi.of(it.name) as ChoiceUi, state, onStep) } }
     when (group.drawing) {
       Drawing.FILTER_CURVE -> FilterCurveView(state, Modifier.weight(1f).fillMaxWidth().padding(top = 6.dp))
       Drawing.FENV -> EnvelopeView(state, "fenv", Modifier.weight(0.45f).fillMaxWidth().padding(vertical = 6.dp))
@@ -53,7 +54,7 @@ fun GroupPanel(group: Group, state: SynthState, onStep: () -> kotlin.Unit, modif
         ) {
           knobs.chunked(columns).forEach { row ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-              row.forEach { Knob(it, ParamUi.of(it.name) as KnobUi, state, size, onStep) }
+              row.forEach { LearnTarget(Target.Param(it.name)) { Knob(it, ParamUi.of(it.name) as KnobUi, state, size, onStep) } }
               repeat(columns - row.size) { Box(Modifier.height(1.dp).padding(horizontal = (size / 2))) }
             }
           }

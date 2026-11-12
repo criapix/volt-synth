@@ -1,3 +1,25 @@
+# Teste no aparelho (plano 3: MIDI Learn)
+
+Com o CK61 ligado por USB. Depois do teste, rodar `tools\pull-log.ps1` (o log registra cada associação aprendida e cada ação).
+
+| # | Passo | Esperado | Resultado |
+|---|---|---|---|
+| 1 | Na aba FILTRO, sem aprender nada, girar o knob do CK61 que manda CC 74 | O Cutoff na tela gira junto (depois de passar pelo valor atual, pela captura suave) | |
+| 2 | Girar os knobs que mandam CC 73 e CC 72 | Ataque e release do envelope de amplitude mudam (aba ENV) | |
+| 3 | Mexer em cada controle do painel do CK61 e ler ⋮ → Controle MIDI → "Última mensagem" | **Anotar em NOTES.md o nome de cada controle físico e o CC que ele manda** | |
+| 4 | Tocar em MIDI na barra, tocar no knob Drive (aba OSC) e mexer num controle do CK61 | Aparece "Drive · MIXER ← CC xx"; o Drive passa a seguir esse controle na hora | |
+| 5 | Aprender um botão do CK61 para ▶ (próximo preset) | Cada toque no botão avança um preset | |
+| 6 | Se no passo 5 só um toque a cada dois funcionar | Em Controle MIDI, ligar "qualquer valor dispara" nessa associação; agora todo toque avança | |
+| 7 | Aprender uma tecla para "Pânico" | A tecla para de tocar nota e corta o som | |
+| 8 | Captura suave: com o Cutoff associado, trocar de preset e girar o knob do CK61 longe do valor | O som não pula; aparece "Cutoff: leve o controle até …"; ao passar pelo valor, assume | |
+| 9 | Desligar a captura suave e repetir | O valor pula para a posição do knob | |
+| 10 | Program Change pelo CK61 (se o teclado manda) | O preset da posição correspondente carrega | |
+| 11 | Canal: escolher 2 em Controle MIDI | O CK61 (canal 1) para de tocar; voltar para Omni | |
+| 12 | Fechar e abrir o app | As associações continuam lá | |
+| 13 | Apagar uma associação e depois "Apagar todas" | Somem da lista; o mapa de fábrica continua funcionando | |
+
+---
+
 # Teste no aparelho (plano 2: tela e presets)
 
 Instalar: `adb install -r app\build\outputs\apk\debug\app-debug.apk`. Depois do teste, rodar `tools\pull-log.ps1`.

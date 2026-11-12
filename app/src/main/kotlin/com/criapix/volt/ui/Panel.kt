@@ -41,5 +41,7 @@ object Panel {
     ),
   )
 
+  fun groupOf(name: String): Group? = groups.values.flatten().firstOrNull { name in it.params }
+
   fun tabOf(name: String): Tab? = groups.entries.firstOrNull { (_, gs) -> gs.any { name in it.params } }?.key
 }

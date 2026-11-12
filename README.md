@@ -4,7 +4,7 @@ Volt é um sintetizador analógico virtual polifônico para Android, tocado por 
 
 ## Estado
 
-Em desenvolvimento. O plano 2 está implementado: motor C++ de 16 vozes (3 osciladores, filtro Ladder / Roland 12 dB / Roland 24 dB / Prophet, 2 envelopes, 2 LFOs, poly-mod, modos poly/mono/legato/unison), saída de áudio Oboe de baixa latência, entrada MIDI USB com mapa de controladores de fábrica, a tela de toque (abas OSC · FILTRO · ENV · MOD, knobs, curva do filtro e envelopes ao vivo) e presets (40 de fábrica, os seus, navegador, favoritos, importar/exportar, sessão restaurada). Ainda não existem MIDI Learn, Program Change, efeitos, arpejador, teclado na tela e o banco de fábrica completo. A tela foi vista só no emulador; o som e o toque no aparelho ainda não foram avaliados: veja `docs/DEVICE-TEST.md` e `docs/NOTES.md`.
+Em desenvolvimento. O plano 3 está implementado: motor C++ de 16 vozes (3 osciladores, filtro Ladder / Roland 12 dB / Roland 24 dB / Prophet, 2 envelopes, 2 LFOs, poly-mod, modos poly/mono/legato/unison), saída de áudio Oboe de baixa latência, entrada MIDI USB com mapa de controladores de fábrica, a tela de toque (abas OSC · FILTRO · ENV · MOD, knobs, curva do filtro e envelopes ao vivo), presets (40 de fábrica, os seus, navegador, favoritos, importar/exportar, sessão restaurada) e MIDI Learn (associar controles do teclado a parâmetros e ações, captura suave, Program Change, canal MIDI). Ainda não existem efeitos, arpejador, teclado na tela e o banco de fábrica completo. A tela foi vista só no emulador; o som, o toque e o MIDI Learn no aparelho ainda não foram avaliados: veja `docs/DEVICE-TEST.md` e `docs/NOTES.md`.
 
 ## Compilar (Windows, PowerShell)
 
@@ -19,7 +19,9 @@ O APK sai em `app\build\outputs\apk\debug\app-debug.apk`.
 
 ## Teclado MIDI
 
-Conecte o teclado por cabo USB (celular como host) antes ou depois de abrir o app; a tela mostra "MIDI: N conectado(s)" e a última mensagem recebida. Mapa de fábrica: modulação (CC 1), volume (CC 7), sustain (CC 64), ressonância (CC 71), cutoff (CC 74), pitch bend, e CC 120/123 como pânico.
+Conecte o teclado por cabo USB (celular como host) antes ou depois de abrir o app; a tela mostra "MIDI: N conectado(s)" e a última mensagem recebida. Mapa de fábrica: modulação (CC 1), volume (CC 7), sustain (CC 64), ressonância (CC 71), cutoff (CC 74), release (CC 72), ataque (CC 73) e decay (CC 75) do envelope de amplitude, pitch bend, e CC 120/123 como pânico.
+
+**MIDI Learn.** Toque no botão MIDI da barra superior: o app entra no modo aprender (botão laranja "APRENDER"). Toque num controle da tela (knob, seletor, botão, ◀ ▶ ou Pânico) e depois mexa num controle do teclado; a associação vale na hora e fica salva. Notas só podem ser associadas a ações (preset anterior, próximo, pânico). Uma associação aprendida vale mais que o mapa de fábrica. A **captura suave** evita saltos: depois de trocar de preset, o controle só assume o parâmetro quando passa pelo valor atual (a tela diz até onde levá-lo); dá para desligá-la. O **Program Change** carrega o preset na posição correspondente da biblioteca. O mapa (lista de associações, canal Omni ou 1–16, captura suave, última mensagem) fica em ⋮ → Controle MIDI, ou em "Mapa…" no modo aprender.
 
 ## Presets
 

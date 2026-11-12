@@ -7,3 +7,9 @@
 [submodule "third_party/simde"]
 	path = third_party/simde
 	url = https://github.com/simd-everywhere/simde.git
+[submodule "third_party/sst-effects"]
+	path = third_party/sst-effects
+	url = https://github.com/surge-synthesizer/sst-effects.git
+[submodule "third_party/fmt"]
+	path = third_party/fmt
+	url = https://github.com/fmtlib/fmt.git

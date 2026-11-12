@@ -14,6 +14,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedTextField
@@ -31,7 +33,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -53,8 +57,13 @@ fun SaveDialog(model: AppModel, onClose: () -> kotlin.Unit) {
     onDismissRequest = onClose,
     title = { Text("Salvar preset") },
     text = {
-      Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        OutlinedTextField(name, { name = it }, label = { Text("Nome") }, singleLine = true)
+      Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        val focus = LocalFocusManager.current
+        OutlinedTextField(
+          name, { name = it }, label = { Text("Nome") }, singleLine = true,
+          keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+          keyboardActions = KeyboardActions(onDone = { focus.clearFocus() }),
+        )
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
           (listOf("") + PresetCodec.CATEGORIES).forEach { key ->
             Text(
@@ -82,6 +91,7 @@ fun SaveDialog(model: AppModel, onClose: () -> kotlin.Unit) {
 fun SettingsDialog(state: SynthState, io: ScreenIo, onClose: () -> kotlin.Unit, onMidiMap: () -> kotlin.Unit) {
   var info by remember { mutableStateOf(io.audioInfo()) }
   var allParams by remember { mutableStateOf(false) }
+  var about by remember { mutableStateOf(false) }
   val last by io.lastMidi.collectAsStateWithLifecycle()
   LaunchedEffect(Unit) { while (true) { info = io.audioInfo(); delay(500) } }
   AlertDialog(
@@ -111,11 +121,14 @@ fun SettingsDialog(state: SynthState, io: ScreenIo, onClose: () -> kotlin.Unit, 
         }
         TextButton(onClick = { allParams = true }) { Text("Todos os parâmetros (lista)") }
         TextButton(onClick = { onClose(); onMidiMap() }) { Text("Controle MIDI (mapa, canal, captura suave)") }
+        TextButton(onClick = { io.onExportLog() }) { Text("Salvar log…") }
+        TextButton(onClick = { about = true }) { Text("Sobre o Volt") }
       }
     },
     confirmButton = { TextButton(onClick = onClose) { Text("Fechar") } },
   )
   if (allParams) AllParamsDialog(state, onClose = { allParams = false })
+  if (about) AboutDialog(io.version, onClose = { about = false })
 }
 
 /** Every parameter as a slider: a fallback view, and a way to reach anything quickly. */
@@ -146,4 +159,24 @@ private fun ParamRow(p: Param, state: SynthState) {
     )
     Text(ParamUi.format(p, p.toReal(norm)), Modifier.width(90.dp), fontSize = 13.sp)
   }
+}
+
+@Composable
+private fun AboutDialog(version: String, onClose: () -> kotlin.Unit) {
+  AlertDialog(
+    onDismissRequest = onClose,
+    title = { Text("Volt $version") },
+    text = {
+      Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("Sintetizador analógico virtual para teclado MIDI USB.", fontSize = 14.sp)
+        Text("Licença: GNU GPL versão 3 ou posterior. Você pode usar, estudar, modificar e redistribuir o Volt nos termos dessa licença; o código-fonte acompanha cada cópia distribuída.", fontSize = 13.sp, lineHeight = 18.sp)
+        Text("Bibliotecas de terceiros", color = VoltColors.dim, fontSize = 12.sp)
+        Text(
+          "Oboe (Google) — Apache 2.0\nsst-filters, sst-basic-blocks, sst-effects (Surge Synth Team) — GPL-3\nfmt — MIT\nSIMDe — MIT\nJetpack Compose, AndroidX, kotlinx.serialization — Apache 2.0",
+          fontSize = 12.sp, lineHeight = 17.sp, fontFamily = FontFamily.Monospace,
+        )
+      }
+    },
+    confirmButton = { TextButton(onClick = onClose) { Text("Fechar") } },
+  )
 }

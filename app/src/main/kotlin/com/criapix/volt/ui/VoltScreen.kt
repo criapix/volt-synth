@@ -63,6 +63,8 @@ class ScreenIo(
   val onImport: () -> kotlin.Unit,
   val voiceLimit: () -> Int = { 16 },
   val maxVoices: MaxVoices = MaxVoices.Fixed,
+  val onExportLog: () -> kotlin.Unit = {},
+  val version: String = "",
 )
 
 /** The polyphony cap setting, behind an interface so the UI does not touch Prefs or Native. */

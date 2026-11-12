@@ -49,6 +49,13 @@ class MainActivity : ComponentActivity() {
   private lateinit var midi: MidiInput
   private lateinit var prefs: Prefs
 
+  private val logLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("text/plain")) { uri ->
+    if (uri == null) return@registerForActivityResult
+    runCatching { contentResolver.openOutputStream(uri)?.use { it.write(AppLog.text().toByteArray()) } }
+      .onSuccess { model.showMessage("Log salvo") }
+      .onFailure { model.showMessage("Não foi possível salvar o log") }
+  }
+
   private val exportLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
     if (uri == null) return@registerForActivityResult
     runCatching { contentResolver.openOutputStream(uri)?.use { it.write(model.exportBank().toByteArray()) } }
@@ -122,6 +129,8 @@ class MainActivity : ComponentActivity() {
       haptics = Haptics(this, prefs),
       learn = learn, pickup = dispatch.pickup, midiSettings = midiSettings,
       onExport = { exportLauncher.launch("volt-presets.json") },
+      onExportLog = { logLauncher.launch("volt-log.txt") },
+      version = runCatching { packageManager.getPackageInfo(packageName, 0).versionName }.getOrNull() ?: "?",
       onImport = { importLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) },
     )
     setContent { VoltScreen(model, io) }

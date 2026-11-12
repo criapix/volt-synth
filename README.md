@@ -4,7 +4,7 @@ Volt é um sintetizador analógico virtual polifônico para Android, tocado por 
 
 ## Estado
 
-Em desenvolvimento. O plano 2 está implementado: motor C++ de 16 vozes (3 osciladores, filtro Ladder / Roland 12 dB / Roland 24 dB / Prophet, 2 envelopes, 2 LFOs, poly-mod, modos poly/mono/legato/unison), saída de áudio Oboe de baixa latência, entrada MIDI USB com mapa de controladores de fábrica, a tela de toque (abas OSC · FILTRO · ENV · MOD, knobs, curva do filtro e envelopes ao vivo) e presets (10 de fábrica, os seus, navegador, favoritos, importar/exportar, sessão restaurada). Ainda não existem MIDI Learn, Program Change, efeitos, arpejador, teclado na tela e o banco de fábrica completo. A tela foi vista só no emulador; o som e o toque no aparelho ainda não foram avaliados: veja `docs/DEVICE-TEST.md` e `docs/NOTES.md`.
+Em desenvolvimento. O plano 2 está implementado: motor C++ de 16 vozes (3 osciladores, filtro Ladder / Roland 12 dB / Roland 24 dB / Prophet, 2 envelopes, 2 LFOs, poly-mod, modos poly/mono/legato/unison), saída de áudio Oboe de baixa latência, entrada MIDI USB com mapa de controladores de fábrica, a tela de toque (abas OSC · FILTRO · ENV · MOD, knobs, curva do filtro e envelopes ao vivo) e presets (40 de fábrica, os seus, navegador, favoritos, importar/exportar, sessão restaurada). Ainda não existem MIDI Learn, Program Change, efeitos, arpejador, teclado na tela e o banco de fábrica completo. A tela foi vista só no emulador; o som e o toque no aparelho ainda não foram avaliados: veja `docs/DEVICE-TEST.md` e `docs/NOTES.md`.
 
 ## Compilar (Windows, PowerShell)
 

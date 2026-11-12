@@ -1,0 +1,7 @@
+{ "format": 1, "name": "Lead Trance", "category": "Lead", "params": {
+  "voice.mode": 3, "voice.unison": 6, "voice.detune": 0.5, "voice.spread": 0.8, "voice.drift": 0.1,
+  "osc1.wave": 0,
+  "osc2.wave": 0, "osc2.fine": 6, "osc2.level": 0.6,
+  "filter.model": 0, "filter.cutoff": 3500, "filter.reso": 0.2, "filter.env": 0.2, "filter.keytrack": 0.6,
+  "fenv.attack": 0.005, "fenv.decay": 0.5, "fenv.sustain": 0.4, "fenv.release": 0.3,
+  "aenv.attack": 0.005, "aenv.decay": 0.2, "aenv.sustain": 1.0, "aenv.release": 0.25 } }

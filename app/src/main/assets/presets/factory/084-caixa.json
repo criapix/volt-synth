@@ -1,0 +1,9 @@
+{ "format": 1, "name": "Caixa", "category": "FX", "params": {
+  "voice.mode": 1, "voice.drift": 0.0,
+  "osc1.wave": 2, "osc1.octave": 1, "osc1.level": 0.45,
+  "pmod.fenv.pitch": 0.3,
+  "mix.noise": 0.9,
+  "hpf.cutoff": 700,
+  "filter.model": 2, "filter.cutoff": 7000, "filter.reso": 0.1, "filter.env": 0.0, "filter.keytrack": 0.0,
+  "fenv.attack": 0.001, "fenv.decay": 0.05, "fenv.sustain": 0.0, "fenv.release": 0.05,
+  "aenv.attack": 0.001, "aenv.decay": 0.17, "aenv.sustain": 0.0, "aenv.release": 0.08, "aenv.vel": 0.7 } }

@@ -1,0 +1,7 @@
+{ "format": 1, "name": "Vibrafone", "category": "Keys", "params": {
+  "osc1.wave": 3, "osc1.level": 1.0,
+  "osc2.wave": 3, "osc2.octave": 2, "osc2.level": 0.15,
+  "pmod.osc2.pitch": 0.1,
+  "filter.model": 1, "filter.cutoff": 7000, "filter.reso": 0.05, "filter.keytrack": 0.6,
+  "aenv.attack": 0.002, "aenv.decay": 2.5, "aenv.sustain": 0.0, "aenv.release": 1.2, "aenv.vel": 0.6,
+  "lfo1.global": 1, "lfo1.wave": 0, "lfo1.rate": 5.0, "lfo1.amp": 0.5 } }

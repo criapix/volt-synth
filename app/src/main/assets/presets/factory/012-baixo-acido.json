@@ -1,0 +1,7 @@
+{ "format": 1, "name": "Baixo Ácido", "category": "Bass", "params": {
+  "voice.mode": 2, "voice.glide": 0.06, "voice.glide_legato": 1, "voice.drift": 0.05,
+  "osc1.wave": 0, "osc1.octave": -1,
+  "mix.drive": 0.35,
+  "filter.model": 0, "filter.cutoff": 250, "filter.reso": 0.8, "filter.env": 0.7, "filter.keytrack": 0.2,
+  "fenv.attack": 0.001, "fenv.decay": 0.22, "fenv.sustain": 0.0, "fenv.release": 0.1,
+  "aenv.attack": 0.001, "aenv.decay": 0.4, "aenv.sustain": 0.8, "aenv.release": 0.06 } }

@@ -1,0 +1,7 @@
+{ "format": 1, "name": "Cravo", "category": "Keys", "params": {
+  "osc1.wave": 0,
+  "osc2.wave": 1, "osc2.pw": 0.3, "osc2.octave": 1, "osc2.level": 0.5,
+  "hpf.cutoff": 200,
+  "filter.model": 2, "filter.cutoff": 3200, "filter.reso": 0.1, "filter.env": 0.2, "filter.keytrack": 0.8, "filter.vel": 0.3,
+  "fenv.attack": 0.001, "fenv.decay": 0.2, "fenv.sustain": 0.0, "fenv.release": 0.1,
+  "aenv.attack": 0.001, "aenv.decay": 0.55, "aenv.sustain": 0.0, "aenv.release": 0.12, "aenv.vel": 0.4 } }

@@ -1,0 +1,8 @@
+{ "format": 1, "name": "Sci-Fi Aleatório", "category": "FX", "params": {
+  "voice.mode": 2, "voice.drift": 0.1,
+  "osc1.wave": 0,
+  "osc2.wave": 1, "osc2.octave": -1, "osc2.level": 0.5,
+  "filter.model": 0, "filter.cutoff": 900, "filter.reso": 0.6, "filter.env": 0.0, "filter.keytrack": 0.4,
+  "aenv.attack": 0.01, "aenv.decay": 0.3, "aenv.sustain": 1.0, "aenv.release": 0.3,
+  "lfo1.wave": 4, "lfo1.rate": 6.0, "lfo1.cutoff": 0.5,
+  "lfo2.wave": 1, "lfo2.rate": 0.3, "lfo2.cutoff": 0.25 } }

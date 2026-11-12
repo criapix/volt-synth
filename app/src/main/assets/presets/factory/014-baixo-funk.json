@@ -1,0 +1,8 @@
+{ "format": 1, "name": "Baixo Funk", "category": "Bass", "params": {
+  "voice.mode": 1, "voice.drift": 0.08,
+  "osc1.wave": 1, "osc1.octave": -1, "osc1.pw": 0.35,
+  "osc2.wave": 0, "osc2.octave": -1, "osc2.fine": 5, "osc2.level": 0.5,
+  "mix.drive": 0.2,
+  "filter.model": 2, "filter.cutoff": 220, "filter.reso": 0.45, "filter.env": 0.65, "filter.keytrack": 0.4, "filter.vel": 0.4,
+  "fenv.attack": 0.001, "fenv.decay": 0.14, "fenv.sustain": 0.1, "fenv.release": 0.08,
+  "aenv.attack": 0.001, "aenv.decay": 0.25, "aenv.sustain": 0.5, "aenv.release": 0.07, "aenv.vel": 0.6 } }

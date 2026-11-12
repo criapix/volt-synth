@@ -1,0 +1,8 @@
+{ "format": 1, "name": "Pad PWM", "category": "Pad", "params": {
+  "voice.drift": 0.3,
+  "osc1.wave": 1, "osc1.pw": 0.5,
+  "osc2.wave": 1, "osc2.pw": 0.5, "osc2.fine": 8, "osc2.level": 0.9,
+  "filter.model": 2, "filter.cutoff": 2400, "filter.reso": 0.1, "filter.env": 0.15, "filter.keytrack": 0.5,
+  "fenv.attack": 1.0, "fenv.decay": 1.0, "fenv.sustain": 0.7, "fenv.release": 1.5,
+  "aenv.attack": 0.7, "aenv.decay": 0.8, "aenv.sustain": 0.9, "aenv.release": 1.8,
+  "lfo1.wave": 1, "lfo1.rate": 0.4, "lfo1.pw": 0.7 } }

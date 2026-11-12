@@ -1,7 +1,7 @@
 # Notas de execução
 
 ## Estado (plano 2: tela de toque e presets)
-- O que existe: tudo do plano 1 mais a tela de toque (barra superior, abas OSC · FILTRO · ENV · MOD, knobs, seletores, curva do filtro e desenhos de envelope ao vivo), presets (formato JSON, 10 de fábrica, presets do usuário, navegador com busca, categorias e favoritos, salvar/renomear/apagar, importar/exportar, restauração da sessão) e troca de preset sem estalo no motor.
+- O que existe: tudo do plano 1 mais a tela de toque (barra superior, abas OSC · FILTRO · ENV · MOD, knobs, seletores, curva do filtro e desenhos de envelope ao vivo), presets (formato JSON, 40 de fábrica, presets do usuário, navegador com busca, categorias e favoritos, salvar/renomear/apagar, importar/exportar, restauração da sessão) e troca de preset sem estalo no motor.
 - O que não existe ainda: MIDI Learn, Program Change, efeitos, arpejador, teclado na tela, banco de fábrica completo (~64).
 - Verificado por: 56 testes do motor no PC (`.\tools\test-engine.ps1`), 68 testes Kotlin (`gradlew :app:testDebugUnitTest`) e capturas de tela no emulador (S25 Ultra e 16:9). **Nada foi tocado nem ouvido no celular**; o som dos presets, o toque dos knobs e a ausência de estalo na troca de preset são para você julgar (`docs/DEVICE-TEST.md`, plano 2).
 
@@ -54,10 +54,21 @@ Fonte: log do app coletado por USB (`tools\pull-log.ps1`), sessão das 10:12 às
 - **Não aparece no log:** nenhum pitch bend e nenhum CC 1 (roda de modulação). Ou não foram usados no teste, ou o CK61 não os enviou. Vale repetir só isso.
 - **Decisão do usuário (2026-11-12):** os testes de pitch bend / roda de modulação e de carga com 16 vozes não serão feitos; foram dados como aprovados por decisão do usuário. **Não há medição por trás disso:** o log não tem nenhum evento de bend ou CC 1, e a carga máxima observada foi 27 % com 8 vozes (10 vozes no pico).
 
+## Resultados no aparelho do plano 2 (S25 Ultra + CK61) — 2026-11-12
+Fonte: log do app coletado por USB, sessão que começa às 11:10:54 (app 0.2.0), 171 amostras de áudio.
+- **Parecer do usuário:** "pareceu muito bom"; pediu mais presets, de timbres clássicos (atendido com os 30 novos, ainda não ouvidos). É um parecer geral; não há anotação por passo do `docs/DEVICE-TEST.md`.
+- Sem crash, **estouros: 0**, stream sem reinício (`restarts=0`), latência de saída estimada 6,4 a 9,8 ms. 908 notas ligadas e 908 desligadas.
+- Os 10 presets de fábrica foram carregados. O log não tem "preset criado", "salvo", "apagado" nem "importado": salvar, renomear, apagar, exportar e importar não aparecem nesta sessão (pode não ter sido testado; exportar não é registrado).
+- **Carga do motor: média 7,7 %, pico 36,3 % com 16 vozes (11:13:30)**, logo depois de carregar `Sino Metálico` (11:13:24) e `Init` (11:13:26). Passa da meta de 30 % do design, sem nenhum estouro. É a primeira medição com 16 vozes; antes o máximo era 27 % com 8 vozes (ver acima, onde esse teste foi dispensado por decisão do usuário). Em aberto: saber qual patch produziu o pico e se vale reduzir a polifonia sob carga (plano 5).
+- O CK61 mandou CC 71, 72, 73, 74, 91, 92, 93, 13, 14 e 15; apareceram 18 linhas de pitch bend e 24 de CC 1 (roda de modulação), que faltavam no teste do plano 1. Nenhum CC 64 (sem pedal de sustain nesta sessão).
+- O log não registra arrasto de knob, vibração nem o que se ouviu.
+
 ## Plano 2 (tela de toque e presets) — 2026-11-12
 - Mudanças no motor: compensação de ganho do Ladder e do Prophet (x1,96, +5,8 dB; os quatro modelos agora têm ganho ~1 na banda passante, e o teste `engine_plays_a_note_at_concert_pitch` voltou a exigir RMS > 0,05); sync no estilo Prophet (o osc 1 segue o osc 2; parâmetro renomeado de `osc2.sync` para `osc1.sync`); troca de preset atômica (`postPatch`), com fade de ~5 ms quando há vozes soando.
 - Presets: JSON com nome permanente do parâmetro → valor real; parâmetro ausente = padrão do motor. **Depois de publicar, não mudar um padrão em `params.def` sem revisar os presets de fábrica.**
-- Banco de fábrica: 10 presets iniciais escritos por valores, sem audição. O banco completo é o plano 5.
+- Banco de fábrica: 40 presets escritos por valores, sem audição por mim. Os 10 primeiros o usuário ouviu no aparelho ("pareceu muito bom"); os 30 acrescentados depois (012 a 086: baixos ácido, sub, funk e pulso; leads quadrado, assobio e trance; pads PWM, escuro, vidro e evolutivo; metais salto, lentos e stab; cordas ensemble e violoncelo; marimba, harpa e pizzicato; piano elétrico, clavinete, órgão, cravo e vibrafone; vento, laser, bumbo, caixa, sci-fi e sirene) ainda não foram ouvidos. Os nomes de arquivo agrupam por categoria (01x Baixo, 02x Lead, 03x Pad, 04x Metais, 05x Cordas, 06x Pluck, 07x Teclas, 08x Efeitos) e `FactoryPresetsTest` confere unicidade, faixa, parâmetros de passo inteiros e fonte de som audível. O banco completo, ajustado com o seu retorno, é o plano 5.
+- A ordem da biblioteca é a ordem dos nomes de arquivo, então a posição mostrada no app mudou quando entraram os 30 novos (os IDs `factory:<arquivo>` não mudaram, nem a sessão restaurada). Ao fazer o Program Change (plano 3) usar essa ordem de propósito e não reordenar depois sem avisar.
+- Sem efeitos no motor (chorus, reverb, delay), timbres clássicos que dependem deles saem aproximados com detune, drift e PWM (Pad PWM, Cordas Ensemble, Piano Elétrico, Órgão).
 - Tamanhos de knob observados no emulador (capturas em `build/`, não versionadas):
   - **S25 Ultra (1440×3120, 560 dpi, ~891×411 dp):** abas OSC, FILTRO e ENV cabem sem rolagem. Na aba MOD o **LFO 1** (seletor + 7 knobs) cai no modo de rolagem vertical com knobs de 52 dp (o último, "Roda", fica abaixo da borda até rolar); LFO 2, POLY-MOD e VOZ cabem.
   - **16:9 (1080×1920, 420 dpi, ~731×411 dp):** rolam OSC 1, OSC 2 e OSC 3 (aba OSC) e LFO 1, LFO 2 e VOZ (aba MOD). MIXER e POLY-MOD cabem. Os rótulos dos seletores ficam apertados ("Legato Unison") mas legíveis.

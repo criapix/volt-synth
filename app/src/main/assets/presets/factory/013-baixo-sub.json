@@ -1,0 +1,5 @@
+{ "format": 1, "name": "Baixo Sub", "category": "Bass", "params": {
+  "voice.mode": 1, "voice.drift": 0.03,
+  "osc1.wave": 3, "osc1.octave": -1, "mix.sub": 0.4,
+  "filter.model": 1, "filter.cutoff": 400, "filter.reso": 0.05, "filter.keytrack": 0.3,
+  "aenv.attack": 0.005, "aenv.decay": 0.3, "aenv.sustain": 0.9, "aenv.release": 0.15 } }

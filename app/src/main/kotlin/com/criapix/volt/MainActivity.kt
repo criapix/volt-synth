@@ -73,7 +73,7 @@ class MainActivity : ComponentActivity() {
     model = AppModel(state, library, File(filesDir, "session.json")) { AppLog.log(it) }
     model.restore()
 
-    dispatch = MidiDispatch(state, params) { AppLog.log(it) }  // MIDI changes go through SynthState
+    dispatch = MidiDispatch(state, params, log = { AppLog.log(it) })  // MIDI changes go through SynthState
     val parser = MidiParser { bytes, len -> dispatch.message(bytes, len) }
     midi = MidiInput(this, onDisconnect = { Native.allNotesOff() }) { bytes, offset, count -> parser.feed(bytes, offset, count) }
 

@@ -9,6 +9,8 @@
 
   <application
       android:label="Volt"
+      android:icon="@mipmap/ic_launcher"
+      android:roundIcon="@mipmap/ic_launcher"
       android:allowBackup="true"
       android:supportsRtl="true"
       android:theme="@android:style/Theme.Material.NoActionBar">
@@ -17,6 +19,7 @@
         android:exported="true"
         android:screenOrientation="sensorLandscape"
         android:configChanges="orientation|screenSize|screenLayout|keyboard|keyboardHidden|navigation|uiMode"
+        android:windowSoftInputMode="adjustResize"
         android:launchMode="singleTask">
       <intent-filter>
         <action android:name="android.intent.action.MAIN" />

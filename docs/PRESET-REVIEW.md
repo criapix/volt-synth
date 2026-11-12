@@ -7,7 +7,7 @@ Presets sem veredito saem como estão. Nenhum preset foi aprovado por mim: eu n�
 
 | # | Preset | Categoria | Nível (dB) | Veredito | Observação |
 |---|---|---|---|---|---|
-| 1 | Init | — | -20.5 | | ouvido no plano 2: pareceu muito bom (parecer geral); o volume mudou depois no balanceamento do plano 5 |
+| 1 | Init | — | -20.5 | | ouvido no plano 2: pareceu muito bom (parecer geral); não foi alterado |
 | 2 | Baixo Gordo | Baixo | -22.8 | | ouvido no plano 2: pareceu muito bom (parecer geral); o volume mudou depois no balanceamento do plano 5 |
 | 3 | Baixo Redondo | Baixo | -24.0 | | ouvido no plano 2: pareceu muito bom (parecer geral); o volume mudou depois no balanceamento do plano 5 |
 | 4 | Baixo Ácido | Baixo | -22.0 | |  |

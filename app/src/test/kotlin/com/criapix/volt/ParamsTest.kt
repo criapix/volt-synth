@@ -36,7 +36,7 @@ class ParamsTest {
 
   @Test fun theRealTableIsReadFromTheEngineSource() {
     val p = TestParams.params
-    assertEquals(67, p.all.size)
+    assertEquals(99, p.all.size)
     assertEquals(Curve.EXP, p["filter.cutoff"]?.curve)
     assertEquals(null, p["osc2.sync"])
     assertEquals(Curve.STEP, p["osc1.sync"]?.curve)

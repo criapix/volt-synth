@@ -61,7 +61,7 @@ Taxa de amostragem: a nativa do dispositivo (48 kHz no S25 Ultra). Processamento
 
 Polifonia máxima: 16 vozes. Roubo de voz: a mais antiga em release; se não houver, a mais antiga.
 
-- **Osciladores (3)**: formas serra, quadrada com largura de pulso, triângulo, senoide. Por oscilador: forma, oitava (−2..+2), semitom, afinação fina, nível. Anti-aliasing por polyBLEP. Sync rígido do osc 2 pelo osc 1. O osc 3 pode ser desligado do teclado e usado como fonte de modulação (como no Minimoog).
+- **Osciladores (3)**: formas serra, quadrada com largura de pulso, triângulo, senoide. Por oscilador: forma, oitava (−2..+2), semitom, afinação fina, nível. Anti-aliasing por polyBLEP. Sync rígido do osc 1 pelo osc 2 (como no Prophet: o oscilador sincronizado é o mesmo que o poly-mod varre). O osc 3 pode ser desligado do teclado e usado como fonte de modulação (como no Minimoog).
 - **Sub-oscilador** (quadrada, uma oitava abaixo do osc 1) e **ruído** (branco).
 - **Mixer** com saturação suave ajustável (drive).
 - **Passa-altas** simples de 1 polo antes do filtro principal (como no Jupiter).

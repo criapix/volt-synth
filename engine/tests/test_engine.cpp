@@ -202,3 +202,23 @@ TEST(engine_filter_envelope_opens_the_filter) {
   };
   CHECK(level(0.8f) > 5.0 * level(0.0f));
 }
+
+TEST(engine_sync_locks_osc1_to_osc2s_period) {
+  // osc 2 (silent) plays the note, 110 Hz; osc 1 is a fifth above, 164.8 Hz.
+  auto energy = [](bool sync) {
+    Rig r;
+    r.set(kVoiceDrift, 0.0f);
+    r.set(kFilterModel, 1);
+    r.set(kOsc1Semi, 7);
+    r.set(kOsc2Level, 0.0f);
+    r.set(kOsc1Sync, sync ? 1.0f : 0.0f);
+    r.play(0.01f);
+    r.on(45);
+    r.play(0.1f);
+    auto x = r.play(1.0f);
+    return std::make_pair(probe::tone(x, 110.0, 48000.0), probe::tone(x, 164.81, 48000.0));
+  };
+  auto free = energy(false), locked = energy(true);
+  CHECK(free.second > 5.0 * free.first);     // unsynced: osc 1 sounds at its own pitch
+  CHECK(locked.first > 5.0 * locked.second);  // synced: osc 1 restarts every osc 2 cycle
+}

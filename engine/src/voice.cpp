@@ -20,7 +20,7 @@ void Voice::start(int n, float velocity, float fromPitch, float detuneSemis, flo
   if (!active) {
     // A fresh voice: free-running oscillators start anywhere, like an analogue synth.
     for (auto& o : osc_) o.phase = rng_.unipolar();
-    subPhase_ = 0.0f; hpf_ = 0.0f; osc2Prev_ = 0.0f; ampPrev_ = 0.0f;
+    subPhase_ = 0.0f; hpf_ = 0.0f; ampPrev_ = 0.0f;
     fenv_.reset(); aenv_.reset();
     lfo1_.restart(); lfo2_.restart();
   }
@@ -80,18 +80,18 @@ float Voice::pre(const BlockCtx& c, float (*io)[4], int lane) {
 
   const float fm = 2.0f * p[kPmodOsc2Pitch] * p[kPmodOsc2Pitch];
   const float pwm = 0.45f * p[kPmodOsc2Pw];
-  const bool sync = p[kOsc2Sync] > 0.5f;
+  const bool sync = p[kOsc1Sync] > 0.5f;
   const float subLevel = p[kMixSub], noiseLevel = p[kMixNoise];
   const float drive = 1.0f + 4.0f * p[kMixDrive];
   const float hpfG = 1.0f - std::exp(-6.28318530718f * p[kHpfCutoff] / c.sr);
 
   // --- audio rate ---------------------------------------------------------
   for (int s = 0; s < kBlock; ++s) {
-    const float inc0 = inc[0] * (1.0f + fm * osc2Prev_);
-    const float a = osc_[0].tick(inc0 > 0.0f ? inc0 : 0.0f, wave[0], clampf(pw[0] + pwm * osc2Prev_, 0.05f, 0.95f));
-    if (sync && osc_[0].wrapped) osc_[1].syncTo(osc_[0].wrapFrac, inc[1]);
     const float b = osc_[1].tick(inc[1], wave[1], pw[1]);
-    osc2Prev_ = b;
+    float inc0 = inc[0] * (1.0f + fm * b);
+    if (inc0 < 0.0f) inc0 = 0.0f;
+    if (sync && osc_[1].wrapped) osc_[0].syncTo(osc_[1].wrapFrac, inc0);
+    const float a = osc_[0].tick(inc0, wave[0], clampf(pw[0] + pwm * b, 0.05f, 0.95f));
     const float d = osc_[2].tick(inc[2], wave[2], pw[2]);
 
     subPhase_ += 0.5f * inc[0];

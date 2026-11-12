@@ -17,7 +17,7 @@ P(kOsc3Semi,   "osc3.semi",   -12, 12, 0, Step)
 P(kOsc3Fine,   "osc3.fine",   -50, 50, 0, Lin)
 P(kOsc3Pw,     "osc3.pw",     0.05f, 0.95f, 0.5f, Lin)
 P(kOsc3Level,  "osc3.level",  0, 1, 0, Lin)
-P(kOsc2Sync,   "osc2.sync",   0, 1, 0, Step)      // osc 2 hard-synced to osc 1
+P(kOsc1Sync,   "osc1.sync",   0, 1, 0, Step)      // osc 1 hard-synced to osc 2 (Prophet: the synced osc is the one poly-mod sweeps)
 
 // Mixer
 P(kMixSub,     "mix.sub",     0, 1, 0, Lin)       // square, one octave below osc 1

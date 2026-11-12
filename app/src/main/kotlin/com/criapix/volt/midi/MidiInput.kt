@@ -8,6 +8,7 @@ import android.media.midi.MidiOutputPort
 import android.media.midi.MidiReceiver
 import android.os.Handler
 import android.os.Looper
+import com.criapix.volt.AppLog
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -46,11 +47,12 @@ class MidiInput(
   private fun connect(info: MidiDeviceInfo) {
     if (info.outputPortCount == 0 || open.containsKey(info.id)) return
     manager?.openDevice(info, { dev ->
-      if (dev == null) return@openDevice
+      if (dev == null) { AppLog.log("MIDI falha ao abrir o dispositivo id ${info.id}"); return@openDevice }
       val ports = (0 until info.outputPortCount).mapNotNull { dev.openOutputPort(it) }
       ports.forEach { it.connect(receiver) }
       open[info.id] = dev to ports
       _count.value = open.size
+      AppLog.log("MIDI conectado: ${info.properties.getString(MidiDeviceInfo.PROPERTY_NAME)} (id ${info.id}, ${info.outputPortCount} saída(s)); total ${open.size}")
     }, handler)
   }
 
@@ -58,6 +60,7 @@ class MidiInput(
     open.remove(id)?.let { (dev, ports) ->
       ports.forEach { runCatching { it.disconnect(receiver); it.close() } }
       runCatching { dev.close() }
+      AppLog.log("MIDI desconectado: dispositivo id $id; restam ${open.size}")
       onDisconnect()
     }
     _count.value = open.size

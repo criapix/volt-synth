@@ -1,9 +1,9 @@
 # Notas de execução
 
-## Estado (plano 2: tela de toque e presets)
-- O que existe: tudo do plano 1 mais a tela de toque (barra superior, abas OSC · FILTRO · ENV · MOD, knobs, seletores, curva do filtro e desenhos de envelope ao vivo), presets (formato JSON, 40 de fábrica, presets do usuário, navegador com busca, categorias e favoritos, salvar/renomear/apagar, importar/exportar, restauração da sessão) e troca de preset sem estalo no motor.
-- O que não existe ainda: MIDI Learn, Program Change, efeitos, arpejador, teclado na tela, banco de fábrica completo (~64).
-- Verificado por: 56 testes do motor no PC (`.\tools\test-engine.ps1`), 68 testes Kotlin (`gradlew :app:testDebugUnitTest`) e capturas de tela no emulador (S25 Ultra e 16:9). **Nada foi tocado nem ouvido no celular**; o som dos presets, o toque dos knobs e a ausência de estalo na troca de preset são para você julgar (`docs/DEVICE-TEST.md`, plano 2).
+## Estado (plano 3: MIDI Learn)
+- O que existe: tudo do plano 2 mais MIDI Learn (botão MIDI na barra, associar qualquer parâmetro, preset anterior/próximo e pânico a um controle do teclado), captura suave, Program Change, tela do mapa MIDI e canal MIDI (Omni ou 1–16).
+- O que não existe ainda: efeitos, arpejador, teclado na tela, banco de fábrica completo e ajustado (~64).
+- Verificado por: 56 testes do motor no PC (`.\tools\test-engine.ps1`), 103 testes Kotlin (`gradlew :app:testDebugUnitTest`) e capturas de tela no emulador. **Nada foi tocado nem ouvido no celular**; associar, captura suave e Program Change são para você testar com o CK61 (`docs/DEVICE-TEST.md`, plano 3).
 
 ## Diferenças em relação ao design
 - Oscilador 3 como fonte de modulação: não feito (os dois LFOs e o poly-mod cobrem).
@@ -82,3 +82,14 @@ Fonte: log do app coletado por USB, sessão que começa às 11:10:54 (app 0.2.0)
 - **`enum class Unit` em `ui/ParamUi.kt`** escondia `kotlin.Unit` no pacote `ui` e quebrava todo `@Composable` (erro de tipo em `VoltTheme`). Renomeado para `ValueUnit`. Nenhum teste muda.
 - **`EnvelopeGeometryTest.nearestHandleIsFound`**: o plano consultava a alça de ataque em nível 0 e a de release em nível 1, o contrário de onde o desenho põe as alças (ataque em nível 1, release em nível 0). Com os níveis do plano, o ponto (attackX, 0) fica mais perto da alça de release. Corrigi o teste (ataque nível 1, release nível 0); o código está certo.
 - **`FilterCurveTest.pointsAreLogSpaced`**: o plano esperava 0 dB no primeiro ponto, mas ele cai em 20 Hz, exatamente o corte do passa-altas (20 Hz), onde um polo único dá −3 dB. Corrigi para −3 dB ±0,5 e acrescentei uma checagem do último ponto (< −30 dB); o código está certo.
+
+## Plano 3 (MIDI Learn) — 2026-11-12
+- Botão MIDI na barra → modo aprender: tocar num controle da tela e mexer num controle do teclado. Alvos: qualquer parâmetro, preset anterior/próximo, pânico. Notas só para ações. CC 0, 32 e 120–127 não podem ser aprendidos.
+- Precedência de um CC: aprender → associação aprendida → mapa de fábrica. Mapa de fábrica ampliado com os controladores de som do General MIDI: CC 72 → release, 73 → ataque, 75 → decay (envelope de amplitude), além de 71 → ressonância e 74 → cutoff. CC 91/92/93 ficam livres até os efeitos (plano 4).
+- Captura suave: o controle só move o parâmetro enquanto o parâmetro ainda tem o último valor que ele mandou; carregar preset, mexer na tela ou outro controle o desligam, e ele volta a valer quando chega a 1,5/127 do valor ou cruza o valor. Logo depois de aprender, o controle já assume. Desligável em ⋮ → Controle MIDI.
+- Ações disparam na subida para ≥ 64 (ou nota ligada); "qualquer valor dispara" (com 150 ms de antirrepique) para botões que mandam 127 e 0 em toques alternados; o mesmo liga/desliga parâmetros liga/desliga.
+- Program Change n → preset na posição n+1 da biblioteca. Bank Select ignorado: só os 128 primeiros presets.
+- Mapa salvo nas preferências (`midiMap`), por canal. Canal (Omni/1–16) e captura suave também.
+- Verificado por: 103 testes Kotlin (MidiMap, SoftTakeover, MidiLearn, roteamento com SynthState real, Program Change, rótulos) e capturas no emulador (`build/`, não versionadas): botão MIDI → "APRENDER" com banner e contorno azul em knobs, seletores, toggles e ◀ ▶ Pânico; Cutoff armado (contorno laranja grosso, banner "Cutoff · FILTRO: mexa num controle do teclado…") com o valor intacto em 20,0 kHz; ▶ armado sem trocar o preset; tela do mapa (Omni, captura suave ligada, mapa de fábrica, lista vazia); canal 2 continua escolhido ao reabrir; "Concluir" tira banner e contornos e o knob volta a girar (Cutoff 20 kHz → 3,7 kHz, "• editado"); logcat sem crash. **Associar de fato, a captura suave e o Program Change não foram exercitados num aparelho: o emulador não tem entrada MIDI.**
+- Visto nas capturas, não corrigido: em Learn mode o contorno do seletor ("Onda", "Modelo") engloba o rótulo e encosta nele; a lista do mapa de fábrica na tela do mapa rola (a coluna esquerda é maior que a tela).
+- Execução: um `adb` sem `-s` falha com dois dispositivos; durante a verificação o celular do usuário apareceu no `adb devices`. Nenhum comando foi enviado a ele; os do emulador usaram `-s emulator-5554`.

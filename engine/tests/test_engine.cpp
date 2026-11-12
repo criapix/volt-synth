@@ -201,3 +201,57 @@ TEST(engine_sync_locks_osc1_to_osc2s_period) {
   CHECK(free.second > 5.0 * free.first);     // unsynced: osc 1 sounds at its own pitch
   CHECK(locked.first > 5.0 * locked.second);  // synced: osc 1 restarts every osc 2 cycle
 }
+
+TEST(engine_effects_change_the_output_and_every_effect_off_does_not) {
+  auto run = [](bool reverb) {
+    Rig r;
+    r.set(kVoiceDrift, 0.0f);
+    if (reverb) { r.set(kFxReverbOn, 1); r.set(kFxReverbMix, 0.5f); }
+    r.play(0.01f);
+    r.on(57); r.play(0.3f); r.off(57);
+    return r.play(1.0f);
+  };
+  auto dry = run(false), wet = run(true);
+  CHECK(probe::rms(std::vector<float>(wet.begin() + 30000, wet.end())) > 3.0 * probe::rms(std::vector<float>(dry.begin() + 30000, dry.end())) + 1e-6);
+}
+
+TEST(engine_arpeggiator_repeats_a_held_key_at_the_tempo) {
+  Rig r;
+  r.set(kArpOn, 1); r.set(kArpBpm, 120); r.set(kArpDivision, 2);  // 1/16 = 0.125 s
+  r.set(kArpGate, 0.5f);
+  r.set(kAenvAttack, 0.001f); r.set(kAenvRelease, 0.005f); r.set(kAenvSustain, 1.0f);
+  r.play(0.01f);
+  r.on(60);
+  int starts = 0, prev = 0;
+  std::vector<float> buf(2 * 16);
+  for (int b = 0; b < 48000 / 16; ++b) {  // 1 s
+    r.e.render(buf.data(), 16);
+    const int v = r.e.activeVoices();
+    if (v > 0 && prev == 0) ++starts;
+    prev = v;
+  }
+  CHECK_NEAR(starts, 8, 1);
+}
+
+TEST(engine_switching_the_arp_on_and_off_never_leaves_a_stuck_note) {
+  Rig r;
+  r.set(kAenvRelease, 0.01f);
+  r.on(60); r.play(0.1f);
+  r.set(kArpOn, 1); r.play(0.3f);   // the held key moves into the arpeggiator
+  r.set(kArpOn, 0); r.play(0.1f);   // and back to a normal note
+  CHECK(r.e.activeVoices() == 1);
+  r.off(60); r.play(0.3f);
+  CHECK(r.e.activeVoices() == 0);
+  r.set(kArpOn, 1); r.on(62); r.play(0.2f); r.off(62); r.play(0.5f);
+  CHECK(r.e.activeVoices() == 0);
+}
+
+TEST(engine_arp_notes_ignore_the_sustain_pedal) {
+  Rig r;
+  r.set(kArpOn, 1); r.set(kArpDivision, 2);
+  r.set(kAenvRelease, 0.005f);
+  r.e.post({Event::Sustain, 0, 1.0f});
+  r.on(60); r.on(64); r.on(67);
+  r.play(1.0f);
+  CHECK(r.e.activeVoices() <= 2);  // with the pedal holding them, every step would pile up a voice
+}

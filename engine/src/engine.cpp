@@ -14,6 +14,7 @@ Engine::Engine() {
   for (int i = 0; i < kMaxVoices; ++i) voices_[i].seed(0x9E3779B9u * (uint32_t)(i + 1));
   globalLfo_.seed(0xC0FFEEu);
   std::memset(io_, 0, sizeof(io_));
+  fx_ = std::make_unique<FxChain>(48000.0f);
   setSampleRate(48000.0f);
 }
 
@@ -22,6 +23,8 @@ void Engine::setSampleRate(float sr) {
   smooth_ = 1.0f - std::exp(-(float)kBlock / (0.010f * sr));  // 10 ms time constant
   blockPos_ = kBlock;
   for (auto& f : filters_) f.setSampleRate(sr);
+  if (fx_) fx_->setSampleRate(sr);
+  arp_.setSampleRate(sr);
 }
 
 bool Engine::post(const Event& e) {
@@ -64,9 +67,9 @@ void Engine::render(float* out, int frames) {
 void Engine::handle(const Event& e) {
   switch (e.type) {
     case Event::NoteOn:
-      if (e.b <= 0.0f) noteOff(e.a); else noteOn(e.a, e.b);
+      if (e.b <= 0.0f) keyUp(e.a); else keyDown(e.a, e.b);
       break;
-    case Event::NoteOff: noteOff(e.a); break;
+    case Event::NoteOff: keyUp(e.a); break;
     case Event::SetParam:
       if (e.a >= 0 && e.a < kNumParams) {
         target_[e.a] = denorm(e.a, e.b);
@@ -94,6 +97,8 @@ void Engine::handle(const Event& e) {
     case Event::AllNotesOff:
       for (auto& v : voices_) v.kill();
       stackSize_ = 0;
+      arp_.clear();
+      std::memset(keyHeld_, 0, sizeof(keyHeld_));
       break;
   }
 }
@@ -167,6 +172,48 @@ void Engine::noteOff(int note) {
   }
 }
 
+void Engine::keyDown(int note, float vel) {
+  if (note < 0 || note > 127) return;
+  keyHeld_[note] = true;
+  keyVel_[note] = vel;
+  if (arpOn_) arp_.keyDown(note, vel); else noteOn(note, vel);
+}
+
+void Engine::keyUp(int note) {
+  if (note < 0 || note > 127) return;
+  keyHeld_[note] = false;
+  if (arpOn_) arp_.keyUp(note); else noteOff(note);
+}
+
+void Engine::noteOffNow(int note) {
+  const bool pedal = sustain_;
+  sustain_ = false;
+  noteOff(note);
+  sustain_ = pedal;
+}
+
+void Engine::runArp() {
+  const bool on = value_[kArpOn] > 0.5f;
+  if (on != arpOn_) {
+    if (on) {
+      for (int n = 0; n < 128; ++n) if (keyHeld_[n]) { noteOffNow(n); arp_.keyDown(n, keyVel_[n]); }
+    } else {
+      const int s = arp_.clear();
+      if (s >= 0) noteOffNow(s);
+      for (int n = 0; n < 128; ++n) if (keyHeld_[n]) noteOn(n, keyVel_[n]);
+    }
+    arpOn_ = on;
+  }
+  if (!arpOn_) return;
+  arp_.setHold(value_[kArpHold] > 0.5f);
+  const ArpSettings s{(int)value_[kArpMode], (int)value_[kArpOctaves], (int)value_[kArpDivision], value_[kArpBpm], value_[kArpGate]};
+  ArpEvent ev[8];
+  const int n = arp_.advance(kBlock, s, ev, 8);
+  for (int i = 0; i < n; ++i) {
+    if (ev[i].on) noteOn(ev[i].note, ev[i].vel); else noteOffNow(ev[i].note);
+  }
+}
+
 void Engine::renderBlock() {
   if (fade_ == Fade::Out && fadeGain_ <= 0.0f) { applyPending(); fade_ = Fade::In; }
   for (int i = 0; i < kNumParams; ++i)
@@ -174,6 +221,8 @@ void Engine::renderBlock() {
 
   const int model = (int)value_[kFilterModel];
   if (model != model_) { model_ = model; for (auto& f : filters_) f.setModel(model); }
+
+  runArp();
 
   BlockCtx c;
   c.p = value_;
@@ -207,6 +256,8 @@ void Engine::renderBlock() {
       if (v.active) ++active;
     }
   }
+
+  fx_->process(value_, blockL_, blockR_);
 
   // Master volume, then a soft limiter so no preset can clip the output.
   const float vol = value_[kMasterVolume] * value_[kMasterVolume] * 2.0f;

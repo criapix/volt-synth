@@ -1,8 +1,11 @@
 #pragma once
 #include <atomic>
 #include <mutex>
+#include <memory>
+#include "arp.h"
 #include "event_queue.h"
 #include "filter.h"
+#include "fx/fx_chain.h"
 #include "params.h"
 #include "voice.h"
 
@@ -39,6 +42,10 @@ class Engine {
   void handle(const Event& e);
   void noteOn(int note, float velocity);
   void noteOff(int note);
+  void keyDown(int note, float vel);
+  void keyUp(int note);
+  void noteOffNow(int note);  // release ignoring the sustain pedal (arpeggio steps)
+  void runArp();
   void releaseOrSustain(Voice& v);
   Voice* allocPoly(int note);
   void startVoice(Voice& v, int note, float velocity, float detune, float pan, float gain);
@@ -55,6 +62,12 @@ class Engine {
   enum class Fade { None, Out, In };
   Fade fade_ = Fade::None;
   float fadeGain_ = 1.0f;
+
+  std::unique_ptr<FxChain> fx_;  // allocated in the constructor (~17 MB), off the audio thread
+  Arp arp_;
+  bool arpOn_ = false;
+  bool keyHeld_[128] = {};
+  float keyVel_[128] = {};
 
   Voice voices_[kMaxVoices];
   uint64_t counter_ = 0;

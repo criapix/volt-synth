@@ -47,8 +47,11 @@ if (VOLT_TESTS)
     tests/test_patch.cpp
     tests/test_arp.cpp
     tests/test_fx.cpp
+    tests/test_presets.cpp
   )
   target_link_libraries(volt_tests PRIVATE volt_engine)
+  set(VOLT_PRESETS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../app/src/main/assets/presets/factory)
+  target_compile_definitions(volt_tests PRIVATE VOLT_PRESETS_DIR="${VOLT_PRESETS_DIR}")
   add_executable(volt_bench tests/bench.cpp)
   target_link_libraries(volt_bench PRIVATE volt_engine)
   add_executable(fx_dump tests/fx_dump.cpp)

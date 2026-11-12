@@ -120,3 +120,62 @@ Fonte: log do app coletado por USB, sessão que começa às 11:10:54 (app 0.2.0)
 - Controladores de fábrica: CC 91 → mix do reverb, CC 93 → mix do chorus, CC 95 → mix do phaser. Levar um deles acima de zero também liga o efeito (vale para mixes aprendidos). CC 92 fica livre.
 - Presets: 090 Arpejo Clássico, 091 Cordas com Phaser, 092 Baixo Distorcido (posições 41–43 na biblioteca; preset de usuário desce 3 posições). Efeitos foram acrescentados a 030–034, 050, 051, 071, 073, 020 e 024. Nenhum foi ouvido.
 - Capturas no emulador (medium_phone, 1440×3120 a 560 dpi, paisagem; `build/fx.png`, `arp.png`, `keys.png`, `hold.png`, não versionadas): as abas OSC FILTRO ENV MOD ARP FX aparecem; **na aba FX os seis grupos cabem sem rolagem**; o teclado sobe cobrindo a parte de baixo, mostra C3 – C5, Oitava −/+, e uma tecla tocada acende e a barra mostra "1 vozes"; logcat sem crash. Com o teclado aberto, a aba ARP (grupo único com seletor de modo e de divisão) fica parcialmente coberta e o grupo rola; feche o teclado para ver os knobs. Arpejo contínuo, Hold e carregar o preset 041 não foram exercitados no emulador (só os testes do motor cobrem).
+
+## Plano 5 (banco final, polifonia sob carga, ícone, release 1.0) — 2026-11-12
+Ferramentas no PC: `.	oolsender-presets.ps1` (WAV por preset + `buildender\index.html` + `loudness.csv`) e `-Stress` (CPU por preset). Linha de base dos testes do motor: 81; depois das Tarefas 1–2: 84.
+
+### Nível dos presets de fábrica (antes do balanceamento)
+Nível = a janela de 400 ms mais alta do trecho, RMS em dBFS. Mediana dos 43 presets: **−22,6 dB** (mín. −42,5, máx. −10,7).
+```
+  #  file                          loud dB  squash %  release s
+  1  001-init                        -20.5      0.00       0.32
+  2  010-baixo-gordo                 -19.9      0.00       0.16
+  3  011-baixo-redondo               -24.0      0.00       0.13
+  4  012-baixo-acido                 -22.0      0.00       0.10
+  5  013-baixo-sub                   -25.5      0.00       0.24
+  6  014-baixo-funk                  -22.6      0.00       0.11
+  7  015-baixo-pulso                 -21.1      0.00       0.16
+  8  020-lead-sync                   -24.5      0.00       0.33
+  9  021-lead-classico               -17.8      0.00       0.24
+ 10  022-lead-quadrado               -19.3      0.00       0.24
+ 11  023-lead-assobio                -22.4      0.00       0.41
+ 12  024-lead-trance                 -27.2      0.00       0.41
+ 13  030-pad-analogico               -23.1      0.00       4.08
+ 14  031-pad-pwm                     -18.4      0.00       2.93
+ 15  032-pad-escuro                  -21.4      0.00       4.96
+ 16  033-pad-vidro                   -20.6      0.00       4.08
+ 17  034-pad-evolutivo               -20.9      0.00       5.72
+ 18  040-metais-poly                 -18.8      0.00       0.49
+ 19  041-metais-salto                -12.5      0.00       0.33
+ 20  042-metais-lentos               -17.9      0.00       0.82
+ 21  043-stab-de-metais              -18.8      0.00       0.18
+ 22  050-cordas-suaves               -24.0      0.00       1.98
+ 23  051-cordas-ensemble             -24.2      0.00       1.65
+ 24  052-violoncelo                  -18.3      0.00       0.57
+ 25  060-pluck-vidro                 -24.3      0.00       0.26
+ 26  061-marimba                     -27.1      0.00       0.10
+ 27  062-harpa                       -23.6      0.00       0.98
+ 28  063-pizzicato                   -32.6      0.00       0.00
+ 29  070-sino-metalico               -23.0      0.00       1.78
+ 30  071-piano-eletrico              -25.3      0.00       0.54
+ 31  072-clavinete                   -27.3      0.00       0.11
+ 32  073-orgao                       -15.3      0.00       0.08
+ 33  074-cravo                       -28.3      0.00       0.14
+ 34  075-vibrafone                   -21.3      0.00       1.86
+ 35  081-vento                       -30.5      0.00       4.13
+ 36  082-laser                       -37.6      0.00       0.00
+ 37  083-bumbo                       -29.4      0.00       0.00
+ 38  084-caixa                       -42.5      0.00       0.00
+ 39  085-scifi-aleatorio             -20.7      0.00       0.50
+ 40  086-sirene                      -19.0      0.00       0.50
+ 41  090-arpejo-classico             -28.9      0.00       0.23
+ 42  091-cordas-phaser               -25.1      0.00       1.49
+ 43  092-baixo-distorcido            -10.7      0.00       0.13
+```
+- `084-caixa` estava em −48,7 dB e reprovava o piso de −45 dB do teste de renderização (Bumbo −29,4, Laser −37,6). Só acrescentei `master.volume` 1,0 (+6,2 dB) e ele foi a −42,5 dB: passa o piso, mas **continua ~13 dB abaixo do Bumbo**. Fica para as Tarefas 4 e 9 (você ouvir e decidir).
+- Nenhum preset aperta o limitador (> 1 % das amostras acima de 0,95) e todos liberam as vozes.
+
+### CPU por preset (16 notas seguradas, % de um núcleo do PC; `-Stress`)
+Cinco mais pesados: `081-vento` 17,1 %, `032-pad-escuro` 15,9 %, `001-init` 15,7 %, `041-metais-salto` 14,9 %, `060-pluck-vidro` 14,9 %.
+Ressalva: presets mono (baixos, leads, percussão) tocam 1 voz só e custam ~1 %; o "16 notas" só vale para os polifônicos.
+**A pergunta dos 36 %:** `070-sino-metalico` NÃO está entre os mais pesados (8,8 %, 19º de 43). O pico de 36 % no celular logo depois de carregá-lo provavelmente não veio do custo dele (talvez do `Init` carregado em seguida, o 3º mais pesado, 15,7 %). Inconclusivo: o PC não mede o celular.

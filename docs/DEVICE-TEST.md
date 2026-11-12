@@ -1,3 +1,23 @@
+# Teste no aparelho (plano 4: efeitos, arpejador, teclado)
+
+| # | Passo | Esperado | Resultado |
+|---|---|---|---|
+| 1 | Aba FX: ligar cada efeito sozinho com uma nota soando | Liga e desliga sem estalo; cada um soa como o nome diz | |
+| 2 | Chorus: modos I, II e I+II num pad | I e II largos e lentos (II mais rápido); I+II um tremor rápido e sutil, como num Juno | |
+| 3 | Delay: tempo 375 ms, repetições 50 % | Ecos regulares que somem aos poucos | |
+| 4 | Reverb: duração 1 s e depois 8 s | Cauda curta e depois longa; "Abafar" escurece a cauda | |
+| 5 | Distorção num baixo: drive de 0 a 100 % | De limpo a saturado; "Tom" escurece | |
+| 6 | Todos os efeitos ligados, 16 notas (pedal) | Anotar "Carga do motor" (⋮ → Configurações) e se há estouros | |
+| 7 | Knob do CK61 que manda CC 91 (reverb) num preset sem reverb | O reverb liga e o mix acompanha | |
+| 8 | Aba ARP: ligar, segurar um acorde | Arpejo no tempo; mudar modo, oitavas, divisão, tempo e duração enquanto toca | |
+| 9 | Hold: tocar um acorde, soltar | Continua; um acorde novo substitui o anterior | |
+| 10 | Ligar/desligar o arpejador com teclas apertadas | Nenhuma nota fica presa | |
+| 11 | Preset "Arpejo Clássico" (041) | Arpejo com delay | |
+| 12 | Botão "Teclas": tocar com vários dedos, deslizar entre teclas, trocar de oitava | Notas certas, sem notas presas; mais embaixo na tecla = mais forte | |
+| 13 | Ouvir os presets com efeitos novos (pads, cordas, piano elétrico, órgão, leads) | Anotar por preset: melhorou / ajustar (o quê) | |
+
+---
+
 # Teste no aparelho (plano 3: MIDI Learn)
 
 Com o CK61 ligado por USB. Depois do teste, rodar `tools\pull-log.ps1` (o log registra cada associação aprendida e cada ação).

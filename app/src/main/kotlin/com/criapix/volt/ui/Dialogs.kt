@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
@@ -87,7 +88,7 @@ fun SettingsDialog(state: SynthState, io: ScreenIo, onClose: () -> kotlin.Unit, 
     onDismissRequest = onClose,
     title = { Text("Configurações") },
     text = {
-      Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+      Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text("Áudio", color = VoltColors.dim, fontSize = 12.sp)
         Text(formatInfo(info), fontSize = 12.sp, fontFamily = FontFamily.Monospace)
         Text("Última mensagem MIDI: ${last.ifEmpty { "nenhuma" }}", fontSize = 12.sp)

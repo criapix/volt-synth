@@ -39,3 +39,16 @@ Todos acima de 10× o tempo real, então o Ladder não foi trocado pelo `fut_lpm
 ## Como ler o diagnóstico de áudio
 - "Baixa latência: NÃO" ou "Latência de saída" acima de ~30 ms só com o CK61 como saída de som: o atraso está no caminho de áudio USB do Android; o app não consegue reduzi-lo pelo AAudio. Anotar os números e levar ao planejamento.
 - "Estouros" subindo sem parar ou "Carga do motor" acima de 50 %: o motor não está acompanhando; anotar o modelo de filtro e o número de vozes.
+
+## Resultados no aparelho (S25 Ultra + Yamaha CK61) — 2026-11-12
+Fonte: log do app coletado por USB (`tools\pull-log.ps1`), sessão das 10:12 às 10:13, 89 amostras de áudio por segundo. O que o log não mostra (som, sensação de atraso) é o que você relatou: "funcionou perfeitamente".
+- Aparelho: samsung SM-S938B, Android 17 (API 37). AAudio, 48000 Hz, **baixa latência: sim, exclusivo: sim**, bloco 96 quadros, buffer 192 (o mínimo, duas rajadas); o LatencyTuner não precisou aumentar.
+- **Latência de saída estimada pelo Oboe: 7,1 a 10,4 ms (média 8,4 ms).** É a estimativa do caminho de saída do stream, não o atraso tecla → som medido de ponta a ponta.
+- **Estouros: 0** na sessão toda.
+- **Carga do motor:** média 6,9 %, **pico 27 %** com 8 vozes (10:12:35); máximo de 10 vozes simultâneas, a 16 %. Dentro da meta de 30 %, mas o teste não chegou a 16 vozes: o caso pior (16 vozes, osc 2 e 3 ligados, cada `filter.model`) continua sem medição.
+- **Reinício do stream ao plugar o CK61:** `stream closed: ErrorDisconnected` às 10:12:09, logo depois de "MIDI conectado", e o app reabriu sozinho (`restarts=1`). Comportamento esperado quando a rota de áudio muda; nenhum som perdido foi relatado. Por isso o log não diz se a saída estava no alto-falante ou no CK61; anotar isso nos próximos testes.
+- Desplugar o CK61 às 10:13:29 foi registrado ("MIDI desconectado") e chamou `allNotesOff`.
+- Notas recebidas: 465 note-on e 466 note-off, notas 47 a 88, velocidade 15 a 104.
+- **O que o CK61 envia** (todos no canal 1; contagem de mensagens, sem saber qual controle físico é qual): CC 74 (153), CC 72 (132), CC 73 (130), CC 71 (109), CC 91 (90), CC 14 (65), CC 13 (39), CC 93 (29), CC 15 (29), CC 92 (25), CC 9 (5) e CC 64 sustain (12). Só CC 74 e CC 71 têm função no mapa de fábrica (cutoff e ressonância); os demais (72, 73, 91, 92, 93, 13, 14, 15, 9) são candidatos para o MIDI Learn / mapa do plano 3. O pedal de sustain envia valores intermediários (12, 72, 127, 74): o limite em 64 do app funciona, mas ele não é meio-pedal.
+- Sistema: o CK61 manda Active Sensing (0xFE) e uma mensagem SysEx (0xF0 … 0xF7); o app ignora, sem problema.
+- **Não aparece no log:** nenhum pitch bend e nenhum CC 1 (roda de modulação). Ou não foram usados no teste, ou o CK61 não os enviou. Vale repetir só isso.

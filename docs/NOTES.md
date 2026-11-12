@@ -53,3 +53,8 @@ Fonte: log do app coletado por USB (`tools\pull-log.ps1`), sessão das 10:12 às
 - Sistema: o CK61 manda Active Sensing (0xFE) e uma mensagem SysEx (0xF0 … 0xF7); o app ignora, sem problema.
 - **Não aparece no log:** nenhum pitch bend e nenhum CC 1 (roda de modulação). Ou não foram usados no teste, ou o CK61 não os enviou. Vale repetir só isso.
 - **Decisão do usuário (2026-11-12):** os testes de pitch bend / roda de modulação e de carga com 16 vozes não serão feitos; foram dados como aprovados por decisão do usuário. **Não há medição por trás disso:** o log não tem nenhum evento de bend ou CC 1, e a carga máxima observada foi 27 % com 8 vozes (10 vozes no pico).
+
+## Plano 2: desvios do plano escrito (registrados durante a execução)
+- **`enum class Unit` em `ui/ParamUi.kt`** escondia `kotlin.Unit` no pacote `ui` e quebrava todo `@Composable` (erro de tipo em `VoltTheme`). Renomeado para `ValueUnit`. Nenhum teste muda.
+- **`EnvelopeGeometryTest.nearestHandleIsFound`**: o plano consultava a alça de ataque em nível 0 e a de release em nível 1, o contrário de onde o desenho põe as alças (ataque em nível 1, release em nível 0). Com os níveis do plano, o ponto (attackX, 0) fica mais perto da alça de release. Corrigi o teste (ataque nível 1, release nível 0); o código está certo.
+- **`FilterCurveTest.pointsAreLogSpaced`**: o plano esperava 0 dB no primeiro ponto, mas ele cai em 20 Hz, exatamente o corte do passa-altas (20 Hz), onde um polo único dá −3 dB. Corrigi para −3 dB ±0,5 e acrescentei uma checagem do último ponto (< −30 dB); o código está certo.

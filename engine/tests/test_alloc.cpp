@@ -21,6 +21,11 @@ TEST(alloc_render_never_touches_the_heap) {
   static float buf[2 * 512];
   Rng rng;
   e.render(buf, 512);  // warm-up
+  // Second warm-up with every effect on, so lazy first-block work in the sst effects happens before counting.
+  for (int id : {kFxDistOn, kFxPhaserOn, kFxFlangerOn, kFxChorusOn, kFxDelayOn, kFxReverbOn})
+    e.post({Event::SetParam, id, 1.0f});
+  e.render(buf, 512);
+  e.render(buf, 512);
   long before = g_allocs.load();
   for (int round = 0; round < 400; ++round) {
     // post() is a non-audio call but must not allocate either.
@@ -30,6 +35,10 @@ TEST(alloc_render_never_touches_the_heap) {
       static float patch[kNumParams];
       for (int i = 0; i < kNumParams; ++i) patch[i] = rng.unipolar();
       e.postPatch(patch, kNumParams);
+    }
+    if (round % 50 == 25) {
+      static const int kOn[] = {kFxDistOn, kFxPhaserOn, kFxFlangerOn, kFxChorusOn, kFxDelayOn, kFxReverbOn, kArpOn};
+      e.post({Event::SetParam, kOn[rng.next() % 7], 1.0f});
     }
     e.render(buf, 1 + (int)(rng.next() % 512));
   }

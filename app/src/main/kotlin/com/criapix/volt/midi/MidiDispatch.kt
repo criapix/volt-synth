@@ -46,6 +46,7 @@ class MidiDispatch(
     val FACTORY_PARAMS = linkedMapOf(
       7 to "master.volume", 71 to "filter.reso", 72 to "aenv.release",
       73 to "aenv.attack", 74 to "filter.cutoff", 75 to "aenv.decay",
+      91 to "fx.reverb.mix", 93 to "fx.chorus.mix", 95 to "fx.phaser.mix",
     )
     private const val DEBOUNCE_NS = 150_000_000L
   }
@@ -174,6 +175,10 @@ class MidiDispatch(
     val tol = maxOf(1.5f / 127f, if (steps > 0f) 0.5f / steps else 0f)
     if (takeover.accept(p.id, q, tol)) {
       synth.setParam(p.id, q)
+      // A controller raising an effect's mix also switches that effect on (decision 4 of plan 4).
+      if (n > 0f && p.name.startsWith("fx.") && p.name.endsWith(".mix")) {
+        params[p.name.removeSuffix(".mix") + ".on"]?.let { on -> if (current(on.id) < 0.5f) synth.setParam(on.id, 1f) }
+      }
       if (_pickup.value?.param == p.id) _pickup.value = null
     } else {
       _pickup.value = Pickup(p.id, current(p.id))

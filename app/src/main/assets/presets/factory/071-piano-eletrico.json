@@ -4,4 +4,5 @@
   "filter.model": 1, "filter.cutoff": 2500, "filter.reso": 0.1, "filter.env": 0.35, "filter.keytrack": 0.8, "filter.vel": 0.5,
   "fenv.attack": 0.001, "fenv.decay": 0.5, "fenv.sustain": 0.2, "fenv.release": 0.3,
   "aenv.attack": 0.002, "aenv.decay": 1.6, "aenv.sustain": 0.25, "aenv.release": 0.35, "aenv.vel": 0.7,
-  "lfo1.wave": 0, "lfo1.rate": 4.5, "lfo1.amp": 0.3 } }
+  "lfo1.wave": 0, "lfo1.rate": 4.5, "lfo1.amp": 0.3,
+  "fx.chorus.on": 1, "fx.chorus.mode": 0, "fx.chorus.mix": 0.35, "fx.reverb.on": 1, "fx.reverb.decay": 1.8, "fx.reverb.mix": 0.2 } }

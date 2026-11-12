@@ -1,7 +1,7 @@
 package com.criapix.volt.ui
 
-/** The tabs. ARP and FX arrive with plan 4. */
-enum class Tab(val title: String) { OSC("OSC"), FILTER("FILTRO"), ENV("ENV"), MOD("MOD") }
+/** The tabs. */
+enum class Tab(val title: String) { OSC("OSC"), FILTER("FILTRO"), ENV("ENV"), MOD("MOD"), ARP("ARP"), FX("FX") }
 
 /** A drawing shown at the top of a group. */
 enum class Drawing { NONE, FILTER_CURVE, FENV, AENV }
@@ -38,6 +38,17 @@ object Panel {
       lfo(2),
       Group("POLY-MOD", listOf("pmod.fenv.pitch", "pmod.fenv.pw", "pmod.osc2.pitch", "pmod.osc2.pw"), weight = 0.8f),
       Group("VOZ", listOf("voice.mode", "voice.unison", "voice.detune", "voice.spread", "voice.glide", "voice.glide_legato", "voice.drift", "voice.bend")),
+    ),
+    Tab.ARP to listOf(
+      Group("ARPEJADOR", listOf("arp.on", "arp.hold", "arp.mode", "arp.division", "arp.octaves", "arp.bpm", "arp.gate"), weight = 2f),
+    ),
+    Tab.FX to listOf(
+      Group("DISTORÇÃO", listOf("fx.dist.on", "fx.dist.drive", "fx.dist.tone", "fx.dist.mix")),
+      Group("PHASER", listOf("fx.phaser.on", "fx.phaser.rate", "fx.phaser.depth", "fx.phaser.feedback", "fx.phaser.mix")),
+      Group("FLANGER", listOf("fx.flanger.on", "fx.flanger.rate", "fx.flanger.depth", "fx.flanger.feedback", "fx.flanger.mix")),
+      Group("CHORUS", listOf("fx.chorus.on", "fx.chorus.mode", "fx.chorus.mix")),
+      Group("DELAY", listOf("fx.delay.on", "fx.delay.time", "fx.delay.feedback", "fx.delay.mix")),
+      Group("REVERB", listOf("fx.reverb.on", "fx.reverb.decay", "fx.reverb.damp", "fx.reverb.mix")),
     ),
   )
 

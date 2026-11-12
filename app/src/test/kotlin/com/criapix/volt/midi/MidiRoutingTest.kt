@@ -57,6 +57,17 @@ class MidiRoutingTest {
     assertEquals(0.001f, state.real(id("aenv.decay")), 0.0001f)
   }
 
+  @Test fun generalMidiEffectControllersSetTheMixAndSwitchTheEffectOn() {
+    d.softTakeover = false
+    send(0xB0, 91, 100)
+    assertEquals(1f, state.real(id("fx.reverb.on")), 0f)
+    assertEquals(100 / 127f, state.norm(id("fx.reverb.mix")), 0.01f)
+    send(0xB0, 93, 0)                                   // zero does not switch an effect on
+    assertEquals(0f, state.real(id("fx.chorus.on")), 0f)
+    send(0xB0, 95, 64)
+    assertEquals(1f, state.real(id("fx.phaser.on")), 0f)
+  }
+
   @Test fun softTakeoverWaitsForThePickupAndSaysWhere() {
     val cutoff = id("filter.cutoff")                         // default 20 kHz = 1.0
     send(0xB0, 74, 0)

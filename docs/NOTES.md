@@ -1,9 +1,9 @@
 # Notas de execução
 
-## Estado (plano 3: MIDI Learn)
-- O que existe: tudo do plano 2 mais MIDI Learn (botão MIDI na barra, associar qualquer parâmetro, preset anterior/próximo e pânico a um controle do teclado), captura suave, Program Change, tela do mapa MIDI e canal MIDI (Omni ou 1–16).
-- O que não existe ainda: efeitos, arpejador, teclado na tela, banco de fábrica completo e ajustado (~64).
-- Verificado por: 56 testes do motor no PC (`.\tools\test-engine.ps1`), 103 testes Kotlin (`gradlew :app:testDebugUnitTest`) e capturas de tela no emulador. **Nada foi tocado nem ouvido no celular**; associar, captura suave e Program Change são para você testar com o CK61 (`docs/DEVICE-TEST.md`, plano 3).
+## Estado (plano 4: efeitos, arpejador, teclado)
+- O que existe: tudo do plano 3 mais seis efeitos (distorção, phaser, flanger, chorus, delay, reverb), arpejador (abas ARP e FX) e teclado deslizante na tela (botão "Teclas"), 43 presets de fábrica.
+- O que não existe ainda: o banco de fábrica final e ajustado (~64, plano 5).
+- Verificado por: 81 testes do motor no PC (`.	ools	est-engine.ps1`), 108 testes Kotlin (`gradlew :app:testDebugUnitTest`), `:app:assembleDebug` e capturas no emulador. **Nada foi ouvido nem tocado no celular**: efeitos, arpejador e teclado são medidos por testes (tempo do eco, cauda do reverb, harmônicos, passos do arpejo); como soam é para você julgar (`docs/DEVICE-TEST.md`, plano 4).
 
 ## Diferenças em relação ao design
 - Oscilador 3 como fonte de modulação: não feito (os dois LFOs e o poly-mod cobrem).
@@ -34,6 +34,12 @@ model 1: 16 voices, 33.7x real time, 3.0 % of one core
 model 2: 16 voices, 34.2x real time, 2.9 % of one core
 model 3: 16 voices, 28.5x real time, 3.5 % of one core
 ```
+Plano 4, mesma máquina, com os seis efeitos ligados (mix 0,5):
+```
+model 0 + all effects: 16 voices, 10.8x real time, 9.2 % of one core
+```
+Os efeitos custam ~1,6 ponto percentual de um núcleo no PC (7,6 % → 9,2 %); no celular isso precisa ser medido (DEVICE-TEST, plano 4, passo 6).
+
 Todos acima de 10× o tempo real, então o Ladder não foi trocado pelo `fut_lpmoog`. O Ladder é o mais pesado (cerca de 2,5× o custo dos Roland).
 
 ## Como ler o diagnóstico de áudio
@@ -93,3 +99,24 @@ Fonte: log do app coletado por USB, sessão que começa às 11:10:54 (app 0.2.0)
 - Verificado por: 103 testes Kotlin (MidiMap, SoftTakeover, MidiLearn, roteamento com SynthState real, Program Change, rótulos) e capturas no emulador (`build/`, não versionadas): botão MIDI → "APRENDER" com banner e contorno azul em knobs, seletores, toggles e ◀ ▶ Pânico; Cutoff armado (contorno laranja grosso, banner "Cutoff · FILTRO: mexa num controle do teclado…") com o valor intacto em 20,0 kHz; ▶ armado sem trocar o preset; tela do mapa (Omni, captura suave ligada, mapa de fábrica, lista vazia); canal 2 continua escolhido ao reabrir; "Concluir" tira banner e contornos e o knob volta a girar (Cutoff 20 kHz → 3,7 kHz, "• editado"); logcat sem crash. **Associar de fato, a captura suave e o Program Change não foram exercitados num aparelho: o emulador não tem entrada MIDI.**
 - Visto nas capturas, não corrigido: em Learn mode o contorno do seletor ("Onda", "Modelo") engloba o rótulo e encosta nele; a lista do mapa de fábrica na tela do mapa rola (a coluna esquerda é maior que a tela).
 - Execução: um `adb` sem `-s` falha com dois dispositivos; durante a verificação o celular do usuário apareceu no `adb devices`. Nenhum comando foi enviado a ele; os do emulador usaram `-s emulator-5554`.
+
+## Efeitos (sst-effects)
+- Submódulos novos: sst-effects `987b39d`, **fmt `407c905` (12.1.0)**. O `ParamMetadata.h` do sst-basic-blocks inclui `<fmt/core.h>`, então o fmt é dependência de fato (o plano não previa). fmt entra só como cabeçalhos (`FMT_HEADER_ONLY` em `volt_engine`); no MSVC foi preciso `/utf-8`. O fmt 11.0.2 não compila com o clang do NDK 30 (`consteval`); 12.1.0 compila.
+- Spike A (MSVC x64): `fx_dump` compilou e imprimiu as quatro tabelas. Spike B (NDK 30, arm64-v8a e x86_64): `libvolt_engine.a` compila com `fx_sst.cpp`. **Plano B (efeitos próprios) NÃO foi necessário.**
+- Tempo e taxa são guardados em log2 (segundos ou Hz). O decay do Reverb2 é log2 com RT60 = 4·2^v s. O feedback do Delay passa por `amp_to_linear` (x³): o wrapper manda `cbrt(fb)` para o feedback do Volt ser um ganho linear.
+- Mapa de parâmetros (índice: nome, faixa, padrão), do `build/fx_dump.txt`:
+  - Reverb2: 0 Pre-Delay (-8..1, -4), 1 Room Size (-1..1, 0), 2 Decay Time (-4..6, 0,75), 3 Diffusion, 4 Buildup, 5 Modulation, 6 LF Damping, 7 HF Damping (0..1), 8 Width, 9 Mix.
+  - Delay: 0 Left (-8..5), 1 Right (-8..5), 2 Feedback, 3 Crossfeed, 4 Low Cut, 5 High Cut, 6 Rate, 7 Depth, 8 Channel, 10 Mix, 11 Width.
+  - Flanger: 0 Mode, 1 Waveform, 2 Rate (-7..9), 3 Depth, 4 Count (1..4), 5 Base Pitch (0..127), 6 Spacing, 7 Feedback, 8 HF Damping, 9 Width, 10 Mix (-1..1).
+  - Phaser: 0 Center, 1 Feedback (-1..1), 2 Sharpness, 3 Rate (-7..9), 4 Depth, 5 Stereo, 6 Mix, 7 Width, 8 Count (1..16, 4), 9 Spread, 10 Waveform, 11 Tone.
+- Ajustes fixos: Phaser Count = 4 (nunca reescrito: subir alocaria no áudio), centro 0; Flanger modo clássico, 1 voz, base 60, damping 0,1; Delay tempo inicial 0,375 s, cortes de graves/agudos nos extremos, sem modulação; Reverb pré-atraso ≈ 22 ms.
+- Desvios do plano (motivos): (1) o mix do Flanger do sst não é seco em 0 (ganho e soft clip fixos); o Flanger roda com mix interno 1 e o `SstEffects::flanger` faz o dry/wet do Volt, assim mix 0 é exatamente seco. (2) O Delay faz crossfade quando o tempo muda (modo "Clean"); os testes de eco esperam 1 s de silêncio antes do impulso, e o tempo inicial do Delay é o padrão do Volt para um preset padrão não sofrer isso. (3) `fx_switching_an_effect_off…`: a distorção forte tem bordas íngremes próprias, então o teste compara o maior degrau depois do desligamento com o maior antes (< 1,5×), não com um limite fixo de 0,15.
+
+## Plano 4 (efeitos, arpejador, teclado) — 2026-11-12
+- Origem dos efeitos: phaser, flanger, delay e reverb vêm do sst-effects (Phaser, Flanger, Delay, Reverb2); **chorus (estilo Juno) e distorção foram escritos aqui**, porque o sst-effects não tem distorção e seu `Chorus.h` é um arquivo vazio. Detalhes de índices, unidades e ajustes fixos na seção "Efeitos (sst-effects)" acima. Plano B não foi necessário.
+- Desvios do plano, com motivo: fmt entra como dependência (vendorizado, 12.1.0, `/utf-8` no MSVC); flanger com dry/wet próprio (mix 0 = seco exato); feedback do delay com `cbrt`; delay inicializado no tempo padrão; três testes ajustados (eco do delay com 1 s de pré-roll; clique da distorção comparado com o degrau anterior; `FactoryPresetsTest` não exige faixa de categoria para números ≥ 90, porque os três presets novos ficam no fim da lista para não mudar os Program Change dos 40 existentes).
+- CPU no PC (`volt_bench`, 16 vozes, modelo 0): 7,6 % de um núcleo sem efeitos, **9,2 % com os seis efeitos ligados** (mix 0,5). Medida no celular fica para o passo 6 do DEVICE-TEST.
+- Limites conhecidos: distorção sem oversampling (serrilhado com drive alto em notas agudas); um efeito religado pode repetir um resto da cauda antiga sob o fade-in de 21 ms; passos do arpejo com resolução de 16 amostras (0,33 ms); Bank Select continua ignorado; o phaser tem 4 estágios fixos.
+- Controladores de fábrica: CC 91 → mix do reverb, CC 93 → mix do chorus, CC 95 → mix do phaser. Levar um deles acima de zero também liga o efeito (vale para mixes aprendidos). CC 92 fica livre.
+- Presets: 090 Arpejo Clássico, 091 Cordas com Phaser, 092 Baixo Distorcido (posições 41–43 na biblioteca; preset de usuário desce 3 posições). Efeitos foram acrescentados a 030–034, 050, 051, 071, 073, 020 e 024. Nenhum foi ouvido.
+- Capturas no emulador (medium_phone, 1440×3120 a 560 dpi, paisagem; `build/fx.png`, `arp.png`, `keys.png`, `hold.png`, não versionadas): as abas OSC FILTRO ENV MOD ARP FX aparecem; **na aba FX os seis grupos cabem sem rolagem**; o teclado sobe cobrindo a parte de baixo, mostra C3 – C5, Oitava −/+, e uma tecla tocada acende e a barra mostra "1 vozes"; logcat sem crash. Com o teclado aberto, a aba ARP (grupo único com seletor de modo e de divisão) fica parcialmente coberta e o grupo rola; feche o teclado para ver os knobs. Arpejo contínuo, Hold e carregar o preset 041 não foram exercitados no emulador (só os testes do motor cobrem).

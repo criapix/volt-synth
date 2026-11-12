@@ -13,8 +13,8 @@ android {
     applicationId = "com.criapix.volt"
     minSdk = 26
     targetSdk = 36
-    versionCode = 3
-    versionName = "0.3.0"
+    versionCode = 4
+    versionName = "0.4.0"
     ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
     externalNativeBuild { cmake { arguments += "-DANDROID_STL=c++_shared" } }
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

@@ -1,10 +1,14 @@
 package com.criapix.volt.ui
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -85,6 +89,7 @@ fun VoltScreen(model: AppModel, io: ScreenIo) {
   var browser by remember { mutableStateOf(false) }
   var saving by remember { mutableStateOf(false) }
   var settings by remember { mutableStateOf(false) }
+  var keyboard by rememberSaveable { mutableStateOf(false) }
 
   // A MIDI controller moved a parameter on another tab: flash that tab.
   LaunchedEffect(external.seq) {
@@ -128,6 +133,7 @@ fun VoltScreen(model: AppModel, io: ScreenIo) {
           onPrev = { model.step(-1) }, onNext = { model.step(1) }, onBrowse = { browser = true },
           onSave = { saving = true }, onPanic = { state.allNotesOff() }, onMenu = { settings = true },
           learnActive = learnActive, onMidi = { io.learn.setActive(!learnActive) },
+          keyboardOpen = keyboard, onKeyboard = { keyboard = !keyboard },
         )
         Row(Modifier.fillMaxWidth().height(40.dp).padding(horizontal = 8.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
           Tab.entries.forEach { t ->
@@ -147,10 +153,13 @@ fun VoltScreen(model: AppModel, io: ScreenIo) {
           armed = armed, armedHasBindings = armed != null && bindings.any { it.second.target == armed }, confirmation = confirmation,
           onForget = { armed?.let { io.learn.clear(it) } }, onMap = { midiMap = true }, onDone = { io.learn.setActive(false) },
         )
-        Row(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-          Panel.groups.getValue(tab).forEach { g ->
-            GroupPanel(g, state, onStep = io.haptics::tick, modifier = Modifier.weight(g.weight).fillMaxHeight())
+        Box(Modifier.weight(1f).fillMaxWidth()) {
+          Row(Modifier.fillMaxSize().padding(horizontal = 8.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Panel.groups.getValue(tab).forEach { g ->
+              GroupPanel(g, state, onStep = io.haptics::tick, modifier = Modifier.weight(g.weight).fillMaxHeight())
+            }
           }
+          KeyboardSlot(keyboard, onNoteOn = { n, v -> state.noteOn(n, v) }, onNoteOff = { n -> state.noteOff(n) }, onClose = { keyboard = false })
         }
       }
       }
@@ -169,5 +178,17 @@ fun VoltScreen(model: AppModel, io: ScreenIo) {
       if (settings) SettingsDialog(state, io, onClose = { settings = false }, onMidiMap = { midiMap = true })
       if (midiMap) MidiMapDialog(state, io, onClose = { midiMap = false })
     }
+  }
+}
+
+/** Its own function so that only the Box's scope is in sight (AnimatedVisibility is ambiguous inside a Column). */
+@Composable
+private fun BoxScope.KeyboardSlot(visible: Boolean, onNoteOn: (Int, Float) -> kotlin.Unit, onNoteOff: (Int) -> kotlin.Unit, onClose: () -> kotlin.Unit) {
+  AnimatedVisibility(
+    visible = visible,
+    enter = slideInVertically { it }, exit = slideOutVertically { it },
+    modifier = Modifier.align(Alignment.BottomCenter),
+  ) {
+    KeyboardDrawer(onNoteOn, onNoteOff, onClose, modifier = Modifier.fillMaxWidth().fillMaxHeight(0.62f))
   }
 }

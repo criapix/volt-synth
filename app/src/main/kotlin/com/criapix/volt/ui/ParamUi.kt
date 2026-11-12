@@ -5,7 +5,7 @@ import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
-enum class ValueUnit { HZ, SEC, GLIDE, PCT, BIPCT, SEMI, CENT, OCT, BEND, COUNT }
+enum class ValueUnit { HZ, SEC, GLIDE, PCT, BIPCT, SEMI, CENT, OCT, BEND, COUNT, BPM }
 
 sealed interface Widget { val label: String }
 data class KnobUi(override val label: String, val unit: ValueUnit, val bipolar: Boolean = false) : Widget
@@ -74,6 +74,37 @@ object ParamUi {
     put("voice.glide_legato", ToggleUi("Glide só em legato"))
     put("voice.drift", KnobUi("Drift", ValueUnit.PCT))
     put("voice.bend", KnobUi("Bend", ValueUnit.BEND))
+
+    put("fx.dist.on", ToggleUi("Ligado"))
+    put("fx.dist.drive", KnobUi("Drive", ValueUnit.PCT))
+    put("fx.dist.tone", KnobUi("Tom", ValueUnit.HZ))
+    put("fx.dist.mix", KnobUi("Mix", ValueUnit.PCT))
+    for (fx in listOf("phaser", "flanger")) {
+      put("fx.$fx.on", ToggleUi("Ligado"))
+      put("fx.$fx.rate", KnobUi("Veloc.", ValueUnit.HZ))
+      put("fx.$fx.depth", KnobUi("Profund.", ValueUnit.PCT))
+      put("fx.$fx.feedback", KnobUi("Realim.", ValueUnit.PCT))
+      put("fx.$fx.mix", KnobUi("Mix", ValueUnit.PCT))
+    }
+    put("fx.chorus.on", ToggleUi("Ligado"))
+    put("fx.chorus.mode", ChoiceUi("Modo", listOf("I", "II", "I+II")))
+    put("fx.chorus.mix", KnobUi("Mix", ValueUnit.PCT))
+    put("fx.delay.on", ToggleUi("Ligado"))
+    put("fx.delay.time", KnobUi("Tempo", ValueUnit.SEC))
+    put("fx.delay.feedback", KnobUi("Repetições", ValueUnit.PCT))
+    put("fx.delay.mix", KnobUi("Mix", ValueUnit.PCT))
+    put("fx.reverb.on", ToggleUi("Ligado"))
+    put("fx.reverb.decay", KnobUi("Duração", ValueUnit.SEC))
+    put("fx.reverb.damp", KnobUi("Abafar", ValueUnit.PCT))
+    put("fx.reverb.mix", KnobUi("Mix", ValueUnit.PCT))
+
+    put("arp.on", ToggleUi("Ligado"))
+    put("arp.hold", ToggleUi("Hold"))
+    put("arp.mode", ChoiceUi("Modo", listOf("Sobe", "Desce", "Sobe-desce", "Aleatório", "Como tocado")))
+    put("arp.division", ChoiceUi("Divisão", listOf("1/4", "1/8", "1/16", "1/4T", "1/8T", "1/16T")))
+    put("arp.octaves", KnobUi("Oitavas", ValueUnit.COUNT))
+    put("arp.bpm", KnobUi("Tempo", ValueUnit.BPM))
+    put("arp.gate", KnobUi("Duração", ValueUnit.PCT))
   }
 
   fun of(name: String): Widget = table[name] ?: error("no on-screen description for parameter $name")
@@ -97,6 +128,7 @@ object ParamUi {
       ValueUnit.OCT -> signed(real.roundToInt(), " oct")
       ValueUnit.BEND -> "±${real.roundToInt()} st"
       ValueUnit.COUNT -> real.roundToInt().toString()
+      ValueUnit.BPM -> "${real.roundToInt()} BPM"
     }
   }
 

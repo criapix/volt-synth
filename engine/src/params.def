@@ -79,3 +79,39 @@ P(kVoiceDrift,       "voice.drift",        0, 1, 0.1f, Lin)
 P(kVoiceBend,        "voice.bend",         0, 24, 2, Step)  // pitch-bend range, semitones
 
 P(kMasterVolume, "master.volume", 0, 1, 0.7f, Lin)
+
+// Effects, in signal order. Every effect: on/off (Step) plus its controls.
+P(kFxDistOn,       "fx.dist.on",        0, 1, 0, Step)
+P(kFxDistDrive,    "fx.dist.drive",     0, 1, 0.4f, Lin)
+P(kFxDistTone,     "fx.dist.tone",      500, 12000, 6000, Exp)  // Hz, low-pass after the shaper
+P(kFxDistMix,      "fx.dist.mix",       0, 1, 1, Lin)
+P(kFxPhaserOn,     "fx.phaser.on",      0, 1, 0, Step)
+P(kFxPhaserRate,   "fx.phaser.rate",    0.05f, 8, 0.4f, Exp)    // Hz
+P(kFxPhaserDepth,  "fx.phaser.depth",   0, 1, 0.7f, Lin)
+P(kFxPhaserFb,     "fx.phaser.feedback",0, 1, 0.4f, Lin)
+P(kFxPhaserMix,    "fx.phaser.mix",     0, 1, 0.5f, Lin)
+P(kFxFlangerOn,    "fx.flanger.on",     0, 1, 0, Step)
+P(kFxFlangerRate,  "fx.flanger.rate",   0.05f, 8, 0.25f, Exp)   // Hz
+P(kFxFlangerDepth, "fx.flanger.depth",  0, 1, 0.6f, Lin)
+P(kFxFlangerFb,    "fx.flanger.feedback",0, 1, 0.5f, Lin)
+P(kFxFlangerMix,   "fx.flanger.mix",    0, 1, 0.5f, Lin)
+P(kFxChorusOn,     "fx.chorus.on",      0, 1, 0, Step)
+P(kFxChorusMode,   "fx.chorus.mode",    0, 2, 0, Step)          // 0 I, 1 II, 2 I+II
+P(kFxChorusMix,    "fx.chorus.mix",     0, 1, 0.5f, Lin)
+P(kFxDelayOn,      "fx.delay.on",       0, 1, 0, Step)
+P(kFxDelayTime,    "fx.delay.time",     0.02f, 2, 0.375f, Exp)  // seconds
+P(kFxDelayFb,      "fx.delay.feedback", 0, 0.95f, 0.35f, Lin)
+P(kFxDelayMix,     "fx.delay.mix",      0, 1, 0.25f, Lin)
+P(kFxReverbOn,     "fx.reverb.on",      0, 1, 0, Step)
+P(kFxReverbDecay,  "fx.reverb.decay",   0.3f, 12, 2.5f, Exp)    // seconds
+P(kFxReverbDamp,   "fx.reverb.damp",    0, 1, 0.5f, Lin)
+P(kFxReverbMix,    "fx.reverb.mix",     0, 1, 0.25f, Lin)
+
+// Arpeggiator
+P(kArpOn,       "arp.on",       0, 1, 0, Step)
+P(kArpMode,     "arp.mode",     0, 4, 0, Step)       // 0 up, 1 down, 2 up-down, 3 random, 4 as played
+P(kArpOctaves,  "arp.octaves",  1, 4, 1, Step)
+P(kArpDivision, "arp.division", 0, 5, 1, Step)       // 0 1/4, 1 1/8, 2 1/16, 3 1/4T, 4 1/8T, 5 1/16T
+P(kArpBpm,      "arp.bpm",      40, 240, 120, Step)
+P(kArpGate,     "arp.gate",     0.05f, 1, 0.5f, Lin)
+P(kArpHold,     "arp.hold",     0, 1, 0, Step)

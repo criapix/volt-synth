@@ -6,4 +6,5 @@
   "hpf.cutoff": 250,
   "filter.model": 2, "filter.cutoff": 4000, "filter.reso": 0.05, "filter.keytrack": 0.6,
   "aenv.attack": 0.5, "aenv.decay": 0.5, "aenv.sustain": 1.0, "aenv.release": 1.0,
-  "lfo1.wave": 0, "lfo1.rate": 5.8, "lfo1.delay": 1.0, "lfo1.pitch": 0.06 } }
+  "lfo1.wave": 0, "lfo1.rate": 5.8, "lfo1.delay": 1.0, "lfo1.pitch": 0.06,
+  "fx.chorus.on": 1, "fx.chorus.mode": 2, "fx.chorus.mix": 0.6, "fx.reverb.on": 1, "fx.reverb.decay": 3, "fx.reverb.mix": 0.3 } }

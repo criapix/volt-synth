@@ -6,4 +6,5 @@
   "filter.model": 0, "filter.cutoff": 700, "filter.reso": 0.15, "filter.env": 0.3, "filter.keytrack": 0.3,
   "fenv.attack": 2.0, "fenv.decay": 2.0, "fenv.sustain": 0.5, "fenv.release": 2.5,
   "aenv.attack": 1.5, "aenv.decay": 1.0, "aenv.sustain": 0.9, "aenv.release": 3.0,
-  "lfo2.wave": 1, "lfo2.rate": 0.15, "lfo2.cutoff": 0.08 } }
+  "lfo2.wave": 1, "lfo2.rate": 0.15, "lfo2.cutoff": 0.08,
+  "fx.reverb.on": 1, "fx.reverb.decay": 5, "fx.reverb.damp": 0.6, "fx.reverb.mix": 0.35 } }

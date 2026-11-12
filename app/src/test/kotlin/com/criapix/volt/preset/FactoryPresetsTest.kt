@@ -25,7 +25,8 @@ class FactoryPresetsTest {
       val n = f.name.substringBefore('-').toInt()
       assertTrue("${f.name}: duplicate number", numbers.add(n))
       val preset = PresetCodec.decode(f.readText())
-      if (preset.category.isNotEmpty()) assertTrue("${f.name}: $n is outside the ${preset.category} range", n in ranges.getValue(preset.category))
+      // 090 and up: presets added later go at the end of the list so Program Change numbers stay stable (plan 4, decision 7).
+      if (n < 90 && preset.category.isNotEmpty()) assertTrue("${f.name}: $n is outside the ${preset.category} range", n in ranges.getValue(preset.category))
     }
   }
 

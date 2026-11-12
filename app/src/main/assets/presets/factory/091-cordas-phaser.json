@@ -1,0 +1,8 @@
+{ "format": 1, "name": "Cordas com Phaser", "category": "Strings", "params": {
+  "osc1.wave": 0, "osc2.wave": 0, "osc2.octave": 1, "osc2.fine": 8, "osc2.level": 0.6,
+  "hpf.cutoff": 200,
+  "filter.model": 2, "filter.cutoff": 4500, "filter.reso": 0.05, "filter.keytrack": 0.5,
+  "aenv.attack": 0.25, "aenv.decay": 0.5, "aenv.sustain": 1.0, "aenv.release": 0.9,
+  "fx.phaser.on": 1, "fx.phaser.rate": 0.3, "fx.phaser.depth": 0.8, "fx.phaser.feedback": 0.5, "fx.phaser.mix": 0.6,
+  "fx.chorus.on": 1, "fx.chorus.mode": 2, "fx.chorus.mix": 0.4,
+  "fx.reverb.on": 1, "fx.reverb.decay": 3, "fx.reverb.mix": 0.25 } }

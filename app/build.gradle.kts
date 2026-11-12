@@ -58,6 +58,7 @@ dependencies {
   implementation(libs.androidx.compose.material3)
   debugImplementation(libs.androidx.compose.ui.tooling)
   implementation(libs.oboe)
+  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
 
   testImplementation(libs.junit)
 }

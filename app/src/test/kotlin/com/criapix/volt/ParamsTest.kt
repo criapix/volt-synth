@@ -33,4 +33,12 @@ class ParamsTest {
     assertEquals(1f, p["osc1.wave"]!!.toReal(0.4f), 0f)    // steps are whole numbers
     assertEquals(0.1f, p["filter.reso"]!!.toNorm(0.1f), 0.0001f)
   }
+
+  @Test fun theRealTableIsReadFromTheEngineSource() {
+    val p = TestParams.params
+    assertEquals(67, p.all.size)
+    assertEquals(Curve.EXP, p["filter.cutoff"]?.curve)
+    assertEquals(null, p["osc2.sync"])
+    assertEquals(Curve.STEP, p["osc1.sync"]?.curve)
+  }
 }

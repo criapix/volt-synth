@@ -1,10 +1,13 @@
 # Copies the Volt log from the phone (USB debugging on) into .\logs\ with a timestamp.
-# Usage:  .\tools\pull-log.ps1
+# Usage:  .\tools\pull-log.ps1                  (debug build, com.criapix.volt.debug)
+#         .\tools\pull-log.ps1 -Package <id>
+# A release build is not debuggable (no run-as): use the menu, "Salvar log...", in the app instead.
+param([string]$Package = "com.criapix.volt.debug")
 $root = Split-Path $PSScriptRoot -Parent
 $out = Join-Path $root "logs"
 New-Item -ItemType Directory -Force $out | Out-Null
 $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
-$app = "com.criapix.volt"
+$app = $Package
 foreach ($name in "volt-log.txt", "volt-log.old.txt") {
   $dest = Join-Path $out "$stamp-$name"
   # cmd handles the redirect so the bytes are not re-encoded by PowerShell

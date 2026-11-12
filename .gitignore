@@ -5,6 +5,7 @@ build/
 .kotlin/
 local.properties
 *.jks
+keystore.properties
 .idea/
 *.iml
 logs/

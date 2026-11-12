@@ -29,7 +29,7 @@ fun Selector(param: Param, ui: ChoiceUi, state: SynthState, onStep: () -> Unit) 
   val norm by state.value(param.id).collectAsStateWithLifecycle()
   val selected = (param.toReal(norm) - param.min).roundToInt()
   Column {
-    Text(ui.label, fontSize = 11.sp, color = VoltColors.dim)
+    Text(ui.label, fontSize = 11.sp, lineHeight = 14.sp, color = VoltColors.dim)
     Row(Modifier.fillMaxWidth().height(34.dp).border(1.dp, VoltColors.track, RoundedCornerShape(6.dp))) {
       ui.options.forEachIndexed { i, option ->
         val on = i == selected

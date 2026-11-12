@@ -110,7 +110,7 @@ fun Knob(param: Param, ui: KnobUi, state: SynthState, size: Dp, onStep: () -> Un
         }
       }
     }
-    Text(ui.label, fontSize = 12.sp, color = VoltColors.text, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
-    Text(text, fontSize = 10.sp, color = VoltColors.dim, maxLines = 1, textAlign = TextAlign.Center)
+    Text(ui.label, fontSize = 12.sp, lineHeight = 15.sp, color = VoltColors.text, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
+    Text(text, fontSize = 10.sp, lineHeight = 13.sp, color = VoltColors.dim, maxLines = 1, textAlign = TextAlign.Center)
   }
 }

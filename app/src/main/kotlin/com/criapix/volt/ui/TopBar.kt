@@ -47,7 +47,7 @@ fun TopBar(
         Text(name, fontSize = 17.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
         if (dirty) Text("  •  editado", fontSize = 12.sp, color = VoltColors.accent)
       }
-      Text(categoryLabel(category), fontSize = 11.sp, color = VoltColors.dim)
+      Text(categoryLabel(category), fontSize = 11.sp, lineHeight = 14.sp, color = VoltColors.dim)
     }
     TextButton(onClick = onNext) { Text("▶", fontSize = 20.sp) }
     Button(onClick = onSave) { Text("Salvar") }

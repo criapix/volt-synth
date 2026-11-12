@@ -31,7 +31,7 @@ fun GroupPanel(group: Group, state: SynthState, onStep: () -> kotlin.Unit, modif
 
   Column(modifier.background(VoltColors.panel, RoundedCornerShape(10.dp)).padding(8.dp)) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-      Text(group.title, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = VoltColors.dim, modifier = Modifier.weight(1f))
+      Text(group.title, fontSize = 11.sp, lineHeight = 14.sp, fontWeight = FontWeight.Bold, color = VoltColors.dim, modifier = Modifier.weight(1f))
       toggles.forEach { Toggle(it, ParamUi.of(it.name) as ToggleUi, state, onStep) }
     }
     choices.forEach { Selector(it, ParamUi.of(it.name) as ChoiceUi, state, onStep) }

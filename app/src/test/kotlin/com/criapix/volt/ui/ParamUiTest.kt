@@ -1,0 +1,47 @@
+package com.criapix.volt.ui
+
+import com.criapix.volt.Curve
+import com.criapix.volt.TestParams
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Test
+
+class ParamUiTest {
+  private val p = TestParams.params
+
+  @Test fun everyParameterHasAWidgetThatFitsItsRange() {
+    for (prm in p.all) {
+      when (val ui = ParamUi.of(prm.name)) {
+        is ChoiceUi -> {
+          assertEquals(prm.name, Curve.STEP, prm.curve)
+          assertEquals(prm.name, (prm.max - prm.min).toInt() + 1, ui.options.size)
+        }
+        is ToggleUi -> assertTrue(prm.name, prm.curve == Curve.STEP && prm.min == 0f && prm.max == 1f)
+        is KnobUi -> assertTrue(prm.name, ui.label.isNotBlank())
+      }
+    }
+  }
+
+  @Test fun valuesAreWrittenWithUnitsInPortuguese() {
+    fun f(name: String, v: Float) = ParamUi.format(p[name]!!, v)
+    assertEquals("440 Hz", f("filter.cutoff", 440f))
+    assertEquals("1,2 kHz", f("filter.cutoff", 1234.5f))
+    assertEquals("20,0 kHz", f("filter.cutoff", 20000f))
+    assertEquals("0,30 Hz", f("lfo1.rate", 0.3f))
+    assertEquals("250 ms", f("aenv.attack", 0.25f))
+    assertEquals("3,0 ms", f("aenv.attack", 0.003f))
+    assertEquals("1,50 s", f("aenv.release", 1.5f))
+    assertEquals("desl.", f("voice.glide", 0f))
+    assertEquals("50 %", f("filter.reso", 0.5f))
+    assertEquals("-30 %", f("filter.env", -0.3f))
+    assertEquals("+30 %", f("filter.env", 0.3f))
+    assertEquals("+7 st", f("osc1.semi", 7f))
+    assertEquals("-12 ct", f("osc1.fine", -12.4f))
+    assertEquals("-1 oct", f("osc1.octave", -1f))
+    assertEquals("0 oct", f("osc1.octave", 0f))
+    assertEquals("±2 st", f("voice.bend", 2f))
+    assertEquals("4", f("voice.unison", 4f))
+    assertEquals("Ladder", f("filter.model", 0f))
+    assertEquals("lig.", f("osc1.sync", 1f))
+  }
+}

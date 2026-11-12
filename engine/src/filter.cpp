@@ -13,6 +13,7 @@ struct QuadFilter::Impl {
   sf::FilterType type = sf::fut_none;
   sf::FilterSubType sub = sf::st_Standard;
   float sr = 48000.0f;
+  float gain = 1.0f;
   bool used[4] = {false, false, false, false};
   // Only comb filters read these, but upstream always points the state at real memory.
   float delay[4][sf::utilities::MAX_FB_COMB + sf::utilities::SincTable::FIRipol_N] = {};
@@ -46,6 +47,8 @@ void QuadFilter::setModel(int model) {
   impl_->type = kModels[model].t;
   impl_->sub = kModels[model].s;
   impl_->fn = sf::GetQFPtrFilterUnit(impl_->type, impl_->sub);
+  static const float kGain[kNumFilterModels] = {1.96f, 1.0f, 1.0f, 1.96f};  // measured passband gain 0.51 (NOTES.md)
+  impl_->gain = kGain[model];
   for (int l = 0; l < 4; ++l) resetLane(l);
 }
 
@@ -70,9 +73,10 @@ void QuadFilter::setLane(int lane, float cutoffHz, float resonance) {
 
 void QuadFilter::process(float (*io)[4]) {
   if (!impl_->fn) return;
+  const auto g = SIMD_MM(set1_ps)(impl_->gain);
   for (int s = 0; s < kBlock; ++s) {
     auto in = SIMD_MM(load_ps)(io[s]);
-    SIMD_MM(store_ps)(io[s], impl_->fn(&impl_->state, in));
+    SIMD_MM(store_ps)(io[s], SIMD_MM(mul_ps)(impl_->fn(&impl_->state, in), g));
   }
 }
 

@@ -40,7 +40,7 @@ TEST(engine_plays_a_note_at_concert_pitch) {
   r.on(69);
   r.play(0.1f);
   auto x = r.play(1.0f);
-  CHECK(probe::rms(x) > 0.02);  // the default Ladder filter has ~0.5 passband gain (see NOTES.md)
+  CHECK(probe::rms(x) > 0.05);
   CHECK_NEAR(probe::zeroCrossHz(x, 48000.0), 440.0, 1.5);
   CHECK(r.e.activeVoices() == 1);
 }

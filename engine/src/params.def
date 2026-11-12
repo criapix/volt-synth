@@ -1,0 +1,81 @@
+// Oscillators. The three blocks must keep the same order (kOscStride).
+P(kOsc1Wave,   "osc1.wave",   0, 3, 0, Step)      // 0 saw, 1 pulse, 2 triangle, 3 sine
+P(kOsc1Octave, "osc1.octave", -2, 2, 0, Step)
+P(kOsc1Semi,   "osc1.semi",   -12, 12, 0, Step)
+P(kOsc1Fine,   "osc1.fine",   -50, 50, 0, Lin)    // cents
+P(kOsc1Pw,     "osc1.pw",     0.05f, 0.95f, 0.5f, Lin)
+P(kOsc1Level,  "osc1.level",  0, 1, 1, Lin)
+P(kOsc2Wave,   "osc2.wave",   0, 3, 0, Step)
+P(kOsc2Octave, "osc2.octave", -2, 2, 0, Step)
+P(kOsc2Semi,   "osc2.semi",   -12, 12, 0, Step)
+P(kOsc2Fine,   "osc2.fine",   -50, 50, 0, Lin)
+P(kOsc2Pw,     "osc2.pw",     0.05f, 0.95f, 0.5f, Lin)
+P(kOsc2Level,  "osc2.level",  0, 1, 0, Lin)
+P(kOsc3Wave,   "osc3.wave",   0, 3, 0, Step)
+P(kOsc3Octave, "osc3.octave", -2, 2, 0, Step)
+P(kOsc3Semi,   "osc3.semi",   -12, 12, 0, Step)
+P(kOsc3Fine,   "osc3.fine",   -50, 50, 0, Lin)
+P(kOsc3Pw,     "osc3.pw",     0.05f, 0.95f, 0.5f, Lin)
+P(kOsc3Level,  "osc3.level",  0, 1, 0, Lin)
+P(kOsc2Sync,   "osc2.sync",   0, 1, 0, Step)      // osc 2 hard-synced to osc 1
+
+// Mixer
+P(kMixSub,     "mix.sub",     0, 1, 0, Lin)       // square, one octave below osc 1
+P(kMixNoise,   "mix.noise",   0, 1, 0, Lin)
+P(kMixDrive,   "mix.drive",   0, 1, 0, Lin)
+
+// Filters
+P(kHpfCutoff,      "hpf.cutoff",      20, 2000, 20, Exp)   // Hz, 1-pole high-pass
+P(kFilterModel,    "filter.model",    0, 3, 0, Step)       // 0 Ladder, 1 Roland 12, 2 Roland 24, 3 Prophet
+P(kFilterCutoff,   "filter.cutoff",   20, 20000, 20000, Exp)
+P(kFilterReso,     "filter.reso",     0, 1, 0.1f, Lin)
+P(kFilterEnv,      "filter.env",      -1, 1, 0, Lin)       // +-1 = +-7 octaves
+P(kFilterKeytrack, "filter.keytrack", 0, 1, 0.5f, Lin)
+P(kFilterVel,      "filter.vel",      0, 1, 0, Lin)
+
+// Envelopes (seconds)
+P(kFenvAttack,  "fenv.attack",  0.001f, 10, 0.005f, Exp)
+P(kFenvDecay,   "fenv.decay",   0.001f, 10, 0.3f, Exp)
+P(kFenvSustain, "fenv.sustain", 0, 1, 0.5f, Lin)
+P(kFenvRelease, "fenv.release", 0.001f, 10, 0.3f, Exp)
+P(kAenvAttack,  "aenv.attack",  0.001f, 10, 0.003f, Exp)
+P(kAenvDecay,   "aenv.decay",   0.001f, 10, 0.3f, Exp)
+P(kAenvSustain, "aenv.sustain", 0, 1, 0.8f, Lin)
+P(kAenvRelease, "aenv.release", 0.001f, 10, 0.2f, Exp)
+P(kAenvVel,     "aenv.vel",     0, 1, 0.5f, Lin)
+
+// LFOs. The two blocks must keep the same order (kLfoStride).
+P(kLfo1Wave,   "lfo1.wave",   0, 4, 0, Step)      // 0 sine, 1 triangle, 2 saw, 3 square, 4 sample&hold
+P(kLfo1Rate,   "lfo1.rate",   0.05f, 30, 5, Exp)  // Hz
+P(kLfo1Delay,  "lfo1.delay",  0, 5, 0, Lin)       // fade-in, seconds
+P(kLfo1Pitch,  "lfo1.pitch",  0, 1, 0, Lin)
+P(kLfo1Pw,     "lfo1.pw",     0, 1, 0, Lin)
+P(kLfo1Cutoff, "lfo1.cutoff", 0, 1, 0, Lin)
+P(kLfo1Amp,    "lfo1.amp",    0, 1, 0, Lin)
+P(kLfo2Wave,   "lfo2.wave",   0, 4, 0, Step)
+P(kLfo2Rate,   "lfo2.rate",   0.05f, 30, 1, Exp)
+P(kLfo2Delay,  "lfo2.delay",  0, 5, 0, Lin)
+P(kLfo2Pitch,  "lfo2.pitch",  0, 1, 0, Lin)
+P(kLfo2Pw,     "lfo2.pw",     0, 1, 0, Lin)
+P(kLfo2Cutoff, "lfo2.cutoff", 0, 1, 0, Lin)
+P(kLfo2Amp,    "lfo2.amp",    0, 1, 0, Lin)
+P(kLfo1Global, "lfo1.global", 0, 1, 0, Step)      // 1 = one LFO shared by all voices
+P(kLfo1Wheel,  "lfo1.wheel",  0, 1, 0, Lin)       // how much the mod wheel gates LFO 1's depth
+
+// Poly-mod
+P(kPmodFenvPitch, "pmod.fenv.pitch", -1, 1, 0, Lin)  // filter envelope -> osc 1 pitch (+-24 semitones)
+P(kPmodFenvPw,    "pmod.fenv.pw",    -1, 1, 0, Lin)
+P(kPmodOsc2Pitch, "pmod.osc2.pitch", 0, 1, 0, Lin)   // osc 2 -> osc 1 frequency (FM)
+P(kPmodOsc2Pw,    "pmod.osc2.pw",    0, 1, 0, Lin)
+
+// Voices
+P(kVoiceMode,        "voice.mode",         0, 3, 0, Step)   // 0 poly, 1 mono, 2 legato, 3 unison
+P(kVoiceUnison,      "voice.unison",       2, 8, 4, Step)
+P(kVoiceDetune,      "voice.detune",       0, 1, 0.2f, Lin)
+P(kVoiceSpread,      "voice.spread",       0, 1, 0.5f, Lin)
+P(kVoiceGlide,       "voice.glide",        0, 5, 0, Lin)    // seconds, 0 = off
+P(kVoiceGlideLegato, "voice.glide_legato", 0, 1, 0, Step)   // 1 = glide only between overlapping notes
+P(kVoiceDrift,       "voice.drift",        0, 1, 0.1f, Lin)
+P(kVoiceBend,        "voice.bend",         0, 24, 2, Step)  // pitch-bend range, semitones
+
+P(kMasterVolume, "master.volume", 0, 1, 0.7f, Lin)

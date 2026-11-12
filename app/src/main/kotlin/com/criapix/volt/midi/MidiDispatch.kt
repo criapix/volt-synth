@@ -13,6 +13,12 @@ interface Synth {
   fun modWheel(value: Float)
   fun sustain(on: Boolean)
   fun allNotesOff()
+
+  /** All parameters at once (normalized, indexed by id). Default: one setParam per value. */
+  fun loadPatch(values: FloatArray): Boolean {
+    values.forEachIndexed { id, v -> setParam(id, v) }
+    return true
+  }
 }
 
 /**

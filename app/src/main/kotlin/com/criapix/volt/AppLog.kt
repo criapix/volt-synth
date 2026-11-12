@@ -23,7 +23,8 @@ object AppLog {
   fun init(context: Context) {
     val f = File(context.filesDir, "volt-log.txt")
     file = f
-    log("=== sessão iniciada · ${Build.MANUFACTURER} ${Build.MODEL} · Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT}) · app 0.1.0")
+    val version = runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull() ?: "?"
+    log("=== sessão iniciada · ${Build.MANUFACTURER} ${Build.MODEL} · Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT}) · app $version")
     val previous = Thread.getDefaultUncaughtExceptionHandler()
     Thread.setDefaultUncaughtExceptionHandler { t, e ->
       log("CRASH na thread ${t.name}: ${e.stackTraceToString()}")

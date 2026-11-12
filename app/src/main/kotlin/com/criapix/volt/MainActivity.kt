@@ -4,18 +4,27 @@ import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.criapix.volt.midi.MidiDispatch
 import com.criapix.volt.midi.MidiInput
 import com.criapix.volt.midi.MidiParser
 import com.criapix.volt.midi.Synth
+import com.criapix.volt.preset.AppModel
+import com.criapix.volt.preset.AssetFactory
+import com.criapix.volt.preset.PresetLibrary
+import com.criapix.volt.state.SynthState
+import com.criapix.volt.ui.Haptics
+import com.criapix.volt.ui.ScreenIo
+import com.criapix.volt.ui.VoltScreen
+import java.io.File
 import kotlinx.coroutines.delay
-import java.util.Locale
+import kotlinx.coroutines.launch
 
 private object NativeSynth : Synth {
   override fun noteOn(note: Int, velocity: Float) = Native.noteOn(note, velocity)
@@ -29,56 +38,61 @@ private object NativeSynth : Synth {
 }
 
 class MainActivity : ComponentActivity() {
-  private lateinit var params: Params
+  private lateinit var model: AppModel
   private lateinit var dispatch: MidiDispatch
   private lateinit var midi: MidiInput
-  private val lastParamLog = HashMap<Int, Long>()  // thins out slider-drag lines, per parameter
+  private lateinit var prefs: Prefs
+
+  private val exportLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+    if (uri == null) return@registerForActivityResult
+    runCatching { contentResolver.openOutputStream(uri)?.use { it.write(model.exportBank().toByteArray()) } }
+      .onSuccess { model.showMessage("Presets exportados") }
+      .onFailure { model.showMessage("Não foi possível exportar") }
+  }
+
+  private val importLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+    if (uri == null) return@registerForActivityResult
+    val text = runCatching { contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() } }.getOrNull()
+    if (text == null) model.showMessage("Não foi possível ler o arquivo") else model.importText(text)
+  }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     AppLog.init(this)
     window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-
-    params = Params.parse(Native.paramTable())
-    dispatch = MidiDispatch(NativeSynth, params) { AppLog.log(it) }
-    // The parser is fed from one binder thread at a time; MidiReceiver serialises its calls.
-    val parser = MidiParser { bytes, len -> dispatch.message(bytes, len) }
-    midi = MidiInput(this, onDisconnect = { Native.allNotesOff() }) { bytes, offset, count ->
-      parser.feed(bytes, offset, count)
+    WindowCompat.setDecorFitsSystemWindows(window, false)
+    WindowInsetsControllerCompat(window, window.decorView).apply {
+      hide(WindowInsetsCompat.Type.systemBars())
+      systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
     }
 
-    setContent {
-      val devices by midi.count.collectAsStateWithLifecycle()
-      val last by dispatch.lastMessage.collectAsStateWithLifecycle()
-      var info by remember { mutableStateOf("") }
-      LaunchedEffect(Unit) {
-        var tick = 0
-        var wasRunning = false
+    prefs = Prefs(this)
+    val params = Params.parse(Native.paramTable())
+    val state = SynthState(params, NativeSynth)
+    val library = PresetLibrary(AssetFactory(assets), File(filesDir, "presets/user"), prefs)
+    model = AppModel(state, library, File(filesDir, "session.json")) { AppLog.log(it) }
+    model.restore()
+
+    dispatch = MidiDispatch(state, params) { AppLog.log(it) }  // MIDI changes go through SynthState
+    val parser = MidiParser { bytes, len -> dispatch.message(bytes, len) }
+    midi = MidiInput(this, onDisconnect = { Native.allNotesOff() }) { bytes, offset, count -> parser.feed(bytes, offset, count) }
+
+    val io = ScreenIo(
+      midiDevices = midi.count, midiActivity = dispatch.activity, lastMidi = dispatch.lastMessage,
+      peak = Native::peak, voices = Native::activeVoices, audioInfo = Native::audioInfo,
+      haptics = Haptics(this, prefs),
+      onExport = { exportLauncher.launch("volt-presets.json") },
+      onImport = { importLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) },
+    )
+    setContent { VoltScreen(model, io) }
+
+    lifecycleScope.launch {
+      repeatOnLifecycle(Lifecycle.State.STARTED) {
         while (true) {
-          info = Native.audioInfo()
-          val running = info.startsWith("running=1")
-          // once a second while the stream runs, plus the line where it stops; nothing while idle
-          if (tick++ % 2 == 0 && (running || wasRunning)) AppLog.log("AUDIO " + info.trim().replace('\n', ' '))
-          wasRunning = running
-          delay(500)
+          AppLog.log("AUDIO " + Native.audioInfo().trim().replace('\n', ' '))
+          delay(1000)
         }
       }
-      DebugScreen(
-        params = params, info = info, midiDevices = devices, lastMidi = last,
-        onParam = { p, n ->
-          Native.setParam(p.id, n)
-          val now = System.nanoTime()
-          if (now - (lastParamLog[p.id] ?: 0L) > 250_000_000L) {
-            lastParamLog[p.id] = now
-            AppLog.log("UI parâmetro ${p.name} = ${String.format(Locale.ROOT, "%.3f", p.toReal(n))}")
-          }
-        },
-        onTestNote = { on ->
-          AppLog.log("UI botão ${if (on) "Tocar Lá" else "Soltar"}")
-          if (on) Native.noteOn(69, 0.8f) else Native.noteOff(69)
-        },
-        onPanic = { AppLog.log("UI botão Pânico"); Native.allNotesOff() },
-      )
     }
   }
 
@@ -91,6 +105,7 @@ class MainActivity : ComponentActivity() {
 
   override fun onStop() {
     AppLog.log("ciclo de vida: onStop; AUDIO " + Native.audioInfo().trim().replace('\n', ' '))
+    model.persist()
     midi.stop()
     Native.allNotesOff()
     Native.stop()

@@ -13,7 +13,7 @@ Instalar: `adb install -r app\build\outputs\apk\debug\app-debug.apk`. Depois do 
 | 7 | Aba FILTRO: mexer em cutoff e ressonância | A curva acompanha; o som acompanha | |
 | 8 | Aba ENV: arrastar os pontos do desenho | Os knobs abaixo acompanham | |
 | 9 | ◀ ▶ com uma nota soando (pedal) | Troca de som sem estalo; a nota continua | |
-| 10 | Ouvir os 10 presets de fábrica com o CK61 | Anotar por preset: bom / ajustar (o quê) / ruim | |
+| 10 | Ouvir os presets de fábrica com o CK61 (os 10 primeiros já foram vistos; os 30 novos de 012 a 086 são escritos por valores, sem audição) | Anotar por preset: bom / ajustar (o quê) / ruim | |
 | 11 | Lead Sync: tocar e segurar | O timbre "varre" no ataque sem mudar a nota (sync com poly-mod) | |
 | 12 | Trocar o modelo do filtro com o mesmo preset | Volume parecido entre os quatro modelos | |
 | 13 | CK61: mexer no knob que manda CC 74 (cutoff) estando na aba OSC | A aba FILTRO pisca; na aba FILTRO, o knob Cutoff gira junto | |

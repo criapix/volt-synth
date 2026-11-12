@@ -1,0 +1,7 @@
+{ "format": 1, "name": "Vento", "category": "FX", "params": {
+  "voice.drift": 0.0,
+  "osc1.level": 0.0, "mix.noise": 1.0,
+  "filter.model": 0, "filter.cutoff": 700, "filter.reso": 0.55, "filter.env": 0.0, "filter.keytrack": 0.8,
+  "aenv.attack": 1.5, "aenv.decay": 1.0, "aenv.sustain": 1.0, "aenv.release": 2.5,
+  "lfo1.wave": 1, "lfo1.rate": 0.35, "lfo1.cutoff": 0.3,
+  "lfo2.wave": 1, "lfo2.rate": 0.2, "lfo2.cutoff": 0.45 } }

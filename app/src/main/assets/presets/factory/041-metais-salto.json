@@ -1,0 +1,9 @@
+{ "format": 1, "name": "Metais Salto", "category": "Brass", "params": {
+  "voice.drift": 0.15,
+  "osc1.wave": 0, "osc1.fine": -6,
+  "osc2.wave": 0, "osc2.fine": 6, "osc2.level": 1.0,
+  "osc3.wave": 0, "osc3.octave": -1, "osc3.level": 0.4,
+  "mix.drive": 0.3,
+  "filter.model": 0, "filter.cutoff": 700, "filter.reso": 0.15, "filter.env": 0.45, "filter.keytrack": 0.5, "filter.vel": 0.2,
+  "fenv.attack": 0.07, "fenv.decay": 0.35, "fenv.sustain": 0.65, "fenv.release": 0.25,
+  "aenv.attack": 0.03, "aenv.decay": 0.2, "aenv.sustain": 0.9, "aenv.release": 0.2, "aenv.vel": 0.4 } }

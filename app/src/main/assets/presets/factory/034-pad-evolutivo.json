@@ -1,0 +1,9 @@
+{ "format": 1, "name": "Pad Evolutivo", "category": "Pad", "params": {
+  "voice.drift": 0.3,
+  "osc1.wave": 0,
+  "osc2.wave": 1, "osc2.pw": 0.4, "osc2.fine": -7, "osc2.level": 0.7,
+  "filter.model": 3, "filter.cutoff": 1500, "filter.reso": 0.3, "filter.env": 0.25, "filter.keytrack": 0.4,
+  "fenv.attack": 2.5, "fenv.decay": 3.0, "fenv.sustain": 0.5, "fenv.release": 3.0,
+  "aenv.attack": 1.8, "aenv.decay": 1.0, "aenv.sustain": 0.9, "aenv.release": 3.5,
+  "lfo1.wave": 1, "lfo1.rate": 0.12, "lfo1.pw": 0.6,
+  "lfo2.wave": 1, "lfo2.rate": 0.07, "lfo2.cutoff": 0.35 } }

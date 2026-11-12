@@ -1,0 +1,7 @@
+{ "format": 1, "name": "Sirene", "category": "FX", "params": {
+  "voice.mode": 1,
+  "osc1.wave": 1, "osc1.pw": 0.5,
+  "osc2.wave": 0, "osc2.level": 0.5,
+  "filter.model": 1, "filter.cutoff": 4000, "filter.reso": 0.25, "filter.keytrack": 0.5,
+  "aenv.attack": 0.05, "aenv.decay": 0.3, "aenv.sustain": 1.0, "aenv.release": 0.3,
+  "lfo1.global": 1, "lfo1.wave": 1, "lfo1.rate": 0.8, "lfo1.pitch": 0.9 } }

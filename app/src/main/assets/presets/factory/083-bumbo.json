@@ -1,0 +1,8 @@
+{ "format": 1, "name": "Bumbo", "category": "FX", "params": {
+  "voice.mode": 1, "voice.drift": 0.0,
+  "osc1.wave": 3, "osc1.level": 1.0,
+  "pmod.fenv.pitch": 0.85,
+  "mix.drive": 0.2,
+  "filter.model": 1, "filter.cutoff": 5000, "filter.reso": 0.0, "filter.env": 0.0, "filter.keytrack": 0.0,
+  "fenv.attack": 0.001, "fenv.decay": 0.09, "fenv.sustain": 0.0, "fenv.release": 0.05,
+  "aenv.attack": 0.001, "aenv.decay": 0.35, "aenv.sustain": 0.0, "aenv.release": 0.1, "aenv.vel": 0.5 } }

@@ -1,0 +1,7 @@
+{ "format": 1, "name": "Piano Elétrico", "category": "Keys", "params": {
+  "osc1.wave": 2,
+  "osc2.wave": 3, "osc2.octave": 1, "osc2.level": 0.35,
+  "filter.model": 1, "filter.cutoff": 2500, "filter.reso": 0.1, "filter.env": 0.35, "filter.keytrack": 0.8, "filter.vel": 0.5,
+  "fenv.attack": 0.001, "fenv.decay": 0.5, "fenv.sustain": 0.2, "fenv.release": 0.3,
+  "aenv.attack": 0.002, "aenv.decay": 1.6, "aenv.sustain": 0.25, "aenv.release": 0.35, "aenv.vel": 0.7,
+  "lfo1.wave": 0, "lfo1.rate": 4.5, "lfo1.amp": 0.3 } }

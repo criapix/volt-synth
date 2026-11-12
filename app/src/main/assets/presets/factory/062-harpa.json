@@ -1,0 +1,6 @@
+{ "format": 1, "name": "Harpa", "category": "Pluck", "params": {
+  "osc1.wave": 2,
+  "osc2.wave": 0, "osc2.octave": 1, "osc2.level": 0.25,
+  "filter.model": 1, "filter.cutoff": 3500, "filter.reso": 0.1, "filter.env": 0.3, "filter.keytrack": 0.7,
+  "fenv.attack": 0.001, "fenv.decay": 0.5, "fenv.sustain": 0.0, "fenv.release": 0.5,
+  "aenv.attack": 0.001, "aenv.decay": 1.4, "aenv.sustain": 0.0, "aenv.release": 0.8, "aenv.vel": 0.5 } }

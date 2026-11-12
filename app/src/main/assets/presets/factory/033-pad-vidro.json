@@ -1,0 +1,8 @@
+{ "format": 1, "name": "Pad Vidro", "category": "Pad", "params": {
+  "voice.drift": 0.25,
+  "osc1.wave": 2,
+  "osc2.wave": 3, "osc2.octave": 1, "osc2.fine": 5, "osc2.level": 0.6,
+  "osc3.wave": 2, "osc3.octave": 1, "osc3.semi": 7, "osc3.level": 0.25,
+  "filter.model": 1, "filter.cutoff": 7000, "filter.reso": 0.1, "filter.keytrack": 0.6,
+  "aenv.attack": 1.0, "aenv.decay": 1.0, "aenv.sustain": 0.9, "aenv.release": 2.5,
+  "lfo1.wave": 0, "lfo1.rate": 0.25, "lfo1.delay": 1.5, "lfo1.pitch": 0.15 } }

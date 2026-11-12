@@ -1,0 +1,7 @@
+{ "format": 1, "name": "Lead Assobio", "category": "Lead", "params": {
+  "voice.mode": 2, "voice.glide": 0.12, "voice.glide_legato": 1, "voice.drift": 0.05,
+  "osc1.wave": 3, "osc1.level": 1.0,
+  "osc2.wave": 3, "osc2.octave": 1, "osc2.level": 0.15,
+  "filter.model": 1, "filter.cutoff": 6000, "filter.reso": 0.05, "filter.keytrack": 0.6,
+  "aenv.attack": 0.04, "aenv.decay": 0.2, "aenv.sustain": 1.0, "aenv.release": 0.25,
+  "lfo1.wave": 0, "lfo1.rate": 5.2, "lfo1.delay": 0.8, "lfo1.pitch": 0.12 } }

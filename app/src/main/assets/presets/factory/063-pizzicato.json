@@ -1,0 +1,6 @@
+{ "format": 1, "name": "Pizzicato", "category": "Pluck", "params": {
+  "osc1.wave": 0,
+  "osc2.wave": 1, "osc2.pw": 0.4, "osc2.level": 0.4,
+  "filter.model": 2, "filter.cutoff": 350, "filter.reso": 0.2, "filter.env": 0.7, "filter.keytrack": 0.6, "filter.vel": 0.4,
+  "fenv.attack": 0.001, "fenv.decay": 0.12, "fenv.sustain": 0.0, "fenv.release": 0.1,
+  "aenv.attack": 0.001, "aenv.decay": 0.22, "aenv.sustain": 0.0, "aenv.release": 0.1, "aenv.vel": 0.7 } }

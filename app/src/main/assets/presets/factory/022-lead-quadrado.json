@@ -1,0 +1,8 @@
+{ "format": 1, "name": "Lead Quadrado", "category": "Lead", "params": {
+  "voice.mode": 2, "voice.glide": 0.04, "voice.glide_legato": 1, "voice.drift": 0.1,
+  "osc1.wave": 1, "osc1.pw": 0.5,
+  "osc2.wave": 1, "osc2.pw": 0.5, "osc2.fine": 7, "osc2.level": 0.6,
+  "filter.model": 1, "filter.cutoff": 2800, "filter.reso": 0.25, "filter.env": 0.15, "filter.keytrack": 0.7,
+  "fenv.attack": 0.005, "fenv.decay": 0.4, "fenv.sustain": 0.5, "fenv.release": 0.2,
+  "aenv.attack": 0.008, "aenv.decay": 0.2, "aenv.sustain": 0.9, "aenv.release": 0.15,
+  "lfo1.wave": 0, "lfo1.rate": 5.5, "lfo1.delay": 0.6, "lfo1.pitch": 0.12 } }

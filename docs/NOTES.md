@@ -187,3 +187,12 @@ Ressalva: presets mono (baixos, leads, percussão) tocam 1 voz só e custam ~1 %
 - Novo espalhamento (todos os 43): mín. -42.5 dB (`084-caixa`, FX), máx. -20.5 dB; sem FX e sem Init: -25.5 a -21.1 dB.
 - **Desvio:** `001-init` fica de fora da janela de nível (teste continua exigindo que soe, seja finito e libere as vozes). Init é o estado padrão do motor (`params: {}`); mudar o volume dele o descaracterizaria. Mede −20,5 dB.
 - `084-caixa` continua em −42,5 dB (FX, isenta do limite inferior): ~13 dB abaixo do Bumbo. Ver Tarefa 9.
+
+### Banco completo, 64 presets (Tarefa 8)
+- 21 presets novos (093 a 113) no fim da lista; os 43 antigos ficam nas posições 1–43 (`theFirst43KeepTheirPositionsForProgramChange` fixa a ordem).
+- Espalhamento de nível (64 presets): mín. -42.5 dB, máx. -20.5 dB; sem FX e sem Init: -25.6 a -21.1 dB (janela [−26, −21]).
+- `master.volume` nos novos: `096-lead-tres-osciladores` 0.59, `098-lead-unison` 0.85, `100-pad-com-chorus` 0.57, `101-pad-varredura` 0.93, `104-trompas` 0.54, `107-pluck-com-eco` 1.0, `108-kalimba` 0.88, `109-orgao-de-tubos` 0.55, `110-clavinete-com-phaser` 0.84, `111-ondas-do-mar` 1.0, `113-arpejo-com-eco` 1.0.
+- Além do `master.volume`: `107-pluck-com-eco` `osc2.level` 0,5 → 0,9 (já estava em 1,0 e ficava 3 dB abaixo da janela).
+- **`111-ondas-do-mar` mudou em relação ao plano**: com ataque de 1,5 s e filtro em 700 Hz ele media −53 dB na frase de 2 s (reprovava o piso de −45 dB). Ruído branco filtrado é ~14 dB mais fraco que uma senoide no mesmo nível, e um ataque lento mal sobe numa nota de 2 s. Ficou com `aenv.attack` 0,6, `filter.cutoff` 3000 e `master.volume` 1,0: mede −39,4 dB (FX só tem limite superior na janela). Soa mais aberto e com ataque mais rápido que o do plano: para você julgar.
+- Os presets de ruído (`084-caixa`, `111-ondas-do-mar`, e também `082-laser` e o vento) são os mais baixos do banco por natureza do ruído filtrado.
+- 5 mais pesados (CPU no PC, 16 notas segurando; duas rodadas, com o emulador aberto consumindo CPU, então os números oscilam): rodada 1: 18.3 % 104-trompas; 17.8 % 032-pad-escuro; 17.2 % 042-metais-lentos; rodada 2: 18.8 % 104-trompas; 16.6 % 041-metais-salto; 16.5 % 032-pad-escuro

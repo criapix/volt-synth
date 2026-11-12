@@ -1,6 +1,8 @@
 package com.criapix.volt
 
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -11,9 +13,13 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.criapix.volt.midi.MidiAction
 import com.criapix.volt.midi.MidiDispatch
 import com.criapix.volt.midi.MidiInput
+import com.criapix.volt.midi.MidiLearn
+import com.criapix.volt.midi.MidiMap
 import com.criapix.volt.midi.MidiParser
+import com.criapix.volt.midi.MidiSettings
 import com.criapix.volt.midi.Synth
 import com.criapix.volt.preset.AppModel
 import com.criapix.volt.preset.AssetFactory
@@ -73,7 +79,33 @@ class MainActivity : ComponentActivity() {
     model = AppModel(state, library, File(filesDir, "session.json")) { AppLog.log(it) }
     model.restore()
 
-    dispatch = MidiDispatch(state, params, log = { AppLog.log(it) })  // MIDI changes go through SynthState
+    val main = Handler(Looper.getMainLooper())
+    val learn = MidiLearn(MidiMap.decode(prefs.midiMap)) { prefs.midiMap = it }
+    // MIDI changes go through SynthState, so the screen follows them.
+    dispatch = MidiDispatch(
+      synth = state, params = params, log = { AppLog.log(it) }, learn = learn, current = state::norm,
+      onAction = { a ->
+        main.post {
+          when (a) {
+            MidiAction.PREV -> model.step(-1)
+            MidiAction.NEXT -> model.step(1)
+            MidiAction.PANIC -> state.allNotesOff()
+          }
+        }
+      },
+      onProgram = { n -> main.post { model.programChange(n) } },
+    ).apply {
+      channel = prefs.midiChannel
+      softTakeover = prefs.softTakeover
+    }
+    val midiSettings = object : MidiSettings {
+      override var channel: Int
+        get() = prefs.midiChannel
+        set(v) { prefs.midiChannel = v; dispatch.channel = v }
+      override var softTakeover: Boolean
+        get() = prefs.softTakeover
+        set(v) { prefs.softTakeover = v; dispatch.softTakeover = v }
+    }
     val parser = MidiParser { bytes, len -> dispatch.message(bytes, len) }
     midi = MidiInput(this, onDisconnect = { Native.allNotesOff() }) { bytes, offset, count -> parser.feed(bytes, offset, count) }
 
@@ -81,6 +113,7 @@ class MainActivity : ComponentActivity() {
       midiDevices = midi.count, midiActivity = dispatch.activity, lastMidi = dispatch.lastMessage,
       peak = Native::peak, voices = Native::activeVoices, audioInfo = Native::audioInfo,
       haptics = Haptics(this, prefs),
+      learn = learn, pickup = dispatch.pickup, midiSettings = midiSettings,
       onExport = { exportLauncher.launch("volt-presets.json") },
       onImport = { importLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) },
     )

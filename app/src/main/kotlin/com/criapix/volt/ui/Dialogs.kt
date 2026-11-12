@@ -78,7 +78,7 @@ fun SaveDialog(model: AppModel, onClose: () -> kotlin.Unit) {
 }
 
 @Composable
-fun SettingsDialog(state: SynthState, io: ScreenIo, onClose: () -> kotlin.Unit) {
+fun SettingsDialog(state: SynthState, io: ScreenIo, onClose: () -> kotlin.Unit, onMidiMap: () -> kotlin.Unit) {
   var info by remember { mutableStateOf(io.audioInfo()) }
   var allParams by remember { mutableStateOf(false) }
   val last by io.lastMidi.collectAsStateWithLifecycle()
@@ -97,6 +97,7 @@ fun SettingsDialog(state: SynthState, io: ScreenIo, onClose: () -> kotlin.Unit) 
           Switch(on, { on = it; io.haptics.enabled = it })
         }
         TextButton(onClick = { allParams = true }) { Text("Todos os parâmetros (lista)") }
+        TextButton(onClick = { onClose(); onMidiMap() }) { Text("Controle MIDI (mapa, canal, captura suave)") }
       }
     },
     confirmButton = { TextButton(onClick = onClose) { Text("Fechar") } },

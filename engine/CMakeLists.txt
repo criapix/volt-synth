@@ -48,6 +48,7 @@ if (VOLT_TESTS)
     tests/test_arp.cpp
     tests/test_fx.cpp
     tests/test_presets.cpp
+    tests/test_governor.cpp
   )
   target_link_libraries(volt_tests PRIVATE volt_engine)
   set(VOLT_PRESETS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../app/src/main/assets/presets/factory)

@@ -6,4 +6,5 @@
   "mix.drive": 0.3,
   "filter.model": 0, "filter.cutoff": 180, "filter.reso": 0.35, "filter.env": 0.45, "filter.keytrack": 0.3,
   "fenv.attack": 0.002, "fenv.decay": 0.35, "fenv.sustain": 0.15, "fenv.release": 0.12,
-  "aenv.attack": 0.002, "aenv.decay": 0.5, "aenv.sustain": 0.85, "aenv.release": 0.1, "aenv.vel": 0.3 } }
+  "aenv.attack": 0.002, "aenv.decay": 0.5, "aenv.sustain": 0.85, "aenv.release": 0.1, "aenv.vel": 0.3,
+  "master.volume": 0.59 } }

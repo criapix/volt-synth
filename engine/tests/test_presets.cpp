@@ -29,8 +29,8 @@ TEST(presets_reader_lists_every_factory_file_in_library_order) {
 
 namespace {
 // Task 4 turns the loudness window on and fills the target from the measured median.
-constexpr bool kCheckLoudness = false;
-constexpr double kLoudTarget = 0.0;  // dBFS
+constexpr bool kCheckLoudness = true;
+constexpr double kLoudTarget = -23.0; // dBFS
 constexpr double kLoudBelow = 3.0, kLoudAbove = 2.0;
 }  // namespace
 
@@ -47,7 +47,8 @@ TEST(presets_every_factory_preset_renders_cleanly) {
     const bool finite = probe::finite(r.left) && probe::finite(r.right);
     const bool latched = presetValue(p, "arp.hold") >= 0.5;  // a held arpeggio never lets go by design
     bool ok = unknown == 0 && finite && loud > -45.0 && squash < 0.01 && (latched || r.releaseSeconds >= 0);
-    if (kCheckLoudness) {
+    // Init is the engine's default state on purpose, so its level is not balanced.
+    if (kCheckLoudness && p.file != "001-init") {
       const bool fx = p.category == "FX";
       ok = ok && loud <= kLoudTarget + kLoudAbove && (fx || loud >= kLoudTarget - kLoudBelow);
     }

@@ -5,4 +5,5 @@
   "filter.model": 0, "filter.cutoff": 450, "filter.reso": 0.35, "filter.env": 0.55, "filter.keytrack": 0.5,
   "fenv.attack": 0.45, "fenv.decay": 0.8, "fenv.sustain": 0.6, "fenv.release": 0.6,
   "aenv.attack": 0.25, "aenv.decay": 0.5, "aenv.sustain": 0.9, "aenv.release": 0.5,
-  "lfo1.wave": 0, "lfo1.rate": 5.2, "lfo1.delay": 1.2, "lfo1.pitch": 0.08 } }
+  "lfo1.wave": 0, "lfo1.rate": 5.2, "lfo1.delay": 1.2, "lfo1.pitch": 0.08,
+  "master.volume": 0.52 } }

@@ -5,4 +5,5 @@
   "filter.model": 0, "filter.cutoff": 900, "filter.reso": 0.6, "filter.env": 0.0, "filter.keytrack": 0.4,
   "aenv.attack": 0.01, "aenv.decay": 0.3, "aenv.sustain": 1.0, "aenv.release": 0.3,
   "lfo1.wave": 4, "lfo1.rate": 6.0, "lfo1.cutoff": 0.5,
-  "lfo2.wave": 1, "lfo2.rate": 0.3, "lfo2.cutoff": 0.25 } }
+  "lfo2.wave": 1, "lfo2.rate": 0.3, "lfo2.cutoff": 0.25,
+  "master.volume": 0.61 } }

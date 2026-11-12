@@ -179,3 +179,11 @@ Nível = a janela de 400 ms mais alta do trecho, RMS em dBFS. Mediana dos 43 pre
 Cinco mais pesados: `081-vento` 17,1 %, `032-pad-escuro` 15,9 %, `001-init` 15,7 %, `041-metais-salto` 14,9 %, `060-pluck-vidro` 14,9 %.
 Ressalva: presets mono (baixos, leads, percussão) tocam 1 voz só e custam ~1 %; o "16 notas" só vale para os polifônicos.
 **A pergunta dos 36 %:** `070-sino-metalico` NÃO está entre os mais pesados (8,8 %, 19º de 43). O pico de 36 % no celular logo depois de carregá-lo provavelmente não veio do custo dele (talvez do `Init` carregado em seguida, o 3º mais pesado, 15,7 %). Inconclusivo: o PC não mede o celular.
+
+### Balanceamento de nível (Tarefa 4)
+- Alvo **T = −23 dB** (mediana −22,6 arredondada; dentro da faixa de sanidade −24…−10). Janela de [−26, −21] dB; FX só tem o limite superior.
+- Fórmula do plano `novo = antigo · 10^((T − L)/40)`, uma passada resolveu 21 presets; `063-pizzicato` já estava em 1,0 e ficou 0,6 dB abaixo, então subi `osc2.level` de 0,4 para 0,6 (sem tocar em `mix.drive`).
+- `master.volume` agora definido em: `010-baixo-gordo` 0.59, `021-lead-classico` 0.52, `022-lead-quadrado` 0.56, `024-lead-trance` 0.89, `031-pad-pwm` 0.54, `033-pad-vidro` 0.61, `034-pad-evolutivo` 0.62, `040-metais-poly` 0.55, `041-metais-salto` 0.38, `042-metais-lentos` 0.52, `043-stab-de-metais` 0.55, `052-violoncelo` 0.53, `061-marimba` 0.89, `063-pizzicato` 1.0, `072-clavinete` 0.9, `073-orgao` 0.45, `074-cravo` 0.95, `084-caixa` 1.0, `085-scifi-aleatorio` 0.61, `086-sirene` 0.56, `090-arpejo-classico` 0.98, `092-baixo-distorcido` 0.34
+- Novo espalhamento (todos os 43): mín. -42.5 dB (`084-caixa`, FX), máx. -20.5 dB; sem FX e sem Init: -25.5 a -21.1 dB.
+- **Desvio:** `001-init` fica de fora da janela de nível (teste continua exigindo que soe, seja finito e libere as vozes). Init é o estado padrão do motor (`params: {}`); mudar o volume dele o descaracterizaria. Mede −20,5 dB.
+- `084-caixa` continua em −42,5 dB (FX, isenta do limite inferior): ~13 dB abaixo do Bumbo. Ver Tarefa 9.

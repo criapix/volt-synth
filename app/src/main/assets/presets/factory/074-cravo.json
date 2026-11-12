@@ -4,4 +4,5 @@
   "hpf.cutoff": 200,
   "filter.model": 2, "filter.cutoff": 3200, "filter.reso": 0.1, "filter.env": 0.2, "filter.keytrack": 0.8, "filter.vel": 0.3,
   "fenv.attack": 0.001, "fenv.decay": 0.2, "fenv.sustain": 0.0, "fenv.release": 0.1,
-  "aenv.attack": 0.001, "aenv.decay": 0.55, "aenv.sustain": 0.0, "aenv.release": 0.12, "aenv.vel": 0.4 } }
+  "aenv.attack": 0.001, "aenv.decay": 0.55, "aenv.sustain": 0.0, "aenv.release": 0.12, "aenv.vel": 0.4,
+  "master.volume": 0.95 } }

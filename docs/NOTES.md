@@ -1,9 +1,10 @@
 # Notas de execução
 
-## Estado (plano 4: efeitos, arpejador, teclado)
-- O que existe: tudo do plano 3 mais seis efeitos (distorção, phaser, flanger, chorus, delay, reverb), arpejador (abas ARP e FX) e teclado deslizante na tela (botão "Teclas"), 43 presets de fábrica.
-- O que não existe ainda: o banco de fábrica final e ajustado (~64, plano 5).
-- Verificado por: 81 testes do motor no PC (`.	ools	est-engine.ps1`), 108 testes Kotlin (`gradlew :app:testDebugUnitTest`), `:app:assembleDebug` e capturas no emulador. **Nada foi ouvido nem tocado no celular**: efeitos, arpejador e teclado são medidos por testes (tempo do eco, cauda do reverb, harmônicos, passos do arpejo); como soam é para você julgar (`docs/DEVICE-TEST.md`, plano 4).
+## Estado (plano 5: versão 1.0.0)
+- O que existe: tudo do plano 4 mais o banco de fábrica de 64 presets (nivelado por medição), a polifonia que cai sozinha sob carga (`LoadGovernor`) com teto manual em ⋮, o ícone adaptativo, "Sobre o Volt", "Salvar log…" no menu, o diálogo de salvar usável com o teclado virtual e a versão de release 1.0.0 (versionCode 100). Debug agora é `com.criapix.volt.debug`, "Volt dev".
+- O que NÃO existe: o APK de release **assinado**. Falta você rodar `tools\make-keystore.ps1` e criar o `keystore.properties` (as senhas são suas); sem isso `assembleRelease` gera só `app-release-unsigned.apk`.
+- Verificado por: 94 testes do motor no PC (`.\tools\test-engine.ps1`), 111 testes Kotlin (`gradlew :app:testDebugUnitTest`), `volt_render` (64 presets: sem NaN, sem aperto do limitador, voz livre, nível dentro da janela), `:app:assembleDebug` e `:app:assembleRelease`, e capturas no emulador (ícone, "0/8 vozes" e "1/8 vozes" em vermelho com o teto em 8, "Sobre o Volt", "Salvar log…", diálogo de salvar com o teclado). O build de release (assinado com a chave de debug, só para o teste, e **descartado**) instala ao lado do debug e toca uma tecla sem crash.
+- Ouvido por você: só os 10 primeiros presets (plano 2, "pareceu muito bom", parecer geral) e o que o plano 1 verificou do CK61. **Os outros 54 presets, os efeitos, o arpejador, o teclado na tela, o MIDI Learn e a polifonia sob carga nunca foram ouvidos nem tocados no celular.** A revisão de ouvido (`docs/PRESET-REVIEW.md`, Tarefa 9) está **pendente**. Nenhum preset foi "ajustado de ouvido".
 
 ## Diferenças em relação ao design
 - Oscilador 3 como fonte de modulação: não feito (os dois LFOs e o poly-mod cobrem).
@@ -196,3 +197,20 @@ Ressalva: presets mono (baixos, leads, percussão) tocam 1 voz só e custam ~1 %
 - **`111-ondas-do-mar` mudou em relação ao plano**: com ataque de 1,5 s e filtro em 700 Hz ele media −53 dB na frase de 2 s (reprovava o piso de −45 dB). Ruído branco filtrado é ~14 dB mais fraco que uma senoide no mesmo nível, e um ataque lento mal sobe numa nota de 2 s. Ficou com `aenv.attack` 0,6, `filter.cutoff` 3000 e `master.volume` 1,0: mede −39,4 dB (FX só tem limite superior na janela). Soa mais aberto e com ataque mais rápido que o do plano: para você julgar.
 - Os presets de ruído (`084-caixa`, `111-ondas-do-mar`, e também `082-laser` e o vento) são os mais baixos do banco por natureza do ruído filtrado.
 - 5 mais pesados (CPU no PC, 16 notas segurando; duas rodadas, com o emulador aberto consumindo CPU, então os números oscilam): rodada 1: 18.3 % 104-trompas; 17.8 % 032-pad-escuro; 17.2 % 042-metais-lentos; rodada 2: 18.8 % 104-trompas; 16.6 % 041-metais-salto; 16.5 % 032-pad-escuro
+
+### Polifonia sob carga (Tarefas 5 a 7)
+- Motor: `setVoiceLimit(4..16)`; vozes acima do limite fazem fade de 15 ms (`quickRelease`), em vez do release do preset, que pode durar segundos. `allocPoly` e o unison respeitam o limite. Testes: `engine_voice_limit_caps_new_notes`, `engine_lowering_the_limit_fades_extra_voices_quickly_without_a_click`, `engine_raising_the_limit_again_allows_sixteen_voices`, `engine_unison_uses_no_more_voices_than_the_limit`; `alloc_` continua passando.
+- `LoadGovernor` (`engine/src/governor.h`), constantes: cai de 4 em 4 até 8 quando a carga fica acima de 80 % por 250 ms, ou quando há um estouro com carga acima de 50 %; espera 2 s entre quedas; sobe de 4 em 4 depois de 10 s abaixo de 40 %. Um contador de estouros que recomeça (stream reaberto) não conta como estouro novo. Os 6 testes `governor_` passaram de primeira, sem ajuste de tempo.
+- App: o governador roda no callback do Oboe com a carga suavizada; o limite efetivo é `min(governador, teto do usuário)`. ⋮ → "Polifonia máxima" 8 / 12 / 16 (salvo nas preferências) e "Polifonia: N" no diagnóstico. A barra mostra "n/limite vozes" em vermelho quando o limite é menor que 16.
+- **Não medido no aparelho:** o governador nunca rodou no celular. No emulador só se viu o teto manual (8) e o texto na barra; a queda automática por carga é coberta apenas pelos testes de lógica.
+
+### Mudanças do plano 5 e desvios (com o motivo)
+1. **`001-init` fora da janela de nível**: ver "Balanceamento de nível".
+2. **`063-pizzicato`, `107-pluck-com-eco`**: `osc2.level` subido porque `master.volume` já estava em 1,0 e o nível continuava abaixo da janela.
+3. **`111-ondas-do-mar`** diferente do plano: ver "Banco completo". `084-caixa` com `master.volume` 1,0 e ainda ~13 dB abaixo do Bumbo.
+4. **Tarefa 9 (ouvir): pendente.** Você pediu para eu seguir sem perguntar, então a folha `docs/PRESET-REVIEW.md` foi montada com os 64 presets e os vereditos ficaram em branco. Presets sem veredito saem como estão.
+5. **Release não assinado**: a chave de assinatura é a identidade permanente do app e as senhas são suas, então não criei o keystore. `tools\make-keystore.ps1` e `keystore.properties` ficam por sua conta.
+6. **Bug de script que deixei passar e corrigi**: o script de balanceamento zerou a sintaxe do `001-init.json` (params vazio); detectei pelo teste de renderização e restaurei o arquivo do git.
+7. **Diálogo de salvar com o teclado**: com `adjustResize` e o ✓ ("Concluído") do teclado, o botão "Salvar como novo" fica alcançável no emulador (capturas `build/save_kb.png` e `save_after.png`). O diálogo de Configurações é rolável; no emulador paisagem os itens de baixo ("Polifonia máxima", "Salvar log…", "Sobre") ficam abaixo da dobra e é preciso rolar.
+8. `tools\pull-log.ps1` usa `com.criapix.volt.debug` por padrão (`-Package` para outro id). Build de release não é debuggable: use ⋮ → "Salvar log…".
+9. Limite de contagem do `-Stress`: com o emulador aberto na mesma máquina as medidas oscilam bastante (o mais pesado variou de 9 % a 18 % entre rodadas). Os números servem como ordem de grandeza, não como medida.

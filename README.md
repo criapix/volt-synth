@@ -4,7 +4,28 @@ Volt é um sintetizador analógico virtual polifônico para Android, tocado por 
 
 ## Estado
 
-Em desenvolvimento. O plano 4 está implementado: motor C++ de 16 vozes (3 osciladores, filtro Ladder / Roland 12 dB / Roland 24 dB / Prophet, 2 envelopes, 2 LFOs, poly-mod, modos poly/mono/legato/unison), saída de áudio Oboe de baixa latência, entrada MIDI USB com mapa de controladores de fábrica, a tela de toque (abas OSC · FILTRO · ENV · MOD · ARP · FX, knobs, curva do filtro e envelopes ao vivo), presets (43 de fábrica, os seus, navegador, favoritos, importar/exportar, sessão restaurada) e MIDI Learn (associar controles do teclado a parâmetros e ações, captura suave, Program Change, canal MIDI). Também há seis efeitos (distorção, phaser, flanger, chorus, delay, reverb), o arpejador e um teclado deslizante na tela (botão "Teclas"). Falta só o banco de fábrica final e ajustado. A tela foi vista só no emulador; o som, o toque, os efeitos, o arpejador e o MIDI Learn no aparelho ainda não foram avaliados: veja `docs/DEVICE-TEST.md` e `docs/NOTES.md`.
+Versão 1.0.0. Todos os cinco planos estão implementados: motor C++ de 16 vozes (3 osciladores, filtro Ladder / Roland 12 dB / Roland 24 dB / Prophet, 2 envelopes, 2 LFOs, poly-mod, modos poly/mono/legato/unison), saída de áudio Oboe de baixa latência, entrada MIDI USB com mapa de controladores de fábrica, a tela de toque (abas OSC · FILTRO · ENV · MOD · ARP · FX, knobs, curva do filtro e envelopes ao vivo), presets (64 de fábrica nivelados por medição, os seus, navegador, favoritos, importar/exportar, sessão restaurada), MIDI Learn, seis efeitos (distorção, phaser, flanger, chorus, delay, reverb), arpejador, teclado deslizante na tela e polifonia que cai sozinha quando o celular não acompanha (com teto manual de 8, 12 ou 16 vozes em ⋮). Há ainda ícone, "Sobre o Volt" e exportação de log.
+
+O que foi e o que não foi testado: o motor e os 64 presets são medidos por testes no PC (soam, não geram NaN, liberam as vozes, nível dentro de uma janela); a tela foi vista no emulador. **No aparelho, só foram ouvidos os 10 primeiros presets e o caminho CK61 → som (plano 1).** Os outros 54 presets, os efeitos, o arpejador, o teclado na tela, o MIDI Learn e a polifonia sob carga ainda não foram avaliados no celular: veja `docs/DEVICE-TEST.md`, `docs/PRESET-REVIEW.md` e `docs/NOTES.md`.
+
+## Ouvir os presets no PC
+
+```powershell
+.\tools\render-presets.ps1           # gera build\render\*.wav e abre build\render\index.html, com um player por preset
+.\tools\render-presets.ps1 -Stress   # custo de CPU de cada preset com 16 notas
+```
+
+Anote o veredito de cada um em `docs/PRESET-REVIEW.md`.
+
+## Versão de release
+
+```powershell
+.\tools\make-keystore.ps1            # uma vez: o keytool pede as senhas
+# crie keystore.properties na raiz (modelo no topo do script; o arquivo não vai para o git)
+.\gradlew.bat :app:assembleRelease    # app\build\outputs\apk\release\app-release.apk
+```
+
+**Faça backup do `.jks` e das senhas**: sem eles nenhuma versão futura consegue atualizar o app instalado. Sem `keystore.properties` o Gradle gera `app-release-unsigned.apk`, que o Android não instala. O debug usa outro id (`com.criapix.volt.debug`, "Volt dev") e convive com o release.
 
 ## Compilar (Windows, PowerShell)
 
@@ -15,7 +36,7 @@ git submodule update --init          # sst-filters, sst-basic-blocks, sst-effect
 .\gradlew.bat :app:testDebugUnitTest :app:assembleDebug
 ```
 
-O APK sai em `app\build\outputs\apk\debug\app-debug.apk`.
+O APK de debug sai em `app\build\outputs\apk\debug\app-debug.apk`.
 
 ## Teclado MIDI
 
@@ -30,6 +51,7 @@ Os presets do usuário ficam dentro do app (pasta privada); use **Exportar** no 
 ## Licença
 
 GPL-3.0-or-later (arquivo `LICENSE`). Bibliotecas de terceiros, em `third_party/`:
+- Oboe: Apache 2.0
 - sst-filters: GPL-3
 - sst-basic-blocks: GPL-3
 - sst-effects: GPL-3

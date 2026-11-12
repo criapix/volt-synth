@@ -1,3 +1,26 @@
+# Teste no aparelho (plano 5: versão 1.0)
+
+Antes de tudo: a versão assinada precisa existir. Rode `.\tools\make-keystore.ps1`, crie o `keystore.properties` (instruções no topo do script), guarde **uma cópia do `.jks` e das senhas** e rode `.\gradlew.bat :app:assembleRelease`. O APK sai em `app\build\outputs\apk\release\app-release.apk`.
+
+| # | Passo | Esperado | Resultado |
+|---|---|---|---|
+| 1 | No app instalado hoje (debug antigo): navegador de presets → **Exportar**. Anotar as associações do MIDI Learn (⋮ → Controle MIDI), porque não sobrevivem | Arquivo `volt-presets.json` salvo | |
+| 2 | Desinstalar o Volt antigo; `adb install app\build\outputs\apk\release\app-release.apk` | Ícone novo (raio laranja) na gaveta de apps, nome "Volt" | |
+| 3 | Abrir, **Importar** o arquivo do passo 1 | Os seus presets voltam | |
+| 4 | ⋮ → Sobre o Volt | Mostra 1.0.0, licença e bibliotecas | |
+| 5 | Ouvir os presets com o CK61, de 044 a 064 (os novos) e os marcados "ajustar" em `docs/PRESET-REVIEW.md` | Anotar na folha | |
+| 6 | Trocar de preset com ◀ ▶ tocando sempre a mesma frase | Volume parecido entre presets (o banco foi nivelado por medição; Caixa, Laser e Ondas do Mar ficam mais baixos por serem ruído) | |
+| 7 | Carregar `104 Trompas` (o mais pesado na última medição no PC) e segurar 16 notas (pedal) por 10 s | Anotar "Carga do motor" em ⋮; se passar de 80 %, a barra mostra "x/12 vozes" em vermelho e o som continua sem estalos | |
+| 8 | ⋮ → Polifonia máxima 8 (rolar o diálogo); tocar um acorde de 10 notas | Só 8 soam; a barra mostra "8/8 vozes" em vermelho; voltar para 16 | |
+| 9 | Plano 4: efeitos (aba FX, ligar cada um com uma nota soando), arpejador (preset 041 e 064, Hold) e teclado na tela | Sem estalo ao ligar/desligar; arpejo no tempo; anotar como soam | |
+| 10 | Plano 3: passos 3–5 da tabela do plano 3 (nomes dos controles do CK61, aprender um knob, aprender ▶) | Anotar CC de cada controle em NOTES | |
+| 11 | ⋮ → Salvar log… | Arquivo salvo; mandar junto com o resultado | |
+| 12 | Salvar preset com o teclado virtual aberto | O botão "Salvar como novo" fica alcançável (rolando ou depois do ✓ do teclado) | |
+
+Posições: 044 = `093 Baixo Três Osciladores` (o primeiro novo), 041 = `090 Arpejo Clássico`, 064 = `113 Arpejo com Eco`.
+
+---
+
 # Teste no aparelho (plano 4: efeitos, arpejador, teclado)
 
 | # | Passo | Esperado | Resultado |

@@ -1,7 +1,14 @@
+import java.util.Properties
+
 plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.compose.compiler)
   alias(libs.plugins.kotlin.serialization)
+}
+
+val keystoreProps = Properties().apply {
+  val f = rootProject.file("keystore.properties")
+  if (f.exists()) f.inputStream().use { load(it) }
 }
 
 android {
@@ -13,8 +20,9 @@ android {
     applicationId = "com.criapix.volt"
     minSdk = 26
     targetSdk = 36
-    versionCode = 4
-    versionName = "0.4.0"
+    versionCode = 100
+    versionName = "1.0.0"
+    manifestPlaceholders["appLabel"] = "Volt"
     ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
     externalNativeBuild { cmake { arguments += "-DANDROID_STL=c++_shared" } }
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -27,8 +35,26 @@ android {
     }
   }
 
+  signingConfigs {
+    if (keystoreProps.getProperty("storeFile") != null) {
+      create("release") {
+        storeFile = file(keystoreProps.getProperty("storeFile"))
+        storePassword = keystoreProps.getProperty("storePassword")
+        keyAlias = keystoreProps.getProperty("keyAlias")
+        keyPassword = keystoreProps.getProperty("keyPassword")
+      }
+    }
+  }
+
   buildTypes {
-    release { isMinifyEnabled = false }
+    debug {
+      applicationIdSuffix = ".debug"
+      manifestPlaceholders["appLabel"] = "Volt dev"
+    }
+    release {
+      isMinifyEnabled = false   // side-loaded; R8 adds JNI/serialization keep-rule risk for little gain
+      signingConfig = signingConfigs.findByName("release")
+    }
   }
   compileOptions {
     sourceCompatibility = JavaVersion.VERSION_17

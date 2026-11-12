@@ -1,0 +1,9 @@
+{ "format": 1, "name": "Trompas", "category": "Brass", "params": {
+  "voice.drift": 0.15,
+  "osc1.wave": 0,
+  "osc2.wave": 1, "osc2.pw": 0.4, "osc2.fine": 4, "osc2.level": 0.6,
+  "filter.model": 0, "filter.cutoff": 380, "filter.reso": 0.1, "filter.env": 0.32, "filter.keytrack": 0.5, "filter.vel": 0.3,
+  "fenv.attack": 0.15, "fenv.decay": 0.8, "fenv.sustain": 0.6, "fenv.release": 0.4,
+  "aenv.attack": 0.12, "aenv.decay": 0.4, "aenv.sustain": 0.9, "aenv.release": 0.45, "aenv.vel": 0.5,
+  "lfo1.wave": 0, "lfo1.rate": 4.5, "lfo1.delay": 1.0, "lfo1.pitch": 0.04,
+  "master.volume": 0.54, "fx.reverb.on": 1, "fx.reverb.decay": 2.5, "fx.reverb.mix": 0.25 } }

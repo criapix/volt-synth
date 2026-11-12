@@ -1,0 +1,7 @@
+{ "format": 1, "name": "Baixo Elástico", "category": "Bass", "params": {
+  "voice.mode": 2, "voice.glide": 0.09, "voice.glide_legato": 1,
+  "osc1.wave": 2, "osc1.octave": -1,
+  "osc2.wave": 3, "osc2.octave": -2, "osc2.level": 0.8,
+  "filter.model": 0, "filter.cutoff": 150, "filter.reso": 0.45, "filter.env": 0.5, "filter.keytrack": 0.3,
+  "fenv.attack": 0.001, "fenv.decay": 0.18, "fenv.sustain": 0.05, "fenv.release": 0.1,
+  "aenv.attack": 0.002, "aenv.decay": 0.6, "aenv.sustain": 0.7, "aenv.release": 0.1, "aenv.vel": 0.3 } }

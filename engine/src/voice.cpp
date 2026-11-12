@@ -24,7 +24,7 @@ void Voice::start(int n, float velocity, float fromPitch, float detuneSemis, flo
     fenv_.reset(); aenv_.reset();
     lfo1_.restart(); lfo2_.restart();
   }
-  active = true; held = true; sustained = false;
+  active = true; held = true; sustained = false; quick_ = false;
   note = n; velocity_ = velocity;
   target_ = (float)n; pitch_ = fromPitch;
   detune_ = detuneSemis; pan_ = pan; gain_ = gain;
@@ -36,6 +36,11 @@ void Voice::retarget(int n) { note = n; target_ = (float)n; held = true; sustain
 void Voice::release() {
   held = false; sustained = false;
   fenv_.gate(false); aenv_.gate(false);
+}
+
+void Voice::quickRelease() {
+  release();
+  quick_ = true;
 }
 
 void Voice::kill() {
@@ -117,7 +122,7 @@ float Voice::pre(const BlockCtx& c, float (*io)[4], int lane) {
 
 void Voice::post(const BlockCtx& c, const float (*io)[4], int lane, float* left, float* right) {
   const float* p = c.p;
-  aenv_.set(p[kAenvAttack], p[kAenvDecay], p[kAenvSustain], p[kAenvRelease], c.dt);
+  aenv_.set(p[kAenvAttack], p[kAenvDecay], p[kAenvSustain], quick_ ? 0.015f : p[kAenvRelease], c.dt);
   const float ae = aenv_.tick();
 
   const float velGain = 1.0f - p[kAenvVel] * (1.0f - velocity_);

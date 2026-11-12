@@ -1,0 +1,8 @@
+{ "format": 1, "name": "Órgão de Tubos", "category": "Keys", "params": {
+  "voice.drift": 0.05,
+  "osc1.wave": 2,
+  "osc2.wave": 3, "osc2.octave": 1, "osc2.level": 0.6,
+  "osc3.wave": 3, "osc3.octave": -1, "osc3.level": 0.5,
+  "filter.model": 1, "filter.cutoff": 5000, "filter.reso": 0.0, "filter.keytrack": 0.5,
+  "aenv.attack": 0.06, "aenv.decay": 0.2, "aenv.sustain": 1.0, "aenv.release": 0.5, "aenv.vel": 0.0,
+  "master.volume": 0.55, "fx.reverb.on": 1, "fx.reverb.decay": 6.0, "fx.reverb.damp": 0.4, "fx.reverb.mix": 0.4 } }

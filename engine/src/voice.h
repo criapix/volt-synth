@@ -30,6 +30,7 @@ class Voice {
   void start(int note, float velocity, float fromPitch, float detuneSemis, float pan, float gain);
   void retarget(int note);  // legato: new pitch, envelopes keep running
   void release();
+  void quickRelease();      // release with a fixed 15 ms fade (voices cut by the polyphony limit)
   void kill();              // silent immediately (panic)
 
   // Renders kBlock pre-filter samples into io[s][lane]. Returns the filter cutoff in Hz for this block.
@@ -41,6 +42,7 @@ class Voice {
   bool releasing() const { return active && !held && !sustained; }
 
  private:
+  bool quick_ = false;
   Osc osc_[3];
   Adsr fenv_, aenv_;
   Lfo lfo1_, lfo2_;

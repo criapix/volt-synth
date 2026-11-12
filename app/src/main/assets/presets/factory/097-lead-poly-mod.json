@@ -1,0 +1,10 @@
+{ "format": 1, "name": "Lead Poly-Mod", "category": "Lead", "params": {
+  "voice.mode": 2, "voice.glide": 0.02,
+  "osc1.wave": 1, "osc1.pw": 0.4,
+  "osc2.wave": 2, "osc2.octave": -1, "osc2.semi": 7, "osc2.level": 0.0,
+  "pmod.osc2.pitch": 0.35, "pmod.fenv.pitch": 0.15,
+  "filter.model": 3, "filter.cutoff": 2500, "filter.reso": 0.25, "filter.env": 0.2, "filter.keytrack": 0.6,
+  "fenv.attack": 0.002, "fenv.decay": 0.7, "fenv.sustain": 0.3, "fenv.release": 0.3,
+  "aenv.attack": 0.003, "aenv.decay": 0.4, "aenv.sustain": 0.9, "aenv.release": 0.3,
+  "lfo1.wave": 0, "lfo1.rate": 5.5, "lfo1.pitch": 0.1, "lfo1.wheel": 1.0,
+  "fx.reverb.on": 1, "fx.reverb.decay": 1.8, "fx.reverb.mix": 0.15 } }

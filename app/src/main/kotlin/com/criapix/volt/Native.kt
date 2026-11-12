@@ -9,9 +9,13 @@ object Native {
 
   external fun start(): Boolean
   external fun stop()
-  /** `key=value` lines: running, sampleRate, burst, buffer, lowLatency, exclusive, api, xruns, latencyMs, load, restarts, voices. */
+  /** `key=value` lines: running, sampleRate, burst, buffer, lowLatency, exclusive, api, xruns, latencyMs, load, restarts, voices, voiceLimit, maxVoices. */
   external fun audioInfo(): String
   external fun peak(): Float
+  /** Voices new notes may use right now (16, or less while the phone is overloaded or capped). */
+  external fun voiceLimit(): Int
+  /** The user's polyphony cap: 8, 12 or 16. */
+  external fun setMaxVoices(n: Int)
 
   external fun noteOn(note: Int, velocity: Float)   // velocity 0..1
   external fun noteOff(note: Int)

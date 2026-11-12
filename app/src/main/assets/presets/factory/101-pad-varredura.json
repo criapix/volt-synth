@@ -1,0 +1,9 @@
+{ "format": 1, "name": "Pad Varredura", "category": "Pad", "params": {
+  "voice.drift": 0.25,
+  "osc1.wave": 0, "osc1.fine": -5,
+  "osc2.wave": 0, "osc2.fine": 5, "osc2.level": 0.9,
+  "filter.model": 2, "filter.cutoff": 300, "filter.reso": 0.35, "filter.env": 0.4, "filter.keytrack": 0.3,
+  "fenv.attack": 3.5, "fenv.decay": 3.0, "fenv.sustain": 0.5, "fenv.release": 2.5,
+  "aenv.attack": 1.0, "aenv.decay": 1.0, "aenv.sustain": 0.9, "aenv.release": 2.5,
+  "master.volume": 0.93, "fx.phaser.on": 1, "fx.phaser.rate": 0.15, "fx.phaser.depth": 0.8, "fx.phaser.feedback": 0.5, "fx.phaser.mix": 0.45,
+  "fx.reverb.on": 1, "fx.reverb.decay": 4.0, "fx.reverb.mix": 0.3 } }

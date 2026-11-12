@@ -12,8 +12,24 @@ class FactoryPresetsTest {
   private val p = TestParams.params
 
   @Test fun thereIsAStarterSetAndInitComesFirst() {
-    assertTrue("found ${files.size}", files.size >= 40)
+    assertTrue("found ${files.size}", files.size >= 64)
     assertEquals("Init", PresetCodec.decode(files.first().readText()).name)
+  }
+
+  @Test fun theFirst43KeepTheirPositionsForProgramChange() {
+    // Program Change n loads position n+1 (plan 3). These 43 shipped before 1.0 and must never move.
+    val pinned = listOf(
+      "001-init", "010-baixo-gordo", "011-baixo-redondo", "012-baixo-acido", "013-baixo-sub", "014-baixo-funk", "015-baixo-pulso",
+      "020-lead-sync", "021-lead-classico", "022-lead-quadrado", "023-lead-assobio", "024-lead-trance",
+      "030-pad-analogico", "031-pad-pwm", "032-pad-escuro", "033-pad-vidro", "034-pad-evolutivo",
+      "040-metais-poly", "041-metais-salto", "042-metais-lentos", "043-stab-de-metais",
+      "050-cordas-suaves", "051-cordas-ensemble", "052-violoncelo",
+      "060-pluck-vidro", "061-marimba", "062-harpa", "063-pizzicato",
+      "070-sino-metalico", "071-piano-eletrico", "072-clavinete", "073-orgao", "074-cravo", "075-vibrafone",
+      "081-vento", "082-laser", "083-bumbo", "084-caixa", "085-scifi-aleatorio", "086-sirene",
+      "090-arpejo-classico", "091-cordas-phaser", "092-baixo-distorcido",
+    )
+    assertEquals(pinned, files.take(43).map { it.name.removeSuffix(".json") })
   }
 
   @Test fun fileNamesStartWithAUniqueNumberAndFollowTheirCategoryRange() {

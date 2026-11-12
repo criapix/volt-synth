@@ -1,0 +1,6 @@
+{ "format": 1, "name": "Ondas do Mar", "category": "FX", "params": {
+  "osc1.level": 0.0, "mix.noise": 1.0,
+  "filter.model": 2, "filter.cutoff": 3000, "master.volume": 1.0, "filter.reso": 0.2, "filter.keytrack": 0.0,
+  "aenv.attack": 0.6, "aenv.decay": 1.0, "aenv.sustain": 1.0, "aenv.release": 3.0, "aenv.vel": 0.0,
+  "lfo1.global": 1, "lfo1.wave": 1, "lfo1.rate": 0.12, "lfo1.cutoff": 0.45, "lfo1.amp": 0.5,
+  "fx.reverb.on": 1, "fx.reverb.decay": 5.0, "fx.reverb.mix": 0.4 } }

@@ -1,9 +1,10 @@
 # Notas de execução
 
-## Estado (plano 4: efeitos, arpejador, teclado)
-- O que existe: tudo do plano 3 mais seis efeitos (distorção, phaser, flanger, chorus, delay, reverb), arpejador (abas ARP e FX) e teclado deslizante na tela (botão "Teclas"), 43 presets de fábrica.
-- O que não existe ainda: o banco de fábrica final e ajustado (~64, plano 5).
-- Verificado por: 81 testes do motor no PC (`.	ools	est-engine.ps1`), 108 testes Kotlin (`gradlew :app:testDebugUnitTest`), `:app:assembleDebug` e capturas no emulador. **Nada foi ouvido nem tocado no celular**: efeitos, arpejador e teclado são medidos por testes (tempo do eco, cauda do reverb, harmônicos, passos do arpejo); como soam é para você julgar (`docs/DEVICE-TEST.md`, plano 4).
+## Estado (plano 5: versão 1.0.0)
+- O que existe: tudo do plano 4 mais o banco de fábrica de 64 presets (nivelado por medição), a polifonia que cai sozinha sob carga (`LoadGovernor`) com teto manual em ⋮, o ícone adaptativo, "Sobre o Volt", "Salvar log…" no menu, o diálogo de salvar usável com o teclado virtual e a versão de release 1.0.0 (versionCode 100). Debug agora é `com.criapix.volt.debug`, "Volt dev".
+- O que NÃO existe: o APK de release **assinado**. Falta você rodar `tools\make-keystore.ps1` e criar o `keystore.properties` (as senhas são suas); sem isso `assembleRelease` gera só `app-release-unsigned.apk`.
+- Verificado por: 94 testes do motor no PC (`.\tools\test-engine.ps1`), 111 testes Kotlin (`gradlew :app:testDebugUnitTest`), `volt_render` (64 presets: sem NaN, sem aperto do limitador, voz livre, nível dentro da janela), `:app:assembleDebug` e `:app:assembleRelease`, e capturas no emulador (ícone, "0/8 vozes" e "1/8 vozes" em vermelho com o teto em 8, "Sobre o Volt", "Salvar log…", diálogo de salvar com o teclado). O build de release (assinado com a chave de debug, só para o teste, e **descartado**) instala ao lado do debug e toca uma tecla sem crash.
+- Ouvido por você: só os 10 primeiros presets (plano 2, "pareceu muito bom", parecer geral) e o que o plano 1 verificou do CK61. **Os outros 54 presets, os efeitos, o arpejador, o teclado na tela, o MIDI Learn e a polifonia sob carga nunca foram ouvidos nem tocados no celular.** A revisão de ouvido (`docs/PRESET-REVIEW.md`, Tarefa 9) está **pendente**. Nenhum preset foi "ajustado de ouvido".
 
 ## Diferenças em relação ao design
 - Oscilador 3 como fonte de modulação: não feito (os dois LFOs e o poly-mod cobrem).
@@ -120,3 +121,96 @@ Fonte: log do app coletado por USB, sessão que começa às 11:10:54 (app 0.2.0)
 - Controladores de fábrica: CC 91 → mix do reverb, CC 93 → mix do chorus, CC 95 → mix do phaser. Levar um deles acima de zero também liga o efeito (vale para mixes aprendidos). CC 92 fica livre.
 - Presets: 090 Arpejo Clássico, 091 Cordas com Phaser, 092 Baixo Distorcido (posições 41–43 na biblioteca; preset de usuário desce 3 posições). Efeitos foram acrescentados a 030–034, 050, 051, 071, 073, 020 e 024. Nenhum foi ouvido.
 - Capturas no emulador (medium_phone, 1440×3120 a 560 dpi, paisagem; `build/fx.png`, `arp.png`, `keys.png`, `hold.png`, não versionadas): as abas OSC FILTRO ENV MOD ARP FX aparecem; **na aba FX os seis grupos cabem sem rolagem**; o teclado sobe cobrindo a parte de baixo, mostra C3 – C5, Oitava −/+, e uma tecla tocada acende e a barra mostra "1 vozes"; logcat sem crash. Com o teclado aberto, a aba ARP (grupo único com seletor de modo e de divisão) fica parcialmente coberta e o grupo rola; feche o teclado para ver os knobs. Arpejo contínuo, Hold e carregar o preset 041 não foram exercitados no emulador (só os testes do motor cobrem).
+
+## Plano 5 (banco final, polifonia sob carga, ícone, release 1.0) — 2026-11-12
+Ferramentas no PC: `.	oolsender-presets.ps1` (WAV por preset + `buildender\index.html` + `loudness.csv`) e `-Stress` (CPU por preset). Linha de base dos testes do motor: 81; depois das Tarefas 1–2: 84.
+
+### Nível dos presets de fábrica (antes do balanceamento)
+Nível = a janela de 400 ms mais alta do trecho, RMS em dBFS. Mediana dos 43 presets: **−22,6 dB** (mín. −42,5, máx. −10,7).
+```
+  #  file                          loud dB  squash %  release s
+  1  001-init                        -20.5      0.00       0.32
+  2  010-baixo-gordo                 -19.9      0.00       0.16
+  3  011-baixo-redondo               -24.0      0.00       0.13
+  4  012-baixo-acido                 -22.0      0.00       0.10
+  5  013-baixo-sub                   -25.5      0.00       0.24
+  6  014-baixo-funk                  -22.6      0.00       0.11
+  7  015-baixo-pulso                 -21.1      0.00       0.16
+  8  020-lead-sync                   -24.5      0.00       0.33
+  9  021-lead-classico               -17.8      0.00       0.24
+ 10  022-lead-quadrado               -19.3      0.00       0.24
+ 11  023-lead-assobio                -22.4      0.00       0.41
+ 12  024-lead-trance                 -27.2      0.00       0.41
+ 13  030-pad-analogico               -23.1      0.00       4.08
+ 14  031-pad-pwm                     -18.4      0.00       2.93
+ 15  032-pad-escuro                  -21.4      0.00       4.96
+ 16  033-pad-vidro                   -20.6      0.00       4.08
+ 17  034-pad-evolutivo               -20.9      0.00       5.72
+ 18  040-metais-poly                 -18.8      0.00       0.49
+ 19  041-metais-salto                -12.5      0.00       0.33
+ 20  042-metais-lentos               -17.9      0.00       0.82
+ 21  043-stab-de-metais              -18.8      0.00       0.18
+ 22  050-cordas-suaves               -24.0      0.00       1.98
+ 23  051-cordas-ensemble             -24.2      0.00       1.65
+ 24  052-violoncelo                  -18.3      0.00       0.57
+ 25  060-pluck-vidro                 -24.3      0.00       0.26
+ 26  061-marimba                     -27.1      0.00       0.10
+ 27  062-harpa                       -23.6      0.00       0.98
+ 28  063-pizzicato                   -32.6      0.00       0.00
+ 29  070-sino-metalico               -23.0      0.00       1.78
+ 30  071-piano-eletrico              -25.3      0.00       0.54
+ 31  072-clavinete                   -27.3      0.00       0.11
+ 32  073-orgao                       -15.3      0.00       0.08
+ 33  074-cravo                       -28.3      0.00       0.14
+ 34  075-vibrafone                   -21.3      0.00       1.86
+ 35  081-vento                       -30.5      0.00       4.13
+ 36  082-laser                       -37.6      0.00       0.00
+ 37  083-bumbo                       -29.4      0.00       0.00
+ 38  084-caixa                       -42.5      0.00       0.00
+ 39  085-scifi-aleatorio             -20.7      0.00       0.50
+ 40  086-sirene                      -19.0      0.00       0.50
+ 41  090-arpejo-classico             -28.9      0.00       0.23
+ 42  091-cordas-phaser               -25.1      0.00       1.49
+ 43  092-baixo-distorcido            -10.7      0.00       0.13
+```
+- `084-caixa` estava em −48,7 dB e reprovava o piso de −45 dB do teste de renderização (Bumbo −29,4, Laser −37,6). Só acrescentei `master.volume` 1,0 (+6,2 dB) e ele foi a −42,5 dB: passa o piso, mas **continua ~13 dB abaixo do Bumbo**. Fica para as Tarefas 4 e 9 (você ouvir e decidir).
+- Nenhum preset aperta o limitador (> 1 % das amostras acima de 0,95) e todos liberam as vozes.
+
+### CPU por preset (16 notas seguradas, % de um núcleo do PC; `-Stress`)
+Cinco mais pesados: `081-vento` 17,1 %, `032-pad-escuro` 15,9 %, `001-init` 15,7 %, `041-metais-salto` 14,9 %, `060-pluck-vidro` 14,9 %.
+Ressalva: presets mono (baixos, leads, percussão) tocam 1 voz só e custam ~1 %; o "16 notas" só vale para os polifônicos.
+**A pergunta dos 36 %:** `070-sino-metalico` NÃO está entre os mais pesados (8,8 %, 19º de 43). O pico de 36 % no celular logo depois de carregá-lo provavelmente não veio do custo dele (talvez do `Init` carregado em seguida, o 3º mais pesado, 15,7 %). Inconclusivo: o PC não mede o celular.
+
+### Balanceamento de nível (Tarefa 4)
+- Alvo **T = −23 dB** (mediana −22,6 arredondada; dentro da faixa de sanidade −24…−10). Janela de [−26, −21] dB; FX só tem o limite superior.
+- Fórmula do plano `novo = antigo · 10^((T − L)/40)`, uma passada resolveu 21 presets; `063-pizzicato` já estava em 1,0 e ficou 0,6 dB abaixo, então subi `osc2.level` de 0,4 para 0,6 (sem tocar em `mix.drive`).
+- `master.volume` agora definido em: `010-baixo-gordo` 0.59, `021-lead-classico` 0.52, `022-lead-quadrado` 0.56, `024-lead-trance` 0.89, `031-pad-pwm` 0.54, `033-pad-vidro` 0.61, `034-pad-evolutivo` 0.62, `040-metais-poly` 0.55, `041-metais-salto` 0.38, `042-metais-lentos` 0.52, `043-stab-de-metais` 0.55, `052-violoncelo` 0.53, `061-marimba` 0.89, `063-pizzicato` 1.0, `072-clavinete` 0.9, `073-orgao` 0.45, `074-cravo` 0.95, `084-caixa` 1.0, `085-scifi-aleatorio` 0.61, `086-sirene` 0.56, `090-arpejo-classico` 0.98, `092-baixo-distorcido` 0.34
+- Novo espalhamento (todos os 43): mín. -42.5 dB (`084-caixa`, FX), máx. -20.5 dB; sem FX e sem Init: -25.5 a -21.1 dB.
+- **Desvio:** `001-init` fica de fora da janela de nível (teste continua exigindo que soe, seja finito e libere as vozes). Init é o estado padrão do motor (`params: {}`); mudar o volume dele o descaracterizaria. Mede −20,5 dB.
+- `084-caixa` continua em −42,5 dB (FX, isenta do limite inferior): ~13 dB abaixo do Bumbo. Ver Tarefa 9.
+
+### Banco completo, 64 presets (Tarefa 8)
+- 21 presets novos (093 a 113) no fim da lista; os 43 antigos ficam nas posições 1–43 (`theFirst43KeepTheirPositionsForProgramChange` fixa a ordem).
+- Espalhamento de nível (64 presets): mín. -42.5 dB, máx. -20.5 dB; sem FX e sem Init: -25.6 a -21.1 dB (janela [−26, −21]).
+- `master.volume` nos novos: `096-lead-tres-osciladores` 0.59, `098-lead-unison` 0.85, `100-pad-com-chorus` 0.57, `101-pad-varredura` 0.93, `104-trompas` 0.54, `107-pluck-com-eco` 1.0, `108-kalimba` 0.88, `109-orgao-de-tubos` 0.55, `110-clavinete-com-phaser` 0.84, `111-ondas-do-mar` 1.0, `113-arpejo-com-eco` 1.0.
+- Além do `master.volume`: `107-pluck-com-eco` `osc2.level` 0,5 → 0,9 (já estava em 1,0 e ficava 3 dB abaixo da janela).
+- **`111-ondas-do-mar` mudou em relação ao plano**: com ataque de 1,5 s e filtro em 700 Hz ele media −53 dB na frase de 2 s (reprovava o piso de −45 dB). Ruído branco filtrado é ~14 dB mais fraco que uma senoide no mesmo nível, e um ataque lento mal sobe numa nota de 2 s. Ficou com `aenv.attack` 0,6, `filter.cutoff` 3000 e `master.volume` 1,0: mede −39,4 dB (FX só tem limite superior na janela). Soa mais aberto e com ataque mais rápido que o do plano: para você julgar.
+- Os presets de ruído (`084-caixa`, `111-ondas-do-mar`, e também `082-laser` e o vento) são os mais baixos do banco por natureza do ruído filtrado.
+- 5 mais pesados (CPU no PC, 16 notas segurando; duas rodadas, com o emulador aberto consumindo CPU, então os números oscilam): rodada 1: 18.3 % 104-trompas; 17.8 % 032-pad-escuro; 17.2 % 042-metais-lentos; rodada 2: 18.8 % 104-trompas; 16.6 % 041-metais-salto; 16.5 % 032-pad-escuro
+
+### Polifonia sob carga (Tarefas 5 a 7)
+- Motor: `setVoiceLimit(4..16)`; vozes acima do limite fazem fade de 15 ms (`quickRelease`), em vez do release do preset, que pode durar segundos. `allocPoly` e o unison respeitam o limite. Testes: `engine_voice_limit_caps_new_notes`, `engine_lowering_the_limit_fades_extra_voices_quickly_without_a_click`, `engine_raising_the_limit_again_allows_sixteen_voices`, `engine_unison_uses_no_more_voices_than_the_limit`; `alloc_` continua passando.
+- `LoadGovernor` (`engine/src/governor.h`), constantes: cai de 4 em 4 até 8 quando a carga fica acima de 80 % por 250 ms, ou quando há um estouro com carga acima de 50 %; espera 2 s entre quedas; sobe de 4 em 4 depois de 10 s abaixo de 40 %. Um contador de estouros que recomeça (stream reaberto) não conta como estouro novo. Os 6 testes `governor_` passaram de primeira, sem ajuste de tempo.
+- App: o governador roda no callback do Oboe com a carga suavizada; o limite efetivo é `min(governador, teto do usuário)`. ⋮ → "Polifonia máxima" 8 / 12 / 16 (salvo nas preferências) e "Polifonia: N" no diagnóstico. A barra mostra "n/limite vozes" em vermelho quando o limite é menor que 16.
+- **Não medido no aparelho:** o governador nunca rodou no celular. No emulador só se viu o teto manual (8) e o texto na barra; a queda automática por carga é coberta apenas pelos testes de lógica.
+
+### Mudanças do plano 5 e desvios (com o motivo)
+1. **`001-init` fora da janela de nível**: ver "Balanceamento de nível".
+2. **`063-pizzicato`, `107-pluck-com-eco`**: `osc2.level` subido porque `master.volume` já estava em 1,0 e o nível continuava abaixo da janela.
+3. **`111-ondas-do-mar`** diferente do plano: ver "Banco completo". `084-caixa` com `master.volume` 1,0 e ainda ~13 dB abaixo do Bumbo.
+4. **Tarefa 9 (ouvir): pendente.** Você pediu para eu seguir sem perguntar, então a folha `docs/PRESET-REVIEW.md` foi montada com os 64 presets e os vereditos ficaram em branco. Presets sem veredito saem como estão.
+5. **Release não assinado**: a chave de assinatura é a identidade permanente do app e as senhas são suas, então não criei o keystore. `tools\make-keystore.ps1` e `keystore.properties` ficam por sua conta.
+6. **Bug de script que deixei passar e corrigi**: o script de balanceamento zerou a sintaxe do `001-init.json` (params vazio); detectei pelo teste de renderização e restaurei o arquivo do git.
+7. **Diálogo de salvar com o teclado**: com `adjustResize` e o ✓ ("Concluído") do teclado, o botão "Salvar como novo" fica alcançável no emulador (capturas `build/save_kb.png` e `save_after.png`). O diálogo de Configurações é rolável; no emulador paisagem os itens de baixo ("Polifonia máxima", "Salvar log…", "Sobre") ficam abaixo da dobra e é preciso rolar.
+8. `tools\pull-log.ps1` usa `com.criapix.volt.debug` por padrão (`-Package` para outro id). Build de release não é debuggable: use ⋮ → "Salvar log…".
+9. Limite de contagem do `-Stress`: com o emulador aberto na mesma máquina as medidas oscilam bastante (o mais pesado variou de 9 % a 18 % entre rodadas). Os números servem como ordem de grandeza, não como medida.

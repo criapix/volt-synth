@@ -3,4 +3,5 @@
   "osc1.wave": 0, "osc2.wave": 0, "osc2.fine": 5, "osc2.level": 0.8,
   "filter.model": 1, "filter.cutoff": 500, "filter.reso": 0.1, "filter.env": 0.5, "filter.keytrack": 0.5, "filter.vel": 0.2,
   "fenv.attack": 0.08, "fenv.decay": 0.5, "fenv.sustain": 0.55, "fenv.release": 0.3,
-  "aenv.attack": 0.05, "aenv.decay": 0.3, "aenv.sustain": 0.85, "aenv.release": 0.3, "aenv.vel": 0.4 } }
+  "aenv.attack": 0.05, "aenv.decay": 0.3, "aenv.sustain": 0.85, "aenv.release": 0.3, "aenv.vel": 0.4,
+  "master.volume": 0.55 } }

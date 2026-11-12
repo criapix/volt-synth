@@ -4,4 +4,4 @@
   "filter.model": 0, "filter.cutoff": 350, "filter.reso": 0.3, "filter.env": 0.4, "filter.keytrack": 0.3,
   "fenv.attack": 0.002, "fenv.decay": 0.3, "fenv.sustain": 0.2, "fenv.release": 0.1,
   "aenv.attack": 0.002, "aenv.decay": 0.4, "aenv.sustain": 0.9, "aenv.release": 0.08,
-  "fx.dist.on": 1, "fx.dist.drive": 0.6, "fx.dist.tone": 3500, "fx.dist.mix": 0.8 } }
+  "master.volume": 0.34, "fx.dist.on": 1, "fx.dist.drive": 0.6, "fx.dist.tone": 3500, "fx.dist.mix": 0.8 } }

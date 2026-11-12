@@ -1,0 +1,10 @@
+{ "format": 1, "name": "Cordas Lentas", "category": "Strings", "params": {
+  "voice.drift": 0.3,
+  "osc1.wave": 0, "osc1.fine": -6,
+  "osc2.wave": 0, "osc2.fine": 6, "osc2.level": 0.9,
+  "mix.sub": 0.2,
+  "filter.model": 2, "filter.cutoff": 2200, "filter.reso": 0.1, "filter.env": 0.1, "filter.keytrack": 0.4,
+  "fenv.attack": 1.5, "fenv.decay": 2.0, "fenv.sustain": 0.8, "fenv.release": 2.0,
+  "aenv.attack": 1.4, "aenv.decay": 1.0, "aenv.sustain": 1.0, "aenv.release": 2.2,
+  "fx.chorus.on": 1, "fx.chorus.mode": 0, "fx.chorus.mix": 0.45,
+  "fx.reverb.on": 1, "fx.reverb.decay": 4.5, "fx.reverb.mix": 0.35 } }

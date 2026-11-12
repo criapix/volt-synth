@@ -7,7 +7,7 @@ private val INFO_LABELS = listOf(
   "sampleRate" to "Taxa (Hz)", "burst" to "Bloco (quadros)", "buffer" to "Buffer (quadros)",
   "lowLatency" to "Baixa latência", "exclusive" to "Exclusivo", "api" to "API",
   "latencyMs" to "Latência de saída (ms)", "xruns" to "Estouros", "load" to "Carga do motor",
-  "restarts" to "Reinícios", "voices" to "Vozes",
+  "restarts" to "Reinícios", "voices" to "Vozes", "voiceLimit" to "Polifonia",
 )
 
 fun formatInfo(info: String): String {

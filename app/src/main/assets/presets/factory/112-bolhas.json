@@ -1,0 +1,7 @@
+{ "format": 1, "name": "Bolhas", "category": "FX", "params": {
+  "osc1.wave": 2,
+  "filter.model": 2, "filter.cutoff": 800, "filter.reso": 0.75, "filter.keytrack": 0.5,
+  "aenv.attack": 0.01, "aenv.decay": 0.3, "aenv.sustain": 1.0, "aenv.release": 0.6,
+  "lfo1.wave": 4, "lfo1.rate": 9.0, "lfo1.cutoff": 0.55,
+  "fx.delay.on": 1, "fx.delay.time": 0.18, "fx.delay.feedback": 0.4, "fx.delay.mix": 0.3,
+  "fx.reverb.on": 1, "fx.reverb.decay": 2.0, "fx.reverb.mix": 0.2 } }

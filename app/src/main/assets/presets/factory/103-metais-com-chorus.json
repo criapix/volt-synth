@@ -1,0 +1,9 @@
+{ "format": 1, "name": "Metais com Chorus", "category": "Brass", "params": {
+  "voice.drift": 0.2,
+  "osc1.wave": 0,
+  "osc2.wave": 0, "osc2.fine": -7, "osc2.level": 0.85,
+  "filter.model": 2, "filter.cutoff": 450, "filter.reso": 0.15, "filter.env": 0.45, "filter.keytrack": 0.5, "filter.vel": 0.25,
+  "fenv.attack": 0.06, "fenv.decay": 0.6, "fenv.sustain": 0.5, "fenv.release": 0.35,
+  "aenv.attack": 0.03, "aenv.decay": 0.3, "aenv.sustain": 0.85, "aenv.release": 0.35, "aenv.vel": 0.4,
+  "fx.chorus.on": 1, "fx.chorus.mode": 1, "fx.chorus.mix": 0.4,
+  "fx.reverb.on": 1, "fx.reverb.decay": 2.0, "fx.reverb.mix": 0.18 } }

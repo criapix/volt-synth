@@ -7,4 +7,4 @@
   "aenv.attack": 1.8, "aenv.decay": 1.0, "aenv.sustain": 0.9, "aenv.release": 3.5,
   "lfo1.wave": 1, "lfo1.rate": 0.12, "lfo1.pw": 0.6,
   "lfo2.wave": 1, "lfo2.rate": 0.07, "lfo2.cutoff": 0.35,
-  "fx.reverb.on": 1, "fx.reverb.decay": 5, "fx.reverb.damp": 0.6, "fx.reverb.mix": 0.35 } }
+  "master.volume": 0.62, "fx.reverb.on": 1, "fx.reverb.decay": 5, "fx.reverb.damp": 0.6, "fx.reverb.mix": 0.35 } }

@@ -1,0 +1,11 @@
+{ "format": 1, "name": "Lead Três Osciladores", "category": "Lead", "params": {
+  "voice.mode": 2, "voice.glide": 0.06, "voice.drift": 0.15,
+  "osc1.wave": 0,
+  "osc2.wave": 0, "osc2.fine": 7, "osc2.level": 0.9,
+  "osc3.wave": 0, "osc3.octave": -1, "osc3.level": 0.6,
+  "mix.drive": 0.2,
+  "filter.model": 0, "filter.cutoff": 1400, "filter.reso": 0.3, "filter.env": 0.25, "filter.keytrack": 0.6,
+  "fenv.attack": 0.005, "fenv.decay": 0.5, "fenv.sustain": 0.5, "fenv.release": 0.3,
+  "aenv.attack": 0.004, "aenv.decay": 0.3, "aenv.sustain": 1.0, "aenv.release": 0.25,
+  "lfo1.wave": 1, "lfo1.rate": 5.2, "lfo1.pitch": 0.12, "lfo1.wheel": 1.0,
+  "master.volume": 0.59, "fx.delay.on": 1, "fx.delay.time": 0.33, "fx.delay.feedback": 0.25, "fx.delay.mix": 0.15 } }

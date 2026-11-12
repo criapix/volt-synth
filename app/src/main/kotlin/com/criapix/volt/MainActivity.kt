@@ -49,6 +49,13 @@ class MainActivity : ComponentActivity() {
   private lateinit var midi: MidiInput
   private lateinit var prefs: Prefs
 
+  private val logLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("text/plain")) { uri ->
+    if (uri == null) return@registerForActivityResult
+    runCatching { contentResolver.openOutputStream(uri)?.use { it.write(AppLog.text().toByteArray()) } }
+      .onSuccess { model.showMessage("Log salvo") }
+      .onFailure { model.showMessage("Não foi possível salvar o log") }
+  }
+
   private val exportLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
     if (uri == null) return@registerForActivityResult
     runCatching { contentResolver.openOutputStream(uri)?.use { it.write(model.exportBank().toByteArray()) } }
@@ -73,6 +80,7 @@ class MainActivity : ComponentActivity() {
     }
 
     prefs = Prefs(this)
+    Native.setMaxVoices(prefs.maxVoices)
     val params = Params.parse(Native.paramTable())
     val state = SynthState(params, NativeSynth)
     val library = PresetLibrary(AssetFactory(assets), File(filesDir, "presets/user"), prefs)
@@ -112,9 +120,17 @@ class MainActivity : ComponentActivity() {
     val io = ScreenIo(
       midiDevices = midi.count, midiActivity = dispatch.activity, lastMidi = dispatch.lastMessage,
       peak = Native::peak, voices = Native::activeVoices, audioInfo = Native::audioInfo,
+      voiceLimit = Native::voiceLimit,
+      maxVoices = object : com.criapix.volt.ui.MaxVoices {
+        override var value: Int
+          get() = prefs.maxVoices
+          set(v) { prefs.maxVoices = v; Native.setMaxVoices(v); AppLog.log("polifonia máxima: $v") }
+      },
       haptics = Haptics(this, prefs),
       learn = learn, pickup = dispatch.pickup, midiSettings = midiSettings,
       onExport = { exportLauncher.launch("volt-presets.json") },
+      onExportLog = { logLauncher.launch("volt-log.txt") },
+      version = runCatching { packageManager.getPackageInfo(packageName, 0).versionName }.getOrNull() ?: "?",
       onImport = { importLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) },
     )
     setContent { VoltScreen(model, io) }

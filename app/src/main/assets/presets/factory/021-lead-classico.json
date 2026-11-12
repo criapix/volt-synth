@@ -6,4 +6,5 @@
   "filter.model": 0, "filter.cutoff": 1200, "filter.reso": 0.45, "filter.env": 0.35, "filter.keytrack": 0.6,
   "fenv.attack": 0.01, "fenv.decay": 0.4, "fenv.sustain": 0.4, "fenv.release": 0.2,
   "aenv.attack": 0.005, "aenv.decay": 0.2, "aenv.sustain": 0.9, "aenv.release": 0.15,
-  "lfo1.wave": 0, "lfo1.rate": 5.5, "lfo1.pitch": 0.1, "lfo1.wheel": 1.0 } }
+  "lfo1.wave": 0, "lfo1.rate": 5.5, "lfo1.pitch": 0.1, "lfo1.wheel": 1.0,
+  "master.volume": 0.52 } }

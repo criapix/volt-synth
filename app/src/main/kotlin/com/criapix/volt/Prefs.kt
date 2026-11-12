@@ -10,6 +10,11 @@ class Prefs(context: Context) : FavoriteStore {
     get() = p.getBoolean("haptics", true)
     set(v) = p.edit().putBoolean("haptics", v).apply()
 
+  /** Polyphony cap chosen in the settings: 8, 12 or 16. */
+  var maxVoices: Int
+    get() = p.getInt("maxVoices", 16)
+    set(v) = p.edit().putInt("maxVoices", v).apply()
+
   /** The learned MIDI map, MidiMap.encode() format. */
   var midiMap: String
     get() = p.getString("midiMap", "") ?: ""

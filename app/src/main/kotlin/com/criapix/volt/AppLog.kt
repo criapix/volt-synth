@@ -49,6 +49,17 @@ object AppLog {
     }
   }
 
+  /** The previous log file followed by the current one, for "Salvar log…". Waits for queued lines first. */
+  fun text(): String {
+    flush()
+    val f = file ?: return ""
+    val old = File(f.parentFile, "volt-log.old.txt")
+    return buildString {
+      if (old.exists()) append(old.readText())
+      if (f.exists()) append(f.readText())
+    }
+  }
+
   /** Waits (briefly) for queued lines to reach the disk. */
   fun flush() {
     runCatching { exec.submit {}.get(1, TimeUnit.SECONDS) }

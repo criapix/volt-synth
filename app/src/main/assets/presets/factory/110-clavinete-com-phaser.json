@@ -1,0 +1,7 @@
+{ "format": 1, "name": "Clavinete com Phaser", "category": "Keys", "params": {
+  "osc1.wave": 1, "osc1.pw": 0.18,
+  "hpf.cutoff": 150,
+  "filter.model": 1, "filter.cutoff": 1200, "filter.reso": 0.3, "filter.env": 0.35, "filter.keytrack": 0.8, "filter.vel": 0.4,
+  "fenv.attack": 0.001, "fenv.decay": 0.2, "fenv.sustain": 0.2, "fenv.release": 0.1,
+  "aenv.attack": 0.001, "aenv.decay": 0.6, "aenv.sustain": 0.4, "aenv.release": 0.08, "aenv.vel": 0.7,
+  "master.volume": 0.84, "fx.phaser.on": 1, "fx.phaser.rate": 0.5, "fx.phaser.depth": 0.7, "fx.phaser.feedback": 0.45, "fx.phaser.mix": 0.5 } }

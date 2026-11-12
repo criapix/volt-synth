@@ -114,13 +114,14 @@ void Engine::startVoice(Voice& v, int note, float velocity, float detune, float 
 }
 
 Voice* Engine::allocPoly(int note) {
-  for (auto& v : voices_) if (v.active && v.note == note) return &v;  // same key: reuse
-  for (auto& v : voices_) if (!v.active) return &v;
+  const int n = voiceLimit_;
+  for (int i = 0; i < n; ++i) if (voices_[i].active && voices_[i].note == note) return &voices_[i];  // same key: reuse
+  for (int i = 0; i < n; ++i) if (!voices_[i].active) return &voices_[i];
   Voice* best = nullptr;
-  for (auto& v : voices_) if (v.releasing() && (!best || v.age < best->age)) best = &v;
+  for (int i = 0; i < n; ++i) if (voices_[i].releasing() && (!best || voices_[i].age < best->age)) best = &voices_[i];
   if (best) return best;
   best = &voices_[0];
-  for (auto& v : voices_) if (v.age < best->age) best = &v;
+  for (int i = 0; i < n; ++i) if (voices_[i].age < best->age) best = &voices_[i];
   return best;
 }
 
@@ -135,7 +136,8 @@ void Engine::noteOn(int note, float velocity) {
     if (stackSize_ == 16) { std::memmove(stack_, stack_ + 1, sizeof(int) * 15); --stackSize_; }
     stack_[stackSize_++] = note;
 
-    const int n = mode == kUnison ? (int)value_[kVoiceUnison] : 1;
+    int n = mode == kUnison ? (int)value_[kVoiceUnison] : 1;
+    if (n > voiceLimit_) n = voiceLimit_;
     const bool legato = mode == kLegato && stackSize_ > 1 && voices_[0].active && voices_[0].held;
     const float gain = kVoiceGain / std::sqrt((float)n);
     for (int i = 0; i < kMaxVoices; ++i) {
@@ -215,6 +217,12 @@ void Engine::runArp() {
 }
 
 void Engine::renderBlock() {
+  const int limit = voiceLimitReq_.load(std::memory_order_relaxed);
+  if (limit != voiceLimit_) {
+    voiceLimit_ = limit;
+    for (int i = limit; i < kMaxVoices; ++i)
+      if (voices_[i].active) voices_[i].quickRelease();
+  }
   if (fade_ == Fade::Out && fadeGain_ <= 0.0f) { applyPending(); fade_ = Fade::In; }
   for (int i = 0; i < kNumParams; ++i)
     if (kParams[i].curve != Curve::Step) value_[i] += (target_[i] - value_[i]) * smooth_;

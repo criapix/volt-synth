@@ -1,0 +1,7 @@
+{ "format": 1, "name": "Kalimba", "category": "Pluck", "params": {
+  "osc1.wave": 3,
+  "osc2.wave": 3, "osc2.octave": 2, "osc2.semi": 7, "osc2.level": 0.0,
+  "pmod.osc2.pitch": 0.12,
+  "filter.model": 1, "filter.cutoff": 6000, "filter.reso": 0.05, "filter.keytrack": 0.6,
+  "aenv.attack": 0.001, "aenv.decay": 0.7, "aenv.sustain": 0.0, "aenv.release": 0.5, "aenv.vel": 0.7,
+  "master.volume": 0.88, "fx.reverb.on": 1, "fx.reverb.decay": 1.6, "fx.reverb.mix": 0.22 } }

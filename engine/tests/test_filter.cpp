@@ -109,3 +109,11 @@ TEST(filter_reset_lane_clears_the_ringing) {
   for (int s = 0; s < kBlock; ++s) lane1 = std::fmax(lane1, std::fabs(io[s][1]));
   CHECK(lane1 < 1e-6);
 }
+
+TEST(filter_every_model_has_unity_passband_gain) {
+  // Cutoff fully open, low resonance, a 440 Hz sine well inside the passband.
+  for (int model = 0; model < kNumFilterModels; ++model) {
+    double out = sineThrough(model, 20000.0f, 0.1f, 440.0f);
+    CHECK_NEAR(out / kIn, 1.0, 0.19);  // within about +-1.5 dB
+  }
+}

@@ -71,4 +71,9 @@ class MidiDispatchTest {
     send(0x90, 60, 100)
     assertEquals("Nota 60 · canal 1 = 100", d.lastMessage.value)
   }
+
+  @Test fun everyMessageBumpsTheActivityCounter() {
+    send(0x90, 60, 100); send(0x90, 60, 100); send(0xB0, 74, 3)
+    assertEquals(3L, d.activity.value)
+  }
 }

@@ -47,7 +47,7 @@ class Voice {
   Rng rng_;
   float velocity_ = 1.0f, pitch_ = 60.0f, target_ = 60.0f;
   float detune_ = 0.0f, pan_ = 0.0f, gain_ = 1.0f;
-  float drift_ = 0.0f, subPhase_ = 0.0f, hpf_ = 0.0f, osc2Prev_ = 0.0f;
+  float drift_ = 0.0f, subPhase_ = 0.0f, hpf_ = 0.0f;
   float ampPrev_ = 0.0f, lfo1Val_ = 0.0f, lfo2Val_ = 0.0f;
 };
 

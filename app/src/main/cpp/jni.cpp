@@ -34,3 +34,12 @@ JNI(void, pitchBend)(JNIEnv*, jobject, jfloat v) { g_audio.engine().post({Event:
 JNI(void, modWheel)(JNIEnv*, jobject, jfloat v) { g_audio.engine().post({Event::ModWheel, 0, v}); }
 JNI(void, sustain)(JNIEnv*, jobject, jboolean on) { g_audio.engine().post({Event::Sustain, 0, on ? 1.0f : 0.0f}); }
 JNI(void, allNotesOff)(JNIEnv*, jobject) { g_audio.engine().post({Event::AllNotesOff, 0, 0.0f}); }
+
+JNI(jboolean, loadPatch)(JNIEnv* env, jobject, jfloatArray values) {
+  const jsize n = env->GetArrayLength(values);
+  float buf[volt::kNumParams];
+  const jsize count = n < volt::kNumParams ? n : volt::kNumParams;
+  env->GetFloatArrayRegion(values, 0, count, buf);
+  return g_audio.engine().postPatch(buf, count) ? JNI_TRUE : JNI_FALSE;
+}
+JNI(jint, activeVoices)(JNIEnv*, jobject) { return g_audio.engine().activeVoices(); }

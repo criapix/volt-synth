@@ -1,31 +1,10 @@
 #include "dsp_probe.h"
 #include "engine.h"
 #include "filter.h"
+#include "rig.h"
 #include "test.h"
 
 using namespace volt;
-
-namespace {
-struct Rig {
-  Engine e;
-  Rig() { e.setSampleRate(48000.0f); }
-  void set(int id, float real) { e.post({Event::SetParam, id, norm(id, real)}); }
-  void on(int note, float vel = 0.8f) { e.post({Event::NoteOn, note, vel}); }
-  void off(int note) { e.post({Event::NoteOff, note, 0}); }
-  // Renders `seconds` and returns the left channel.
-  std::vector<float> play(float seconds, int chunk = 96) {
-    std::vector<float> left, buf(2 * chunk);
-    int frames = (int)(seconds * 48000.0f);
-    while (frames > 0) {
-      int n = frames < chunk ? frames : chunk;
-      e.render(buf.data(), n);
-      for (int i = 0; i < n; ++i) left.push_back(buf[2 * i]);
-      frames -= n;
-    }
-    return left;
-  }
-};
-}  // namespace
 
 TEST(engine_is_silent_with_no_notes) {
   Rig r;
@@ -40,7 +19,7 @@ TEST(engine_plays_a_note_at_concert_pitch) {
   r.on(69);
   r.play(0.1f);
   auto x = r.play(1.0f);
-  CHECK(probe::rms(x) > 0.02);  // the default Ladder filter has ~0.5 passband gain (see NOTES.md)
+  CHECK(probe::rms(x) > 0.05);
   CHECK_NEAR(probe::zeroCrossHz(x, 48000.0), 440.0, 1.5);
   CHECK(r.e.activeVoices() == 1);
 }
@@ -201,4 +180,24 @@ TEST(engine_filter_envelope_opens_the_filter) {
     return probe::tone(r.play(1.0f), 2200.0, 48000.0);  // 10th harmonic of 220 Hz
   };
   CHECK(level(0.8f) > 5.0 * level(0.0f));
+}
+
+TEST(engine_sync_locks_osc1_to_osc2s_period) {
+  // osc 2 (silent) plays the note, 110 Hz; osc 1 is a fifth above, 164.8 Hz.
+  auto energy = [](bool sync) {
+    Rig r;
+    r.set(kVoiceDrift, 0.0f);
+    r.set(kFilterModel, 1);
+    r.set(kOsc1Semi, 7);
+    r.set(kOsc2Level, 0.0f);
+    r.set(kOsc1Sync, sync ? 1.0f : 0.0f);
+    r.play(0.01f);
+    r.on(45);
+    r.play(0.1f);
+    auto x = r.play(1.0f);
+    return std::make_pair(probe::tone(x, 110.0, 48000.0), probe::tone(x, 164.81, 48000.0));
+  };
+  auto free = energy(false), locked = energy(true);
+  CHECK(free.second > 5.0 * free.first);     // unsynced: osc 1 sounds at its own pitch
+  CHECK(locked.first > 5.0 * locked.second);  // synced: osc 1 restarts every osc 2 cycle
 }

@@ -4,7 +4,7 @@ Volt é um sintetizador analógico virtual polifônico para Android, tocado por 
 
 ## Estado
 
-Em desenvolvimento. O plano 1 está implementado: motor C++ de 16 vozes (3 osciladores, filtro Ladder / Roland 12 dB / Roland 24 dB / Prophet, 2 envelopes, 2 LFOs, poly-mod, modos poly/mono/legato/unison), saída de áudio Oboe de baixa latência, entrada MIDI USB com mapa de controladores de fábrica e uma tela de depuração com um controle por parâmetro. Ainda não existem a tela de toque, presets, MIDI Learn, efeitos e arpejador. Nada foi medido no aparelho ainda: veja `docs/DEVICE-TEST.md` e `docs/NOTES.md`.
+Em desenvolvimento. O plano 2 está implementado: motor C++ de 16 vozes (3 osciladores, filtro Ladder / Roland 12 dB / Roland 24 dB / Prophet, 2 envelopes, 2 LFOs, poly-mod, modos poly/mono/legato/unison), saída de áudio Oboe de baixa latência, entrada MIDI USB com mapa de controladores de fábrica, a tela de toque (abas OSC · FILTRO · ENV · MOD, knobs, curva do filtro e envelopes ao vivo) e presets (10 de fábrica, os seus, navegador, favoritos, importar/exportar, sessão restaurada). Ainda não existem MIDI Learn, Program Change, efeitos, arpejador, teclado na tela e o banco de fábrica completo. A tela foi vista só no emulador; o som e o toque no aparelho ainda não foram avaliados: veja `docs/DEVICE-TEST.md` e `docs/NOTES.md`.
 
 ## Compilar (Windows, PowerShell)
 
@@ -20,6 +20,10 @@ O APK sai em `app\build\outputs\apk\debug\app-debug.apk`.
 ## Teclado MIDI
 
 Conecte o teclado por cabo USB (celular como host) antes ou depois de abrir o app; a tela mostra "MIDI: N conectado(s)" e a última mensagem recebida. Mapa de fábrica: modulação (CC 1), volume (CC 7), sustain (CC 64), ressonância (CC 71), cutoff (CC 74), pitch bend, e CC 120/123 como pânico.
+
+## Presets
+
+Os presets do usuário ficam dentro do app (pasta privada); use **Exportar** no navegador de presets para fazer backup e **Importar** para trazê-los de volta. Um preset é um arquivo JSON com `name`, `category` e `params`, que mapeia o nome permanente de cada parâmetro ao seu valor real (Hz, segundos, semitons); o que faltar assume o padrão do motor. Os presets de fábrica são somente leitura: para alterar um, salve como novo.
 
 ## Licença
 

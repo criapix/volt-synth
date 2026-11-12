@@ -1,0 +1,6 @@
+{ "format": 1, "name": "Baixo Redondo", "category": "Bass", "params": {
+  "voice.mode": 2, "voice.drift": 0.1,
+  "osc1.wave": 1, "osc1.octave": -1, "osc1.pw": 0.5, "mix.sub": 0.6,
+  "filter.model": 2, "filter.cutoff": 300, "filter.reso": 0.15, "filter.env": 0.35, "filter.keytrack": 0.3,
+  "fenv.attack": 0.002, "fenv.decay": 0.25, "fenv.sustain": 0.0, "fenv.release": 0.1,
+  "aenv.attack": 0.002, "aenv.decay": 0.3, "aenv.sustain": 1.0, "aenv.release": 0.08 } }

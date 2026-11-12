@@ -20,4 +20,8 @@ object Native {
   external fun modWheel(value: Float)               // 0..1
   external fun sustain(on: Boolean)
   external fun allNotesOff()
+
+  /** Every parameter at once, normalized, indexed by id. False when the engine queue is full (nothing applied). */
+  external fun loadPatch(values: FloatArray): Boolean
+  external fun activeVoices(): Int
 }

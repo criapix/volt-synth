@@ -13,6 +13,8 @@
 #include <utility>
 #include <vector>
 #include "engine.h"
+#include "fm/fm_params.h"
+#include "params.h"
 
 namespace volt {
 
@@ -203,5 +205,15 @@ inline double limitedShare(const Rendered& r) {
   for (size_t i = 0; i < r.left.size(); ++i) if (std::fabs(r.left[i]) > 0.95f || std::fabs(r.right[i]) > 0.95f) ++n;
   return r.left.empty() ? 0.0 : (double)n / r.left.size();
 }
+
+// Loads one DX7 voice into the engine as the app does: every parameter at its default, then the voice.
+inline void applyDx7Voice(Engine& e, const Dx7Voice& voice) {
+  std::vector<float> real(kNumParams), n(kNumParams);
+  for (int i = 0; i < kNumParams; ++i) real[i] = kParams[i].def;
+  valuesFromVced(voice, real.data());
+  for (int i = 0; i < kNumParams; ++i) n[i] = norm(i, real[i]);
+  e.postPatch(n.data(), kNumParams);
+}
+
 
 }  // namespace volt

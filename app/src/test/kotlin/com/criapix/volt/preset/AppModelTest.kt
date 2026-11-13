@@ -135,4 +135,106 @@ class AppModelTest {
     assertEquals(0, m.importText("nada"))
     assertNotNull(m.message.value)
   }
+
+  // Hand-made bank (voices named "<NAME> 01".."<NAME> 32"); the Yamaha files are not distributed (see Dx7Fixtures).
+  private fun rom(name: String) = Dx7Fixtures.synthBank(name.uppercase())
+
+  @Test fun importingASyxBankReportsTheCount() {
+    val m = model().apply { restore() }
+    assertEquals(32, m.importBytes(rom("rom1a"), "rom1a"))
+    assertEquals("32 presets importados", m.message.value)
+  }
+
+  @Test fun aBadChecksumIsImportedWithAWarning() {
+    val m = model().apply { restore() }
+    val b = rom("rom1a").also { it[4102] = ((it[4102] + 1) and 0x7F).toByte() }
+    assertEquals(32, m.importBytes(b, "rom1a"))
+    assertEquals("Importado com checksum inválido: 32 presets", m.message.value)
+  }
+
+  @Test fun aSyxThatIsNotDx7DataIsRejected() {
+    val m = model().apply { restore() }
+    val b = ByteArray(100).also { it[0] = 0xF0.toByte() }
+    assertEquals(0, m.importBytes(b, "x"))
+    assertEquals("Não é um arquivo do DX7", m.message.value)
+    assertEquals(3, m.presets.value.size)
+  }
+
+  @Test fun jsonStillImportsThroughImportBytes() {
+    val m = model().apply { restore() }
+    assertEquals(1, m.importBytes(PresetCodec.encode(PresetFile(name = "Json")).toByteArray(), "x"))
+    assertEquals("1 preset importado", m.message.value)
+  }
+
+  @Test fun exportSyxIsOneVoiceForFmAndNullForAnalog() {
+    val m = model().apply { restore() }
+    assertNull(m.exportSyx("factory:001-init"))
+    val ref = m.library.importBytes(rom("rom1a"), "rom1a").refs.first()
+    val b = m.exportSyx(ref.id)!!
+    assertEquals(163, b.size)
+    assertEquals("ROM1A 01", Dx7Codec.readAny(b, "x").presets.single().name)
+    assertTrue(m.isFm(ref.id))
+    assertFalse(m.isFm("factory:001-init"))
+  }
+
+  @Test fun factoryCartridgeVoicesExportAsSingleVoices() {
+    val state = SynthState(p, Silent)
+    val lib = PresetLibrary(DirFactory(factory()), File(tmp.root, "user"), NoFavorites, CartridgeSource { listOf("rom1a" to rom("rom1a")) })
+    val m = AppModel(state, lib, File(tmp.root, "session.json"))
+    val b = m.exportSyx("factory:dx7-rom1a-01")!!
+    assertEquals(163, b.size)
+    assertTrue(m.isFm("factory:dx7-rom1a-32"))
+  }
+
+  @Test fun exportSyxBankDropsBeyond32AndPadsFewer() {
+    val m = model().apply { restore() }
+    val voice = Dx7Codec.readBank(rom("rom1a"), "rom1a").presets[0]
+    assertNull(m.exportSyxBank("DX7 mix"))
+    repeat(3) { i -> m.library.create(voice.copy(name = "V$i", category = "DX7 mix")) }
+    val (few, droppedFew) = m.exportSyxBank("DX7 mix")!!
+    assertEquals(0, droppedFew)
+    val back = Dx7Codec.readBank(few, "mix")
+    assertTrue(back.checksumOk)
+    assertEquals(listOf("V0", "V1", "V2", "INIT VOICE"), back.presets.take(4).map { it.name })
+    assertEquals("INIT VOICE", back.presets[31].name)
+    repeat(32) { i -> m.library.create(voice.copy(name = "W$i", category = "DX7 mix")) }  // 35 in total
+    val (full, dropped) = m.exportSyxBank("DX7 mix")!!
+    assertEquals(3, dropped)
+    assertEquals(32, Dx7Codec.readBank(full, "mix").presets.size)
+  }
+
+  @Test fun exportSyxBankKeepsTheCartridgeOrderAndParameters() {
+    for (rom in listOf("rom1a", "rom2a")) {
+      val m = model().apply { restore() }
+      val original = Dx7Codec.readBank(rom(rom), rom).presets
+      val cat = m.library.importBytes(rom(rom), rom).refs.first().category
+      val back = Dx7Codec.readBank(m.exportSyxBank(cat)!!.first, rom).presets
+      assertEquals(original.size, back.size)
+      original.zip(back).forEachIndexed { i, (a, b) ->
+        assertEquals("voice $i name", a.name, b.name)
+        assertEquals("voice $i params", a.params, b.params)
+      }
+    }
+  }
+
+  @Test fun theLastPresetsBeyond32AreDroppedAndFactoryOnesAreExcluded() {
+    val state = SynthState(p, Silent)
+    val lib = PresetLibrary(DirFactory(factory()), File(tmp.root, "user"), NoFavorites, CartridgeSource { listOf("rom1a" to rom("rom1a")) })
+    val m = AppModel(state, lib, File(tmp.root, "session.json"))
+    val voice = Dx7Codec.readBank(rom("rom1a"), "rom1a").presets[0]
+    // "DX7 ROM1A" is also the factory cartridge category; its 32 factory voices must not leak into the export.
+    repeat(35) { i -> lib.create(voice.copy(name = "N${i.toString().padStart(2, '0')}", category = "DX7 ROM1A", slot = 0)) }
+    val (bytes, dropped) = m.exportSyxBank("DX7 ROM1A")!!
+    assertEquals(3, dropped)
+    val names = Dx7Codec.readBank(bytes, "x").presets.map { it.name }
+    assertEquals(List(32) { "N${it.toString().padStart(2, '0')}" }, names)
+  }
+
+  @Test fun theRealRom1aExportsBrassAsASingleVoice() {
+    val bytes = Dx7Fixtures.rom("rom1a")
+    val state = SynthState(p, Silent)
+    val lib = PresetLibrary(DirFactory(factory()), File(tmp.root, "user"), NoFavorites, CartridgeSource { listOf("rom1a" to bytes) })
+    val m = AppModel(state, lib, File(tmp.root, "session.json"))
+    assertEquals("BRASS   1", Dx7Codec.readAny(m.exportSyx("factory:dx7-rom1a-01")!!, "x").presets.single().name)
+  }
 }

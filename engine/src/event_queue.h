@@ -5,10 +5,10 @@
 namespace volt {
 
 struct Event {
-  enum Type : int32_t { NoteOn, NoteOff, SetParam, PitchBend, ModWheel, Sustain, AllNotesOff, PatchParam, PatchCommit };
+  enum Type : int32_t { NoteOn, NoteOff, SetParam, PitchBend, ModWheel, Sustain, AllNotesOff, PatchParam, PatchCommit, Aftertouch, Breath };
   Type type;
   int32_t a;  // note, or parameter id
-  float b;    // velocity 0..1, normalized parameter value, bend -1..1, wheel 0..1, sustain 0/1
+  float b;    // velocity 0..1, normalized parameter value, bend -1..1, wheel 0..1, sustain 0/1, aftertouch 0..1, breath 0..1
 };
 
 // Single-producer / single-consumer ring. push() from one thread at a time, pop() from another.

@@ -22,10 +22,14 @@ object Native {
   external fun setParam(id: Int, normalized: Float) // 0..1
   external fun pitchBend(value: Float)              // -1..1
   external fun modWheel(value: Float)               // 0..1
+  external fun aftertouch(value: Float)             // 0..1
+  external fun breath(value: Float)                 // 0..1
   external fun sustain(on: Boolean)
   external fun allNotesOff()
 
   /** Every parameter at once, normalized, indexed by id. False when the engine queue is full (nothing applied). */
   external fun loadPatch(values: FloatArray): Boolean
   external fun activeVoices(): Int
+  /** msfa's algorithm table: 32 algorithms x 6 operator flag values (index 0 of each = OP6). */
+  external fun fmAlgorithms(): IntArray
 }

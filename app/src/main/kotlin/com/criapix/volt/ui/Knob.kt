@@ -45,7 +45,7 @@ private const val START_DEG = 135f
 private const val SWEEP_DEG = 270f
 
 @Composable
-fun Knob(param: Param, ui: KnobUi, state: SynthState, size: Dp, onStep: () -> Unit) {
+fun Knob(param: Param, ui: KnobUi, state: SynthState, size: Dp, onStep: () -> Unit, minWidth: Dp = 0.dp) {
   val norm by state.value(param.id).collectAsStateWithLifecycle()
   var active by remember { mutableStateOf(false) }
   var lastUp by remember { mutableLongStateOf(0L) }
@@ -53,7 +53,7 @@ fun Knob(param: Param, ui: KnobUi, state: SynthState, size: Dp, onStep: () -> Un
   val steps = if (param.curve == Curve.STEP) (param.max - param.min).toInt() else 0
   val text = ParamUi.format(param, param.toReal(norm))
 
-  Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(size + 8.dp)) {
+  Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(maxOf(size + 8.dp, minWidth))) {
     Box(contentAlignment = Alignment.Center) {
       Canvas(
         Modifier.size(size).pointerInput(param.id, travel) {

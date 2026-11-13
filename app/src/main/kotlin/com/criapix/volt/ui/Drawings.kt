@@ -6,6 +6,13 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
@@ -109,5 +116,185 @@ fun EnvelopeView(state: SynthState, prefix: String, modifier: Modifier = Modifie
     for (o in listOf(at(pts.attackX, 1f), at(pts.decayX, pts.sustain), at(pts.releaseX, 0f))) {
       drawCircle(VoltColors.accent, 12f, o)
     }
+  }
+}
+
+/** The DX7 algorithm of the patch: boxes per operator, lines from modulators down to what they modulate. */
+@Composable
+fun AlgorithmView(state: SynthState, modifier: Modifier = Modifier) {
+  val algos = remember { Algorithms.decode(com.criapix.volt.Native.fmAlgorithms()) }
+  val p = state.params
+  val algoParam = p["fm.algorithm"]!!
+  val algoNorm by state.value(algoParam.id).collectAsStateWithLifecycle()
+  val on0 by state.value(p["fm.op1.on"]!!.id).collectAsStateWithLifecycle()
+  val on1 by state.value(p["fm.op2.on"]!!.id).collectAsStateWithLifecycle()
+  val on2 by state.value(p["fm.op3.on"]!!.id).collectAsStateWithLifecycle()
+  val on3 by state.value(p["fm.op4.on"]!!.id).collectAsStateWithLifecycle()
+  val on4 by state.value(p["fm.op5.on"]!!.id).collectAsStateWithLifecycle()
+  val on5 by state.value(p["fm.op6.on"]!!.id).collectAsStateWithLifecycle()
+  val ons = listOf(on0, on1, on2, on3, on4, on5)
+  val number = algoParam.toReal(algoNorm).toInt().coerceIn(1, 32)
+  val algo = algos[number - 1]
+  val layout = remember(number) { Algorithms.layout(algo) }
+  val measurer = rememberTextMeasurer()
+
+  Canvas(modifier.fillMaxSize()) {
+    val cellH = size.height / layout.rows
+    val cellW = minOf(size.width / (layout.columns.coerceAtLeast(3) + 0.6f), cellH * 1.6f)
+    val box = minOf(cellW * 0.62f, cellH * 0.6f, 56.dp.toPx())
+    val originX = (size.width - cellW * layout.columns) / 2f
+    fun center(op: Int): Offset {
+      val c = layout.cells[op]!!
+      return Offset(originX + cellW * (c.column + 0.5f), cellH * (c.row + 0.5f))
+    }
+    val lineColor = VoltColors.dim
+    // modulation lines: from the bottom edge of the modulator to the top edge of its target
+    algo.modulators.forEach { (target, mods) ->
+      mods.forEach { m ->
+        val a = center(m)
+        val b = center(target)
+        drawLine(lineColor, Offset(a.x, a.y + box / 2), Offset(b.x, b.y - box / 2), 3f)
+      }
+    }
+    // feedback: a small loop on the right side of the box (self-loop) or an arc from one operator to the other
+    val fbColor = VoltColors.accent2
+    val from = center(algo.feedbackFrom)
+    val to = center(algo.feedback)
+    val fbPath = Path()
+    if (algo.feedbackFrom == algo.feedback) {
+      val r = box * 0.32f
+      val x = from.x + box / 2
+      fbPath.moveTo(x, from.y - box * 0.15f)
+      fbPath.cubicTo(x + r * 2.2f, from.y - box * 0.9f, x + r * 2.2f, from.y + box * 0.9f, x, from.y + box * 0.15f)
+    } else {
+      val x = maxOf(from.x, to.x) + box / 2
+      val bulge = box * 0.5f + cellW * 0.0f
+      fbPath.moveTo(from.x + box / 2, from.y)
+      fbPath.cubicTo(x + bulge, from.y, x + bulge, to.y, to.x + box / 2, to.y)
+    }
+    drawPath(fbPath, fbColor, style = Stroke(3f))
+    // arrow head at the end of the feedback path
+    val tipX = if (algo.feedbackFrom == algo.feedback) from.x + box / 2 else to.x + box / 2
+    val tipY = if (algo.feedbackFrom == algo.feedback) from.y + box * 0.15f else to.y
+    val ah = box * 0.14f
+    val head = Path().apply {
+      moveTo(tipX, tipY); lineTo(tipX + ah * 1.5f, tipY - ah); lineTo(tipX + ah * 1.5f, tipY + ah); close()
+    }
+    drawPath(head, fbColor)
+
+    for (op in 1..6) {
+      val c = center(op)
+      val on = ons[op - 1] >= 0.5f
+      val carrier = op in algo.carriers
+      val tl = Offset(c.x - box / 2, c.y - box / 2)
+      val corner = androidx.compose.ui.geometry.CornerRadius(8f, 8f)
+      drawRoundRect(if (on) VoltColors.raised else VoltColors.background, tl, androidx.compose.ui.geometry.Size(box, box), corner)
+      drawRoundRect(
+        (if (carrier) VoltColors.accent else VoltColors.track).copy(alpha = if (on) 1f else 0.35f),
+        tl, androidx.compose.ui.geometry.Size(box, box), corner, style = Stroke(if (carrier) 5f else 3f),
+      )
+      val text = measurer.measure(
+        op.toString(),
+        TextStyle(fontSize = (box / density * 0.45f).sp, lineHeight = (box / density * 0.5f).sp, fontWeight = FontWeight.Bold,
+          color = VoltColors.text.copy(alpha = if (on) 1f else 0.3f)),
+      )
+      drawText(text, topLeft = Offset(c.x - text.size.width / 2f, c.y - text.size.height / 2f))
+    }
+    val big = measurer.measure(
+      number.toString(),
+      TextStyle(fontSize = 40.sp, lineHeight = 44.sp, fontWeight = FontWeight.Bold, color = VoltColors.accent.copy(alpha = 0.55f)),
+    )
+    drawText(big, topLeft = Offset(6.dp.toPx(), 2.dp.toPx()))
+  }
+}
+
+/**
+ * A DX7 envelope (four rates, four levels) with draggable handles. [prefix] is "fm.op3" or "fm.pitchenv"; the
+ * parameters are `$prefix.r1..r4` and `$prefix.l1..l4`, all steps 0..99. With [pitch] the levels are centred at
+ * 50 (no shift) and a centre line is drawn. A handle's horizontal drag changes its rate, the vertical one its level.
+ */
+@Composable
+fun Dx7EnvelopeView(state: SynthState, prefix: String, pitch: Boolean = false, modifier: Modifier = Modifier) {
+  val p = state.params
+  val rateParams = (1..4).map { p["$prefix.r$it"]!! }
+  val levelParams = (1..4).map { p["$prefix.l$it"]!! }
+  val rn = rateParams.map { state.value(it.id).collectAsStateWithLifecycle().value }
+  val ln = levelParams.map { state.value(it.id).collectAsStateWithLifecycle().value }
+  val rates = IntArray(4) { rateParams[it].toReal(rn[it]).toInt() }
+  val levels = IntArray(4) { levelParams[it].toReal(ln[it]).toInt() }
+  val measurer = rememberTextMeasurer()
+
+  Canvas(
+    modifier.fillMaxSize().pointerInput(prefix) {
+      awaitEachGesture {
+        val down = awaitFirstDown()
+        down.consume()
+        val startRates = IntArray(4) { rateParams[it].toReal(state.norm(rateParams[it].id)).toInt() }
+        val startLevels = IntArray(4) { levelParams[it].toReal(state.norm(levelParams[it].id)).toInt() }
+        val pts = Dx7Envelope.points(startRates, startLevels)
+        val handle = Dx7Envelope.nearest(pts, down.position.x / size.width, 1f - down.position.y / size.height)
+        var dx = 0f
+        var dy = 0f
+        while (true) {
+          val ev = awaitPointerEvent()
+          val ch = ev.changes.firstOrNull { it.id == down.id } ?: break
+          if (!ch.pressed) break
+          val m = ch.positionChange(); ch.consume()
+          dx += m.x / size.width; dy += m.y / size.height
+          val (rate, level) = Dx7Envelope.drag(startRates[handle], startLevels[handle], dx, dy)
+          if (rate != rateParams[handle].toReal(state.norm(rateParams[handle].id)).toInt()) state.set(rateParams[handle].id, rateParams[handle].toNorm(rate.toFloat()))
+          if (level != levelParams[handle].toReal(state.norm(levelParams[handle].id)).toInt()) state.set(levelParams[handle].id, levelParams[handle].toNorm(level.toFloat()))
+        }
+      }
+    },
+  ) {
+    val pad = 10.dp.toPx()
+    val w = size.width - 2 * pad
+    val h = size.height - 2 * pad
+    fun at(pt: Dx7Envelope.Pt) = Offset(pad + pt.x * w, pad + h - pt.level * h)
+    drawLine(VoltColors.track, Offset(pad, pad + h), Offset(pad + w, pad + h), 1f)
+    if (pitch) drawLine(VoltColors.track, Offset(pad, pad + h / 2), Offset(pad + w, pad + h / 2), 2f)
+    val pts = Dx7Envelope.points(rates, levels)
+    val path = Path()
+    pts.forEachIndexed { i, pt -> val o = at(pt); if (i == 0) path.moveTo(o.x, o.y) else path.lineTo(o.x, o.y) }
+    drawPath(path, VoltColors.accent2, style = Stroke(4f))
+    // the plateau marks the key being held
+    val sus = at(pts[3]); val susEnd = at(pts[4])
+    drawLine(VoltColors.accent2.copy(alpha = 0.35f), Offset(sus.x, pad), Offset(sus.x, pad + h), 1f)
+    drawLine(VoltColors.accent2.copy(alpha = 0.35f), Offset(susEnd.x, pad), Offset(susEnd.x, pad + h), 1f)
+    Dx7Envelope.handles(pts).forEachIndexed { i, pt ->
+      val o = at(pt)
+      drawCircle(VoltColors.accent, 12f, o)
+      val t = measurer.measure(
+        (i + 1).toString(),
+        TextStyle(fontSize = 10.sp, lineHeight = 12.sp, fontWeight = FontWeight.Bold, color = VoltColors.text),
+      )
+      drawText(t, topLeft = Offset(o.x - t.size.width / 2f, (o.y - 16.dp.toPx() - t.size.height).coerceAtLeast(0f)))
+    }
+  }
+}
+
+/** Keyboard level scaling of an operator, as a picture (no handles): the left and right curves around the break point. */
+@Composable
+fun KeyScalingView(state: SynthState, op: Int, modifier: Modifier = Modifier) {
+  val p = state.params
+  val names = listOf("kls.break", "kls.ldepth", "kls.lcurve", "kls.rdepth", "kls.rcurve")
+  val values = names.map { n ->
+    val prm = p["fm.op$op.$n"]!!
+    prm.toReal(state.value(prm.id).collectAsStateWithLifecycle().value).toInt()
+  }
+  val breakNote = values[0]
+  val pts = KeyScaling.polyline(breakNote, values[1], values[2], values[3], values[4])
+  Canvas(modifier.fillMaxSize()) {
+    val pad = 6.dp.toPx()
+    val w = size.width - 2 * pad
+    val h = size.height - 2 * pad
+    fun y(change: Float) = pad + h / 2 - change * h / 2
+    drawLine(VoltColors.track, Offset(pad, y(0f)), Offset(pad + w, y(0f)), 1f)
+    val bx = pad + w * breakNote / KeyScaling.NOTES.toFloat()
+    drawLine(VoltColors.accent.copy(alpha = 0.5f), Offset(bx, pad), Offset(bx, pad + h), 2f)
+    val path = Path()
+    pts.forEachIndexed { i, (x, c) -> if (i == 0) path.moveTo(pad + x * w, y(c)) else path.lineTo(pad + x * w, y(c)) }
+    drawPath(path, VoltColors.accent2, style = Stroke(4f))
   }
 }

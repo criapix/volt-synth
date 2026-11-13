@@ -50,3 +50,24 @@ TEST(params_oscillator_and_lfo_blocks_have_the_same_shape) {
   CHECK(kLfo2Wave - kLfo1Wave == kLfoStride);
   CHECK(kLfo2Amp - kLfo2Wave == kLfo1Amp - kLfo1Wave);
 }
+
+TEST(params_fm_blocks_follow_vced_order) {
+  CHECK(paramIndex("engine.type") >= 0);
+  // 22 parameters per operator: the 21 VCED bytes in order, then on/off.
+  CHECK(kFmOpStride == 22);
+  CHECK(kFmOp2R1 - kFmOp1R1 == kFmOpStride);
+  CHECK(paramIndex("fm.op6.on") == kFmOp1R1 + 5 * kFmOpStride + 21);
+  CHECK(paramIndex("fm.op1.detune") == kFmOp1R1 + 20);
+  // 19 global parameters in VCED order 126..144.
+  CHECK(kFmGlobalCount == 19);
+  CHECK(paramIndex("fm.transpose") == kFmPitchEnvR1 + 18);
+  CHECK(paramIndex("fm.algorithm") == kFmPitchEnvR1 + 8);
+  // INIT VOICE defaults
+  CHECK_NEAR(kParams[paramIndex("fm.op1.level")].def, 99, 0);
+  CHECK_NEAR(kParams[paramIndex("fm.op2.level")].def, 0, 0);
+  CHECK_NEAR(kParams[paramIndex("fm.algorithm")].def, 1, 0);
+  CHECK_NEAR(kParams[paramIndex("fm.op3.detune")].def, 0, 0);
+  CHECK(kParams[paramIndex("fm.op3.r2")].curve == Curve::Step);
+  // 99 parameters existed before the DX7 work (1 type + 132 operator + 19 global + 12 controller added).
+  CHECK(kNumParams == 99 + 164);
+}

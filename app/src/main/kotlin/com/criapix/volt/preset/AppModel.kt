@@ -72,6 +72,9 @@ class AppModel(
   /** 1-based position in library order, or 0 when the current sound is not a stored preset. */
   fun number(id: String?): Int = _presets.value.indexOfFirst { it.id == id } + 1
 
+  /** Id -> 1-based position for a presets list, for screens that show many numbers at once. */
+  fun positions(list: List<PresetRef>): Map<String, Int> = list.withIndex().associate { it.value.id to it.index + 1 }
+
   fun canOverwrite(): Boolean = _current.value.id?.startsWith(PresetLibrary.USER) == true
 
   /** Overwrites the current user preset with the sound on screen. False when it is a factory preset. */
@@ -130,6 +133,46 @@ class AppModel(
   } catch (e: PresetError) {
     _message.value = e.message
     0
+  }
+
+  /** Adds the presets in a file the user picked (JSON or DX7 sysex). Returns how many were added. */
+  fun importBytes(bytes: ByteArray, stem: String): Int = try {
+    val r = library.importBytes(bytes, stem)
+    val n = r.refs.size
+    refresh()
+    val count = if (n == 1) "1 preset" else "$n presets"
+    _message.value = if (r.checksumOk) "$count importado${if (n == 1) "" else "s"}" else "Importado com checksum inválido: $count"
+    log("PRESET importados: $n${if (r.checksumOk) "" else " (checksum inválido)"}")
+    n
+  } catch (e: PresetError) {
+    _message.value = e.message
+    0
+  }
+
+  /** True when the preset is an FM (DX7) voice. */
+  fun isFm(id: String): Boolean = try {
+    library.read(id).params["engine.type"] == 1f
+  } catch (e: PresetError) {
+    false
+  }
+
+  /** The preset as a 163-byte single-voice sysex, or null when it is not an FM preset. */
+  fun exportSyx(id: String): ByteArray? = try {
+    library.read(id).takeIf { it.params["engine.type"] == 1f }?.let(Dx7Codec::writeVoice)
+  } catch (e: PresetError) {
+    null
+  }
+
+  /**
+   * The user's FM presets of [category] as a 32-voice bank (library order), with the number of presets dropped
+   * beyond 32. Null when there are none. Fewer than 32 are padded with INIT VOICE.
+   */
+  fun exportSyxBank(category: String): Pair<ByteArray, Int>? {
+    val fm = library.all().filter { it.isUser && it.category == category }.mapNotNull { ref ->
+      runCatching { library.read(ref.id) }.getOrNull()?.takeIf { it.params["engine.type"] == 1f }
+    }.sortedWith(compareBy({ if (it.slot > 0) it.slot else Int.MAX_VALUE }, { it.name.lowercase() }))
+    if (fm.isEmpty()) return null
+    return Dx7Codec.writeBank(fm.take(32)) to (fm.size - 32).coerceAtLeast(0)
   }
 
   fun showMessage(text: String) { _message.value = text }

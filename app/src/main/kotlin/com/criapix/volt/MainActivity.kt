@@ -1,8 +1,10 @@
 package com.criapix.volt
 
+import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.provider.OpenableColumns
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -22,6 +24,7 @@ import com.criapix.volt.midi.MidiParser
 import com.criapix.volt.midi.MidiSettings
 import com.criapix.volt.midi.Synth
 import com.criapix.volt.preset.AppModel
+import com.criapix.volt.preset.AssetCartridges
 import com.criapix.volt.preset.AssetFactory
 import com.criapix.volt.preset.PresetLibrary
 import com.criapix.volt.state.SynthState
@@ -39,6 +42,8 @@ private object NativeSynth : Synth {
   override fun pitchBend(value: Float) = Native.pitchBend(value)
   override fun modWheel(value: Float) = Native.modWheel(value)
   override fun sustain(on: Boolean) = Native.sustain(on)
+  override fun aftertouch(value: Float) = Native.aftertouch(value)
+  override fun breath(value: Float) = Native.breath(value)
   override fun allNotesOff() = Native.allNotesOff()
   override fun loadPatch(values: FloatArray) = Native.loadPatch(values)
 }
@@ -63,10 +68,37 @@ class MainActivity : ComponentActivity() {
       .onFailure { model.showMessage("Não foi possível exportar") }
   }
 
+  private var pendingSyx: Pair<ByteArray, String>? = null  // bytes and the message to show when saved
+
+  private val syxLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("application/octet-stream")) { uri ->
+    val (bytes, done) = pendingSyx ?: return@registerForActivityResult
+    pendingSyx = null
+    if (uri == null) return@registerForActivityResult
+    runCatching { contentResolver.openOutputStream(uri)?.use { it.write(bytes) } }
+      .onSuccess { model.showMessage(done) }
+      .onFailure { model.showMessage("Não foi possível exportar") }
+  }
+
   private val importLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
     if (uri == null) return@registerForActivityResult
-    val text = runCatching { contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() } }.getOrNull()
-    if (text == null) model.showMessage("Não foi possível ler o arquivo") else model.importText(text)
+    val bytes = runCatching { contentResolver.openInputStream(uri)?.use { it.readBytes() } }.getOrNull()
+    if (bytes == null) model.showMessage("Não foi possível ler o arquivo") else model.importBytes(bytes, displayStem(uri))
+  }
+
+  /** The picked document's file name without its extension (the category of imported DX7 banks). */
+  private fun displayStem(uri: Uri): String {
+    val name = runCatching {
+      contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { c ->
+        if (c.moveToFirst()) c.getString(0) else null
+      }
+    }.getOrNull() ?: "importado"
+    return name.substringBeforeLast('.', name).trim().ifEmpty { "importado" }
+  }
+
+  private fun exportSyx(name: String, bytes: ByteArray, done: String) {
+    pendingSyx = bytes to done
+    val safe = name.replace(Regex("[\\/:*?\"<>|]"), "_").trim().take(40).trim().ifEmpty { "preset" }
+    syxLauncher.launch("$safe.syx")
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -83,7 +115,7 @@ class MainActivity : ComponentActivity() {
     Native.setMaxVoices(prefs.maxVoices)
     val params = Params.parse(Native.paramTable())
     val state = SynthState(params, NativeSynth)
-    val library = PresetLibrary(AssetFactory(assets), File(filesDir, "presets/user"), prefs)
+    val library = PresetLibrary(AssetFactory(assets), File(filesDir, "presets/user"), prefs, AssetCartridges(assets)) { AppLog.log(it) }
     model = AppModel(state, library, File(filesDir, "session.json")) { AppLog.log(it) }
     model.restore()
 
@@ -131,7 +163,8 @@ class MainActivity : ComponentActivity() {
       onExport = { exportLauncher.launch("volt-presets.json") },
       onExportLog = { logLauncher.launch("volt-log.txt") },
       version = runCatching { packageManager.getPackageInfo(packageName, 0).versionName }.getOrNull() ?: "?",
-      onImport = { importLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) },
+      onExportSyx = ::exportSyx,
+      onImport = { importLauncher.launch(arrayOf("*/*")) },
     )
     setContent { VoltScreen(model, io) }
 

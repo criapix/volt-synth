@@ -6,6 +6,7 @@ namespace volt {
 namespace {
 enum Mode { kPoly = 0, kMono = 1, kLegato = 2, kUnison = 3 };
 const float kVoiceGain = 0.35f;
+const float kFmGain = 0.45f;  // calibrated in plan 6 task 7: median of the 256 DX7 factory voices -16.0 dB -> -23 dB
 const int kFadeSamples = 256;  // ~5 ms at 48 kHz
 }  // namespace
 
@@ -14,8 +15,11 @@ Engine::Engine() {
   for (int i = 0; i < kMaxVoices; ++i) voices_[i].seed(0x9E3779B9u * (uint32_t)(i + 1));
   globalLfo_.seed(0xC0FFEEu);
   std::memset(io_, 0, sizeof(io_));
+  std::memset(mono_, 0, sizeof(mono_));
   fx_ = std::make_unique<FxChain>(48000.0f);
+  fm_ = std::make_unique<FmBlock>();
   setSampleRate(48000.0f);
+  fm_->setPatch(value_);
 }
 
 void Engine::setSampleRate(float sr) {
@@ -25,6 +29,7 @@ void Engine::setSampleRate(float sr) {
   for (auto& f : filters_) f.setSampleRate(sr);
   if (fx_) fx_->setSampleRate(sr);
   arp_.setSampleRate(sr);
+  if (fm_) { fm_->setSampleRate(sr); fm_->setPatch(value_); }  // tables first; setPatch reads the rate tables
 }
 
 bool Engine::post(const Event& e) {
@@ -44,11 +49,43 @@ bool Engine::postPatch(const float* n, int count) {
 void Engine::applyPending() {
   for (int i = 0; i < kNumParams; ++i)
     if (pendingSet_[i]) { target_[i] = value_[i] = pending_[i]; pendingSet_[i] = false; }
+  syncEngineType();
+  fm_->setPatch(value_);
+  fmDirty_ = false;
+}
+
+void Engine::killVoice(Voice& v) {
+  if (fmMode_) fm_->kill((int)(&v - voices_));
+  v.kill();
+}
+
+void Engine::releaseVoice(Voice& v) {
+  if (fmMode_) fm_->noteOff((int)(&v - voices_));
+  v.release();
+}
+
+void Engine::quickReleaseVoice(Voice& v) {
+  if (fmMode_) fm_->quickRelease((int)(&v - voices_));
+  v.quickRelease();
+}
+
+void Engine::killAllVoices() {
+  // Both renderers, whatever the mode: nothing may sound with the wrong one.
+  for (int i = 0; i < kMaxVoices; ++i) { fm_->kill(i); voices_[i].kill(); }
+}
+
+void Engine::syncEngineType() {
+  const bool fm = value_[kEngineType] >= 0.5f;
+  if (fm == fmMode_) return;
+  killAllVoices();
+  stackSize_ = 0;
+  fmMode_ = fm;
 }
 
 void Engine::render(float* out, int frames) {
   Event e;
   while (queue_.pop(e)) handle(e);
+  flushFm();
 
   int done = 0;
   while (done < frames) {
@@ -67,6 +104,7 @@ void Engine::render(float* out, int frames) {
 void Engine::handle(const Event& e) {
   switch (e.type) {
     case Event::NoteOn:
+      flushFm();
       if (e.b <= 0.0f) keyUp(e.a); else keyDown(e.a, e.b);
       break;
     case Event::NoteOff: keyUp(e.a); break;
@@ -75,6 +113,8 @@ void Engine::handle(const Event& e) {
         target_[e.a] = denorm(e.a, e.b);
         if (kParams[e.a].curve == Curve::Step) value_[e.a] = target_[e.a];
         pendingSet_[e.a] = false;  // an explicit change after a patch overrides the patch's value
+        if (e.a == kEngineType) { syncEngineType(); fmDirty_ = true; }  // kills voices now, patch pushed once later
+        else if (e.a >= kFmOp1R1 && fmMode_) fmDirty_ = true;  // analog: the type switch re-syncs
       }
       break;
     case Event::PatchParam:
@@ -88,14 +128,16 @@ void Engine::handle(const Event& e) {
       break;
     }
     case Event::PitchBend: bend_ = clampf(e.b, -1.0f, 1.0f); break;
-    case Event::ModWheel: modWheel_ = clampf(e.b, 0.0f, 1.0f); break;
+    case Event::ModWheel: modWheel_ = clampf(e.b, 0.0f, 1.0f); fm_->setModWheel(modWheel_); break;
+    case Event::Aftertouch: fm_->setAftertouch(clampf(e.b, 0.0f, 1.0f)); break;  // analog ignores it
+    case Event::Breath: fm_->setBreath(clampf(e.b, 0.0f, 1.0f)); break;
     case Event::Sustain:
       sustain_ = e.b > 0.5f;
       if (!sustain_)
-        for (auto& v : voices_) if (v.active && v.sustained) v.release();
+        for (auto& v : voices_) if (v.active && v.sustained) releaseVoice(v);
       break;
     case Event::AllNotesOff:
-      for (auto& v : voices_) v.kill();
+      for (auto& v : voices_) killVoice(v);
       stackSize_ = 0;
       arp_.clear();
       std::memset(keyHeld_, 0, sizeof(keyHeld_));
@@ -111,6 +153,7 @@ void Engine::startVoice(Voice& v, int note, float velocity, float detune, float 
   }
   v.start(note, velocity, glide ? lastPitch_ : (float)note, detune, pan, gain);
   v.age = ++counter_;
+  if (fmMode_) fm_->noteOn((int)(&v - voices_), note, velocity, kFmGain);
 }
 
 Voice* Engine::allocPoly(int note) {
@@ -136,13 +179,13 @@ void Engine::noteOn(int note, float velocity) {
     if (stackSize_ == 16) { std::memmove(stack_, stack_ + 1, sizeof(int) * 15); --stackSize_; }
     stack_[stackSize_++] = note;
 
-    int n = mode == kUnison ? (int)value_[kVoiceUnison] : 1;
+    int n = mode == kUnison && !fmMode_ ? (int)value_[kVoiceUnison] : 1;  // FM: one voice, retriggered
     if (n > voiceLimit_) n = voiceLimit_;
-    const bool legato = mode == kLegato && stackSize_ > 1 && voices_[0].active && voices_[0].held;
+    const bool legato = !fmMode_ && mode == kLegato && stackSize_ > 1 && voices_[0].active && voices_[0].held;
     const float gain = kVoiceGain / std::sqrt((float)n);
     for (int i = 0; i < kMaxVoices; ++i) {
       Voice& v = voices_[i];
-      if (i >= n) { if (v.active && !v.releasing()) v.release(); continue; }
+      if (i >= n) { if (v.active && !v.releasing()) releaseVoice(v); continue; }
       const float pos = n > 1 ? 2.0f * (float)i / (float)(n - 1) - 1.0f : 0.0f;  // -1..1
       if (legato) v.retarget(note);
       else startVoice(v, note, velocity, 0.5f * value_[kVoiceDetune] * pos, value_[kVoiceSpread] * pos, gain);
@@ -154,7 +197,7 @@ void Engine::noteOn(int note, float velocity) {
 
 void Engine::releaseOrSustain(Voice& v) {
   if (sustain_) { v.held = false; v.sustained = true; }
-  else v.release();
+  else releaseVoice(v);
 }
 
 void Engine::noteOff(int note) {
@@ -169,7 +212,13 @@ void Engine::noteOff(int note) {
   if (stackSize_ == 0) {
     for (auto& v : voices_) if (v.active && v.held) releaseOrSustain(v);
   } else if (wasTop) {
-    for (auto& v : voices_) if (v.active && v.held) v.retarget(stack_[stackSize_ - 1]);
+    const int top = stack_[stackSize_ - 1];
+    for (int i = 0; i < kMaxVoices; ++i) {
+      Voice& v = voices_[i];
+      if (!(v.active && v.held)) continue;
+      if (fmMode_) startVoice(v, top, keyVel_[top] > 0.0f ? keyVel_[top] : 0.7f, 0.0f, 0.0f, kVoiceGain);  // msfa cannot retarget: retrigger
+      else v.retarget(top);
+    }
     lastPitch_ = (float)stack_[stackSize_ - 1];
   }
 }
@@ -221,7 +270,7 @@ void Engine::renderBlock() {
   if (limit != voiceLimit_) {
     voiceLimit_ = limit;
     for (int i = limit; i < kMaxVoices; ++i)
-      if (voices_[i].active) voices_[i].quickRelease();
+      if (voices_[i].active) quickReleaseVoice(voices_[i]);
   }
   if (fade_ == Fade::Out && fadeGain_ <= 0.0f) { applyPending(); fade_ = Fade::In; }
   for (int i = 0; i < kNumParams; ++i)
@@ -237,6 +286,7 @@ void Engine::renderBlock() {
   c.sr = sr_;
   c.dt = (float)kBlock / sr_;
   c.bend = bend_ * value_[kVoiceBend];
+  if (fmMode_) fm_->setBend(bend_, (int)value_[kVoiceBend]);
   c.modWheel = modWheel_;
   c.lfo1Global = globalLfo_.tick((int)value_[kLfo1Wave], value_[kLfo1Rate], 0.0f, c.dt);
 
@@ -244,7 +294,17 @@ void Engine::renderBlock() {
   std::memset(blockR_, 0, sizeof(blockR_));
 
   int active = 0;
-  for (int q = 0; q < kMaxVoices / 4; ++q) {
+  if (fmMode_) {
+    std::memset(mono_, 0, sizeof(mono_));
+    fm_->render(mono_, kBlock);
+    for (int s = 0; s < kBlock; ++s) { blockL_[s] += mono_[s]; blockR_[s] += mono_[s]; }  // mono, centred
+    for (int i = 0; i < kMaxVoices; ++i) {
+      Voice& v = voices_[i];
+      if (v.active && !fm_->active(i)) v.kill();  // the FM envelope ended
+      if (v.active) ++active;
+    }
+  }
+  for (int q = 0; q < (fmMode_ ? 0 : kMaxVoices / 4); ++q) {
     bool any = false;
     float cutoff[4] = {1000.0f, 1000.0f, 1000.0f, 1000.0f};
     for (int lane = 0; lane < 4; ++lane) {

@@ -9,3 +9,8 @@ keystore.properties
 .idea/
 *.iml
 logs/
+
+# DX7 factory cartridges (rom1a.syx .. rom4b.syx) are Yamaha data and are not distributed with this repository.
+# Each developer may drop their own copies here; see docs/DX7-CARTUCHOS.md. Tests skip when they are absent.
+app/src/main/assets/dx7/*.syx
+.playwright-mcp/

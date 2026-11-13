@@ -8,8 +8,10 @@
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <iterator>
 #include <string>
 #include <vector>
+#include "dx7_fixtures.h"
 #include "preset_file.h"
 
 using namespace volt;
@@ -60,6 +62,50 @@ static int stress() {
   return 0;
 }
 
+// All 256 DX7 factory voices, same phrase and tail as the test, into <out>/dx7/<cartridge>-<NN>.wav.
+// Appends a DX7 section to index.html (one sub-heading per cartridge) and rows to loudness.csv.
+static void renderDx7(const std::string& out, std::ofstream& page, std::ofstream& csv) {
+  namespace fs = std::filesystem;
+  std::vector<fs::path> carts;
+  for (auto& p : dx7fx::dx7Cartridges()) carts.emplace_back(p);
+  if (carts.empty()) {
+    std::printf("\nNo DX7 cartridges in app/src/main/assets/dx7: skipping the DX7 section.\n");
+    return;
+  }
+  fs::create_directories(out + "/dx7");
+  page << "<h1>DX7 - cartuchos de f&aacute;brica</h1><p class=d>Frase de teclas, motor FM do app. O n&iacute;vel n&atilde;o "
+          "&eacute; nivelado por voz (s&atilde;o os n&iacute;veis originais dos cartuchos).</p>\n";
+  std::printf("\nDX7 voice     name        loud dB  squash %%  release s\n");
+  for (const auto& path : carts) {
+    std::ifstream in(path, std::ios::binary);
+    std::vector<uint8_t> bytes((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+    Dx7Bank bank;
+    if (readDx7Bank(bytes, bank) != Dx7Status::Ok) { std::printf("cannot read %s\n", path.string().c_str()); continue; }
+    const std::string cart = path.stem().string();
+    page << "<h2>" << html(cart) << "</h2><table>\n";
+    for (int i = 0; i < 32; ++i) {
+      Engine e;
+      e.setSampleRate(48000.0f);
+      applyDx7Voice(e, bank.voices[i]);
+      PresetFile p;
+      p.category = "Keys";
+      auto r = renderPhrase(e, phraseFor(p), 2.0, 20.0);
+      const double loud = loudnessDb(r), squash = 100.0 * limitedShare(r);
+      char id[32];
+      std::snprintf(id, sizeof id, "%s-%02d", cart.c_str(), i + 1);
+      const std::string name = dx7Name(bank.voices[i].data());
+      writeWav(out + "/dx7/" + id + ".wav", r);
+      std::printf("%-12s  %-10s  %7.1f  %8.2f  %9.2f\n", id, name.c_str(), loud, squash, r.releaseSeconds);
+      csv << ",dx7:" << id << ",\"" << name << "\",DX7," << loud << ',' << squash << ',' << r.releaseSeconds << '\n';
+      char db[16];
+      std::snprintf(db, sizeof db, "%.1f", loud);
+      page << "<tr><td>" << i + 1 << "<td>" << html(name) << "<td>" << db
+           << "<td><audio controls preload=none src=\"dx7/" << id << ".wav\"></audio></tr>\n";
+    }
+    page << "</table>\n";
+  }
+}
+
 int main(int argc, char** argv) {
   if (argc < 2) { std::printf("usage: volt_render <outDir> [--stress]\n"); return 2; }
   if (argc > 2 && std::strcmp(argv[2], "--stress") == 0) return stress();
@@ -96,6 +142,7 @@ int main(int argc, char** argv) {
          << "<td><audio controls preload=none src=\"" << p.file << ".wav\"></audio></tr>\n";
   }
   page << "</table>\n";
+  renderDx7(out, page, csv);
   std::printf("wrote %s/index.html\n", out.c_str());
   return 0;
 }

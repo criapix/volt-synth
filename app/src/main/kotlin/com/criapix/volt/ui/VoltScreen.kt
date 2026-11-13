@@ -5,6 +5,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
@@ -46,6 +48,7 @@ import com.criapix.volt.midi.describe
 import com.criapix.volt.preset.AppModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
+import kotlin.math.roundToInt
 
 /** What the screen reads from outside the model; lambdas keep Native out of the UI code. */
 class ScreenIo(
@@ -61,6 +64,8 @@ class ScreenIo(
   val midiSettings: MidiSettings,
   val onExport: () -> kotlin.Unit,
   val onImport: () -> kotlin.Unit,
+  /** Saves a .syx: suggested file name (without extension), the bytes, and the message shown when it worked. */
+  val onExportSyx: (String, ByteArray, String) -> kotlin.Unit = { _, _, _ -> },
   val voiceLimit: () -> Int = { 16 },
   val maxVoices: MaxVoices = MaxVoices.Fixed,
   val onExportLog: () -> kotlin.Unit = {},
@@ -91,7 +96,12 @@ fun VoltScreen(model: AppModel, io: ScreenIo) {
   var pickupHint by remember { mutableStateOf<String?>(null) }
   var midiMap by remember { mutableStateOf(false) }
 
-  var tab by rememberSaveable { mutableStateOf(Tab.OSC) }
+  val engineType = state.params["engine.type"]!!
+  val engineNorm by state.value(engineType.id).collectAsStateWithLifecycle()
+  val fm = engineType.toReal(engineNorm) >= 0.5f
+  val tabs = Panel.tabsFor(fm)
+  var savedTab by rememberSaveable { mutableStateOf(Tab.OSC) }
+  val tab = if (savedTab in tabs) savedTab else tabs.first()  // falls back when the voice type changes
   var flash by remember { mutableStateOf<Tab?>(null) }
   var midiLit by remember { mutableStateOf(false) }
   var level by remember { mutableFloatStateOf(0f) }
@@ -105,7 +115,7 @@ fun VoltScreen(model: AppModel, io: ScreenIo) {
   // A MIDI controller moved a parameter on another tab: flash that tab.
   LaunchedEffect(external.seq) {
     val t = state.params.all.getOrNull(external.id)?.let { Panel.tabOf(it.name) } ?: return@LaunchedEffect
-    if (t != tab) { flash = t; delay(600); flash = null }
+    if (t != tab && t in tabs) { flash = t; delay(600); flash = null }
   }
   LaunchedEffect(activity) { if (activity > 0) { midiLit = true; delay(120); midiLit = false } }
   LaunchedEffect(Unit) {
@@ -147,13 +157,14 @@ fun VoltScreen(model: AppModel, io: ScreenIo) {
           keyboardOpen = keyboard, onKeyboard = { keyboard = !keyboard },
         )
         Row(Modifier.fillMaxWidth().height(40.dp).padding(horizontal = 8.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-          Tab.entries.forEach { t ->
+          MotorSwitch(engineType, engineNorm, state, io.haptics::tick)
+          tabs.forEach { t ->
             val bg by animateColorAsState(
               when { t == tab -> VoltColors.accent; t == flash -> VoltColors.accent.copy(alpha = 0.45f); else -> VoltColors.panel },
               label = "tab",
             )
             Box(
-              Modifier.weight(1f).fillMaxHeight().background(bg, RoundedCornerShape(8.dp)).clickable { tab = t; io.haptics.tick() },
+              Modifier.weight(1f).fillMaxHeight().background(bg, RoundedCornerShape(8.dp)).clickable { savedTab = t; io.haptics.tick() },
               contentAlignment = Alignment.Center,
             ) {
               Text(t.title, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = if (t == tab) Color.Black else VoltColors.text)
@@ -166,8 +177,12 @@ fun VoltScreen(model: AppModel, io: ScreenIo) {
         )
         Box(Modifier.weight(1f).fillMaxWidth()) {
           Row(Modifier.fillMaxSize().padding(horizontal = 8.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Panel.groups.getValue(tab).forEach { g ->
-              GroupPanel(g, state, onStep = io.haptics::tick, modifier = Modifier.weight(g.weight).fillMaxHeight())
+            when (tab) {
+              Tab.OP -> OperatorTab(state, onStep = io.haptics::tick, modifier = Modifier.fillMaxSize())
+              Tab.PITCH -> PitchTab(state, onStep = io.haptics::tick, modifier = Modifier.fillMaxSize())
+              else -> Panel.groups.getValue(tab).forEach { g ->
+                GroupPanel(g, state, onStep = io.haptics::tick, modifier = Modifier.weight(g.weight).fillMaxHeight())
+              }
             }
           }
           KeyboardSlot(keyboard, onNoteOn = { n, v -> state.noteOn(n, v) }, onNoteOff = { n -> state.noteOff(n) }, onClose = { keyboard = false })
@@ -188,6 +203,28 @@ fun VoltScreen(model: AppModel, io: ScreenIo) {
       if (saving) SaveDialog(model, onClose = { saving = false })
       if (settings) SettingsDialog(state, io, onClose = { settings = false }, onMidiMap = { midiMap = true })
       if (midiMap) MidiMapDialog(state, io, onClose = { midiMap = false })
+    }
+  }
+}
+
+/** The voice-type switch (analog / FM): a small segmented control at the left end of the tab row. */
+@Composable
+private fun MotorSwitch(param: com.criapix.volt.Param, norm: Float, state: com.criapix.volt.state.SynthState, onStep: () -> kotlin.Unit) {
+  val ui = ParamUi.of(param.name) as ChoiceUi
+  val selected = (param.toReal(norm) - param.min).roundToInt()
+  LearnTarget(com.criapix.volt.midi.Target.Param(param.name)) {
+    Row(Modifier.fillMaxHeight().width(150.dp).border(1.dp, VoltColors.track, RoundedCornerShape(8.dp))) {
+      ui.options.forEachIndexed { i, option ->
+        val on = i == selected
+        Box(
+          Modifier.weight(1f).fillMaxHeight()
+            .background(if (on) VoltColors.accent else Color.Transparent, RoundedCornerShape(8.dp))
+            .clickable { if (!on) { state.set(param.id, param.toNorm(param.min + i)); onStep() } },
+          contentAlignment = Alignment.Center,
+        ) {
+          Text(option, fontSize = 12.sp, lineHeight = 15.sp, maxLines = 1, fontWeight = FontWeight.Bold, color = if (on) Color.Black else VoltColors.text)
+        }
+      }
     }
   }
 }

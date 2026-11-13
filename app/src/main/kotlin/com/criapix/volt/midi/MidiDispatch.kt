@@ -16,6 +16,12 @@ interface Synth {
   fun sustain(on: Boolean)
   fun allNotesOff()
 
+  /** Channel pressure, 0..1 (drives the FM aftertouch). */
+  fun aftertouch(value: Float) {}
+
+  /** Breath controller (CC 2), 0..1. */
+  fun breath(value: Float) {}
+
   /** All parameters at once (normalized, indexed by id). Default: one setParam per value. */
   fun loadPatch(values: FloatArray): Boolean {
     values.forEachIndexed { id, v -> setParam(id, v) }
@@ -127,6 +133,11 @@ class MidiDispatch(
         log("MIDI program change ${d1 + 1} canal ${ch + 1}")
         onProgram(d1)
       }
+      0xD0 -> if (len >= 2) {
+        _last.value = "Pressão $d1 · canal ${ch + 1}"
+        if (dense()) log("MIDI pressão $d1 canal ${ch + 1}")
+        synth.aftertouch(d1 / 127f)
+      }
       else -> if (dense()) log("MIDI status 0x${status.toString(16)} dados $d1 $d2 (ignorado)")
     }
   }
@@ -189,6 +200,7 @@ class MidiDispatch(
     factory[cc]?.let { fromController(it, value / 127f); return }
     when (cc) {
       1 -> synth.modWheel(value / 127f)
+      2 -> synth.breath(value / 127f)
       64 -> synth.sustain(value >= 64)
       120, 123 -> synth.allNotesOff()
     }

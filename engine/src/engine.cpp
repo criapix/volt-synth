@@ -6,7 +6,7 @@ namespace volt {
 namespace {
 enum Mode { kPoly = 0, kMono = 1, kLegato = 2, kUnison = 3 };
 const float kVoiceGain = 0.35f;
-const float kFmGain = 1.0f;  // calibrated in plan 6 task 7
+const float kFmGain = 0.45f;  // calibrated in plan 6 task 7: median of the 256 DX7 factory voices -16.0 dB -> -23 dB
 const int kFadeSamples = 256;  // ~5 ms at 48 kHz
 }  // namespace
 

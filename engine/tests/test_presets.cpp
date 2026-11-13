@@ -1,4 +1,6 @@
 #include <cmath>
+#include <fstream>
+#include <iterator>
 #include "dsp_probe.h"
 #include "preset_file.h"
 #include "rig.h"
@@ -58,4 +60,59 @@ TEST(presets_every_factory_preset_renders_cleanly) {
       ++t::failures();
     }
   }
+}
+
+namespace {
+constexpr bool kCheckFmLoudness = true;  // on since kFmGain was calibrated (plan 6 task 7)
+constexpr double kFmLoudTarget = kLoudTarget;  // same target as the analog bank
+// Measured after calibration: loudest voice -8.8 dB, so -7.0 leaves ~1.8 dB and still catches a regression.
+constexpr double kFmLoudCeiling = -7.0;  // dBFS
+// "It sounds" floor. The plan's -60 dB, moved down by the 6.9 dB the calibration (kFmGain 0.45) took off:
+// the quietest voice (TAKE OFF, a slow rising jet whose pitch envelope falls) is -61.4 dB.
+constexpr double kFmSoundFloor = -67.0;  // dBFS
+}  // namespace
+
+TEST(presets_every_dx7_factory_voice_renders_cleanly) {
+  std::vector<std::filesystem::path> carts;
+  for (auto& e : std::filesystem::directory_iterator(VOLT_DX7_DIR))
+    if (e.path().extension() == ".syx") carts.push_back(e.path());
+  std::sort(carts.begin(), carts.end());
+  CHECK(carts.size() == 8);
+  std::vector<double> loud;
+  int holding = 0;
+  for (const auto& path : carts) {
+    std::ifstream in(path, std::ios::binary);
+    std::vector<uint8_t> bytes((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+    Dx7Bank bank;
+    const bool readOk = readDx7Bank(bytes, bank) == Dx7Status::Ok;
+    CHECK(readOk);
+    if (!readOk) continue;
+    for (int i = 0; i < 32; ++i) {
+      Engine eng;
+      eng.setSampleRate(48000.0f);
+      applyDx7Voice(eng, bank.voices[i]);
+      PresetFile p;
+      p.category = "Keys";  // a chord phrase plus single notes
+      auto r = renderPhrase(eng, phraseFor(p), 2.0, 20.0);
+      const double l = loudnessDb(r);
+      loud.push_back(l);
+      if (r.releaseSeconds < 0) ++holding;
+      const bool finite = probe::finite(r.left) && probe::finite(r.right);
+      bool ok = finite && l > kFmSoundFloor && limitedShare(r) < 0.01;
+      if (kCheckFmLoudness) ok = ok && l <= kFmLoudCeiling;
+      if (!ok) {
+        std::printf("    FAIL %s %02d %s: finite=%d loud=%.1f dB squash=%.2f %% release=%.2f s\n",
+                    path.stem().string().c_str(), i + 1, dx7Name(bank.voices[i].data()).c_str(),
+                    (int)finite, l, 100.0 * limitedShare(r), r.releaseSeconds);
+        ++t::failures();
+      }
+    }
+  }
+  CHECK(loud.size() == 256);
+  if (loud.empty()) return;
+  std::sort(loud.begin(), loud.end());
+  std::printf("    DX7 loudness: min %.1f, median %.1f, max %.1f dB (%zu voices)\n",
+              loud.front(), loud[loud.size() / 2], loud.back(), loud.size());
+  std::printf("    DX7 voices that never release within the phrase tail: %d of %zu; target median %.1f dB\n",
+              holding, loud.size(), kFmLoudTarget);
 }

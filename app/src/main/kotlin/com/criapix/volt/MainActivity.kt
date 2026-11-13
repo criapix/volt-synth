@@ -42,6 +42,8 @@ private object NativeSynth : Synth {
   override fun pitchBend(value: Float) = Native.pitchBend(value)
   override fun modWheel(value: Float) = Native.modWheel(value)
   override fun sustain(on: Boolean) = Native.sustain(on)
+  override fun aftertouch(value: Float) = Native.aftertouch(value)
+  override fun breath(value: Float) = Native.breath(value)
   override fun allNotesOff() = Native.allNotesOff()
   override fun loadPatch(values: FloatArray) = Native.loadPatch(values)
 }

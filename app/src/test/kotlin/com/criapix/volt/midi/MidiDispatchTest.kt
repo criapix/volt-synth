@@ -15,6 +15,8 @@ class MidiDispatchTest {
     override fun modWheel(value: Float) { log += "wheel ${f2(value)}" }
     override fun sustain(on: Boolean) { log += "sustain $on" }
     override fun allNotesOff() { log += "panic" }
+    override fun aftertouch(value: Float) { log += "at ${f2(value)}" }
+    override fun breath(value: Float) { log += "breath ${f2(value)}" }
   }
   private val params = Params.parse(
     "filter.cutoff|20|20000|20000|exp\nfilter.reso|0|1|0.1|lin\nmaster.volume|0|1|0.7|lin\n"
@@ -61,8 +63,32 @@ class MidiDispatchTest {
   }
 
   @Test fun unknownAndShortMessagesAreIgnored() {
-    send(0xF8); send(0xB0, 99, 5); send(0xD0, 40); send(0xC0, 3)
+    send(0xF8); send(0xB0, 99, 5); send(0xC0, 3)
     assertEquals(emptyList<String>(), log)
+  }
+
+  @Test fun channelPressureAndBreathReachTheSynth() {
+    send(0xD0, 64); send(0xB0, 2, 127)
+    assertEquals(listOf("at 0.50", "breath 1.00"), log)
+    assertEquals("CC 2 · canal 1 = 127", d.lastMessage.value)
+    send(0xD3, 10)
+    assertEquals("Pressão 10 · canal 4", d.lastMessage.value)
+  }
+
+  @Test fun channelPressureOnAnotherChannelIsFiltered() {
+    d.channel = 1
+    send(0xD0, 64)
+    assertEquals(emptyList<String>(), log)
+    send(0xD1, 127)
+    assertEquals(listOf("at 1.00"), log)
+  }
+
+  @Test fun aLearnedBindingOnCc2WinsOverBreath() {
+    d.learn.setActive(true); d.learn.arm(Target.Param("master.volume"))
+    send(0xB0, 2, 5)  // learns CC 2 -> master.volume
+    log.clear()
+    send(0xB0, 2, 127)
+    assertEquals(listOf("param 2 1.00"), log)
   }
 
   @Test fun reportsTheLastMessageForTheMonitor() {

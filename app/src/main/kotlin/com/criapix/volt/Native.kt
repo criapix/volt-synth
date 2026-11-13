@@ -22,6 +22,8 @@ object Native {
   external fun setParam(id: Int, normalized: Float) // 0..1
   external fun pitchBend(value: Float)              // -1..1
   external fun modWheel(value: Float)               // 0..1
+  external fun aftertouch(value: Float)             // 0..1
+  external fun breath(value: Float)                 // 0..1
   external fun sustain(on: Boolean)
   external fun allNotesOff()
 

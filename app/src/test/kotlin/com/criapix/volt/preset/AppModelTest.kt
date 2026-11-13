@@ -136,7 +136,8 @@ class AppModelTest {
     assertNotNull(m.message.value)
   }
 
-  private fun rom(name: String) = File("src/main/assets/dx7/$name.syx").readBytes()
+  // Hand-made bank (voices named "<NAME> 01".."<NAME> 32"); the Yamaha files are not distributed (see Dx7Fixtures).
+  private fun rom(name: String) = Dx7Fixtures.synthBank(name.uppercase())
 
   @Test fun importingASyxBankReportsTheCount() {
     val m = model().apply { restore() }
@@ -171,7 +172,7 @@ class AppModelTest {
     val ref = m.library.importBytes(rom("rom1a"), "rom1a").refs.first()
     val b = m.exportSyx(ref.id)!!
     assertEquals(163, b.size)
-    assertEquals("BRASS   1", Dx7Codec.readAny(b, "x").presets.single().name)
+    assertEquals("ROM1A 01", Dx7Codec.readAny(b, "x").presets.single().name)
     assertTrue(m.isFm(ref.id))
     assertFalse(m.isFm("factory:001-init"))
   }
@@ -227,5 +228,13 @@ class AppModelTest {
     assertEquals(3, dropped)
     val names = Dx7Codec.readBank(bytes, "x").presets.map { it.name }
     assertEquals(List(32) { "N${it.toString().padStart(2, '0')}" }, names)
+  }
+
+  @Test fun theRealRom1aExportsBrassAsASingleVoice() {
+    val bytes = Dx7Fixtures.rom("rom1a")
+    val state = SynthState(p, Silent)
+    val lib = PresetLibrary(DirFactory(factory()), File(tmp.root, "user"), NoFavorites, CartridgeSource { listOf("rom1a" to bytes) })
+    val m = AppModel(state, lib, File(tmp.root, "session.json"))
+    assertEquals("BRASS   1", Dx7Codec.readAny(m.exportSyx("factory:dx7-rom1a-01")!!, "x").presets.single().name)
   }
 }

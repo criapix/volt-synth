@@ -88,9 +88,10 @@ class PresetLibraryTest {
     assertEquals(2, lib.all().size)
   }
 
+  // Hand-made cartridges: the Yamaha files are not distributed with the repository (see Dx7Fixtures).
   private fun cartridgeDir(): File = tmp.newFolder("dx7").also { d ->
-    File("src/main/assets/dx7/rom1a.syx").copyTo(File(d, "rom1a.syx"))
-    File("src/main/assets/dx7/rom1b.syx").copyTo(File(d, "rom1b.syx"))
+    File(d, "rom1a.syx").writeBytes(Dx7Fixtures.synthBank("VOZ A"))
+    File(d, "rom1b.syx").writeBytes(Dx7Fixtures.synthBank("VOZ B"))
   }
 
   private fun libraryWithDx7() =
@@ -101,7 +102,7 @@ class PresetLibraryTest {
     val ids = lib.all().map { it.id }
     assertEquals(listOf("factory:010-a", "factory:020-b", "factory:dx7-rom1a-01"), ids.take(3))
     assertEquals("factory:dx7-rom1b-32", ids[2 + 63])
-    assertEquals("BRASS   1", lib.read("factory:dx7-rom1a-01").name)
+    assertEquals("VOZ A 01", lib.read("factory:dx7-rom1a-01").name)
     assertEquals("DX7 ROM1A", lib.all()[2].category)
     assertThrows(IllegalArgumentException::class.java) { lib.delete("factory:dx7-rom1a-01") }
     assertThrows(IllegalArgumentException::class.java) { lib.overwrite("factory:dx7-rom1a-01", PresetFile(name = "X")) }
@@ -117,7 +118,7 @@ class PresetLibraryTest {
   @Test fun aBrokenCartridgeIsSkippedAndLogged() {
     val dir = cartridgeDir()
     File(dir, "aaa.syx").writeBytes(ByteArray(100) { 0x11 })
-    File(dir, "bbb.syx").writeBytes(File("src/main/assets/dx7/rom1a.syx").readBytes().also { it[1] = 0x41 })
+    File(dir, "bbb.syx").writeBytes(Dx7Fixtures.synthBank().also { it[1] = 0x41 })
     val logs = mutableListOf<String>()
     val lib = PresetLibrary(DirFactory(factoryDir()), File(tmp.root, "user"), MemFavorites(), DirCartridges(dir)) { logs += it }
     assertEquals(2 + 64, lib.all().size)
@@ -128,7 +129,7 @@ class PresetLibraryTest {
 
   @Test fun importingASyxBankAddsThirtyTwoUserPresets() {
     val lib = libraryWithDx7()
-    val r = lib.importBytes(File("src/main/assets/dx7/rom2a.syx").readBytes(), "meu-cartucho")
+    val r = lib.importBytes(Dx7Fixtures.synthBank(), "meu-cartucho")
     assertEquals(32, r.refs.size)
     assertTrue(r.checksumOk)
     assertTrue(r.refs.all { it.isUser && it.category == "DX7 meu-cartucho" })
@@ -154,7 +155,7 @@ class PresetLibraryTest {
     val bank = PresetCodec.encodeBank(List(3) { PresetFile(name = "INIT VOICE") } + PresetFile(name = "Existente 7"))
     val names = lib.import(bank).map { it.name }
     assertEquals(listOf("INIT VOICE", "INIT VOICE (2)", "INIT VOICE (3)", "Existente 7 (2)"), names)
-    val r = lib.importBytes(File("src/main/assets/dx7/rom1a.syx").readBytes(), "a")
+    val r = lib.importBytes(Dx7Fixtures.synthBank(), "a")
     assertEquals(32, r.refs.size)
     assertEquals(150 + 4 + 32, lib.all().count { it.isUser })
   }
@@ -165,7 +166,7 @@ class PresetLibraryTest {
   }
 
   @Test fun bankCategoriesDropALeadingDx7FromTheFileName() {
-    val bank = File("src/main/assets/dx7/rom3a.syx").readBytes()
+    val bank = Dx7Fixtures.synthBank()
     val factory = factoryDir()
     for ((stem, cat) in listOf("DX7 rom3a" to "DX7 rom3a", "dx7_rom3a" to "DX7 rom3a", "DX7" to "DX7 importado", "meu cartucho" to "DX7 meu cartucho")) {
       val lib = PresetLibrary(DirFactory(factory), tmp.newFolder(), MemFavorites())
@@ -175,10 +176,25 @@ class PresetLibraryTest {
 
   @Test fun singleVoicesShareOneImportedCategory() {
     val lib = library()
-    val voice = Dx7Codec.writeVoice(Dx7Codec.readBank(File("src/main/assets/dx7/rom1a.syx").readBytes(), "x").presets[0])
+    val voice = Dx7Codec.writeVoice(Dx7Codec.readBank(Dx7Fixtures.synthBank(), "x").presets[0])
     val a = lib.importBytes(voice, "um").refs.single()
     val b = lib.importBytes(voice, "dois").refs.single()
     assertEquals("DX7 Importados", a.category)
     assertEquals("DX7 Importados", b.category)
+  }
+
+  @Test fun aMissingOrEmptyCartridgeFolderMeansNoDx7Shelves() {
+    val missing = PresetLibrary(DirFactory(factoryDir()), File(tmp.root, "user"), MemFavorites(), DirCartridges(File(tmp.root, "nao-existe")))
+    assertEquals(listOf("factory:010-a", "factory:020-b"), missing.all().map { it.id })
+    val empty = PresetLibrary(DirFactory(tmp.newFolder("f2")), File(tmp.root, "user2"), MemFavorites(), DirCartridges(tmp.newFolder("vazio")))
+    assertEquals(emptyList<String>(), empty.all().map { it.id })
+  }
+
+  @Test fun theRealFactoryCartridgesLoadWithTheirKnownNames() {
+    val rom1a = Dx7Fixtures.rom("rom1a")
+    val dir = tmp.newFolder("dx7real").also { File(it, "rom1a.syx").writeBytes(rom1a) }
+    val lib = PresetLibrary(DirFactory(factoryDir()), File(tmp.root, "user"), MemFavorites(), DirCartridges(dir))
+    assertEquals("BRASS   1", lib.read("factory:dx7-rom1a-01").name)
+    assertEquals(2 + 32, lib.all().size)
   }
 }

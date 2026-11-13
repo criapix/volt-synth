@@ -10,8 +10,9 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class Dx7CodecTest {
-  private val dir = File("src/main/assets/dx7")
-  private fun rom(name: String) = File(dir, "$name.syx").readBytes()
+  // Cartridge-backed tests are SKIPPED (Assume) when the Yamaha files are absent; see Dx7Fixtures.
+  private fun rom(name: String) = Dx7Fixtures.rom(name)
+  private val synth get() = Dx7Fixtures.synthBank()
 
   @Test fun readsKnownValuesFromRom1a() {
     val bank = Dx7Codec.readBank(rom("rom1a"), "ROM1A")
@@ -40,8 +41,7 @@ class Dx7CodecTest {
     // rom3a, rom3b and rom4a hold bits the DX7 ignores and a few out-of-range values; masking and
     // clamping changes those bytes (plan 6, findings). The other five must come back identical.
     val dirty = setOf("rom3a.syx", "rom3b.syx", "rom4a.syx")
-    val files = dir.listFiles { x -> x.name.endsWith(".syx") }!!.sortedBy { it.name }
-    assertEquals(8, files.size)
+    val files = Dx7Fixtures.cartridges()
     for (f in files) {
       val bytes = f.readBytes()
       val bank = Dx7Codec.readBank(bytes, "x")
@@ -55,7 +55,7 @@ class Dx7CodecTest {
   }
 
   @Test fun allCartridgesReadWithEveryValueInsideItsParameterRange() {
-    for (f in dir.listFiles { x -> x.name.endsWith(".syx") }!!.sortedBy { it.name }) {
+    for (f in Dx7Fixtures.cartridges()) {
       val bank = Dx7Codec.readBank(f.readBytes(), "x")
       assertEquals(f.name, 32, bank.presets.size)
       assertTrue(f.name, bank.checksumOk)
@@ -70,7 +70,7 @@ class Dx7CodecTest {
   }
 
   @Test fun everyFmParameterExistsInTheEngineTable() {
-    val p = Dx7Codec.readBank(rom("rom2a"), "ROM2A").presets[3]
+    val p = Dx7Codec.readBank(synth, "SYNTH").presets[3]
     for (name in p.params.keys) assertTrue(name, TestParams.params[name] != null)
     // engine.type + 6 operators x 21 fields + 19 globals (8 pitch EG, algorithm, feedback, osc sync, 6 LFO, transpose).
     assertEquals(1 + 6 * 21 + 19, p.params.size)
@@ -150,5 +150,80 @@ class Dx7CodecTest {
     assertEquals(99f, back.params["fm.op1.level"])
     assertEquals(0f, back.params["fm.op2.level"])
     assertEquals(1f, back.params["fm.algorithm"])
+  }
+
+  // ---- Synthetic data: these run without any cartridge on disk ----
+
+  @Test fun syntheticBankReadsBackWithItsValues() {
+    val bank = Dx7Codec.readBank(synth, "SYNTH")
+    assertEquals(32, bank.presets.size)
+    assertTrue(bank.checksumOk)
+    assertEquals("SYNTH 01", bank.presets[0].name)
+    assertEquals("SYNTH 32", bank.presets[31].name)
+    assertEquals("DX7 SYNTH", bank.presets[0].category)
+    assertEquals(1f, bank.presets[0].params["engine.type"])
+    assertEquals(5f, bank.presets[4].params["fm.algorithm"])
+    assertEquals(3f, bank.presets[3].params["fm.feedback"])
+    assertEquals(50f, bank.presets[10].params["fm.op1.level"])
+    assertEquals(11f, bank.presets[1].params["fm.op6.r1"])
+  }
+
+  @Test fun syntheticBankRoundTripIsByteIdentical() {
+    val bytes = synth
+    assertEquals(4104, bytes.size)
+    val read = Dx7Codec.readBank(bytes, "x")
+    assertArrayEquals(bytes, Dx7Codec.writeBank(read.presets))
+    val reread = Dx7Codec.readBank(Dx7Codec.writeBank(read.presets), "x")
+    assertEquals(read.presets.map { it.params }, reread.presets.map { it.params })
+    assertEquals(read.presets.map { it.name }, reread.presets.map { it.name })
+  }
+
+  @Test fun syntheticParametersStayInsideTheirRange() {
+    for (p in Dx7Codec.readBank(synth, "x").presets) {
+      assertTrue(p.name.isNotBlank() && p.name == p.name.trimEnd())
+      for ((k, v) in p.params) {
+        val prm = TestParams.params[k]!!
+        assertTrue("${p.name} $k=$v", v >= prm.min && v <= prm.max && v == Math.rint(v.toDouble()).toFloat())
+      }
+    }
+  }
+
+  @Test fun syntheticSingleVoiceRoundTrip() {
+    val v = Dx7Codec.readBank(synth, "x").presets[10]
+    val sx = Dx7Codec.writeVoice(v)
+    assertEquals(163, sx.size)
+    val read = Dx7Codec.readAny(sx, "x")
+    assertTrue(read.checksumOk)
+    val back = read.presets.single()
+    assertEquals(v.params, back.params)
+    assertEquals("SYNTH 11", back.name)
+  }
+
+  @Test fun syntheticBadChecksumReadsWithAWarning() {
+    val bytes = synth.also { it[4102] = (it[4102].toInt() xor 0x11).toByte() }
+    val bank = Dx7Codec.readBank(bytes, "x")
+    assertEquals(false, bank.checksumOk)
+    assertEquals("SYNTH 01", bank.presets[0].name)
+  }
+
+  @Test fun syntheticRejectsFilesThatAreNotDx7() {
+    val e1 = assertThrows(PresetError::class.java) { Dx7Codec.readAny(ByteArray(100), "x") }
+    assertEquals("Não é um arquivo do DX7", e1.message)
+    val roland = synth.also { it[1] = 0x41 }
+    val e2 = assertThrows(PresetError::class.java) { Dx7Codec.readAny(roland, "x") }
+    assertEquals("Não é um arquivo do DX7", e2.message)
+  }
+
+  @Test fun syntheticMasksAndClampsGarbage() {
+    val bytes = synth
+    bytes[6 + 0] = 0xFF.toByte()    // OP6 R1: 127 after masking -> clamped to 99
+    bytes[6 + 110] = 0x7F           // algorithm byte with junk in bits 5..6 -> 31 -> fm.algorithm 32
+    bytes[6 + 116] = 0x7F           // LPMS 7, LFW 7 (clamped to 5), LKS 1
+    val p = Dx7Codec.readBank(bytes, "x").presets[0]
+    assertEquals(99f, p.params["fm.op6.r1"])
+    assertEquals(32f, p.params["fm.algorithm"])
+    assertEquals(7f, p.params["fm.lfo.pms"])
+    assertEquals(5f, p.params["fm.lfo.wave"])
+    assertEquals(1f, p.params["fm.lfo.sync"])
   }
 }

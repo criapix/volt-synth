@@ -29,8 +29,8 @@ import com.criapix.volt.midi.noteName
 fun targetLabel(t: Target): String = when (t) {
   is Target.Action -> t.action.label
   is Target.Param -> {
-    val group = Panel.groupOf(t.name)
-    if (group == null) "${t.name} (parâmetro removido)" else "${ParamUi.of(t.name).label} · ${group.title}"
+    val card = Panel.cardOf(t.name)
+    if (card == null) "${t.name} (parâmetro removido)" else "${ParamUi.of(t.name).label} · ${card.title}"
   }
 }
 

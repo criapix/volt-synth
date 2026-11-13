@@ -13,6 +13,9 @@ class SynthStateTest {
     var patches = 0
     var acceptPatch = true
     var notes = 0
+    val log = ArrayList<String>()
+    override fun aftertouch(value: Float) { log += "at $value" }
+    override fun breath(value: Float) { log += "breath $value" }
     override fun noteOn(note: Int, velocity: Float) { notes++ }
     override fun noteOff(note: Int) {}
     override fun setParam(id: Int, normalized: Float) { params += id to normalized }
@@ -82,5 +85,30 @@ class SynthStateTest {
     val f = Fake()
     SynthState(p, f).noteOn(60, 1f)
     assertEquals(1, f.notes)
+  }
+
+  @Test fun aftertouchAndBreathReachTheEngine() {
+    val f = Fake()
+    val s = SynthState(p, f)
+    s.aftertouch(0.5f)
+    s.breath(1f)
+    assertEquals(listOf("at 0.5", "breath 1.0"), f.log)
+  }
+
+  @Test fun theObserverSeesTheperformance() {
+    val f = Fake()
+    val s = SynthState(p, f)
+    val seen = ArrayList<String>()
+    s.observer = object : SynthState.PerformanceObserver {
+      override fun noteOn(note: Int, velocity: Float) { seen += "on $note" }
+      override fun noteOff(note: Int) { seen += "off $note" }
+      override fun sustain(on: Boolean) { seen += "sus $on" }
+      override fun allNotesOff() { seen += "panic" }
+      override fun pitchBend(value: Float) { seen += "bend $value" }
+      override fun modWheel(value: Float) { seen += "mod $value" }
+    }
+    s.noteOn(60, 0.8f); s.noteOff(60); s.sustain(true); s.allNotesOff(); s.pitchBend(0.5f); s.modWheel(1f)
+    assertEquals(listOf("on 60", "off 60", "sus true", "panic", "bend 0.5", "mod 1.0"), seen)
+    assertEquals(1, f.notes)  // and the engine still got the note
   }
 }

@@ -12,7 +12,7 @@ Antes de tudo: a versão assinada precisa existir. Rode `.\tools\make-keystore.p
 | 6 | Trocar de preset com ◀ ▶ tocando sempre a mesma frase | Volume parecido entre presets (o banco foi nivelado por medição; Caixa, Laser e Ondas do Mar ficam mais baixos por serem ruído) | |
 | 7 | Carregar `104 Trompas` (o mais pesado na última medição no PC) e segurar 16 notas (pedal) por 10 s | Anotar "Carga do motor" em ⋮; se passar de 80 %, a barra mostra "x/12 vozes" em vermelho e o som continua sem estalos | |
 | 8 | ⋮ → Polifonia máxima 8 (rolar o diálogo); tocar um acorde de 10 notas | Só 8 soam; a barra mostra "8/8 vozes" em vermelho; voltar para 16 | |
-| 9 | Plano 4: efeitos (aba FX, ligar cada um com uma nota soando), arpejador (preset 041 e 064, Hold) e teclado na tela | Sem estalo ao ligar/desligar; arpejo no tempo; anotar como soam | |
+| 9 | Plano 4: efeitos (PAINEL › Efeitos, ligar cada um com uma nota soando), arpejador (preset 041 e 064, Hold) e teclado na tela | Sem estalo ao ligar/desligar; arpejo no tempo; anotar como soam | |
 | 10 | Plano 3: passos 3–5 da tabela do plano 3 (nomes dos controles do CK61, aprender um knob, aprender ▶) | Anotar CC de cada controle em NOTES | |
 | 11 | ⋮ → Salvar log… | Arquivo salvo; mandar junto com o resultado | |
 | 12 | Salvar preset com o teclado virtual aberto | O botão "Salvar como novo" fica alcançável (rolando ou depois do ✓ do teclado) | |
@@ -25,14 +25,14 @@ Posições: 044 = `093 Baixo Três Osciladores` (o primeiro novo), 041 = `090 Ar
 
 | # | Passo | Esperado | Resultado |
 |---|---|---|---|
-| 1 | Aba FX: ligar cada efeito sozinho com uma nota soando | Liga e desliga sem estalo; cada um soa como o nome diz | |
+| 1 | PAINEL › Efeitos: ligar cada efeito sozinho com uma nota soando | Liga e desliga sem estalo; cada um soa como o nome diz | |
 | 2 | Chorus: modos I, II e I+II num pad | I e II largos e lentos (II mais rápido); I+II um tremor rápido e sutil, como num Juno | |
 | 3 | Delay: tempo 375 ms, repetições 50 % | Ecos regulares que somem aos poucos | |
 | 4 | Reverb: duração 1 s e depois 8 s | Cauda curta e depois longa; "Abafar" escurece a cauda | |
 | 5 | Distorção num baixo: drive de 0 a 100 % | De limpo a saturado; "Tom" escurece | |
 | 6 | Todos os efeitos ligados, 16 notas (pedal) | Anotar "Carga do motor" (⋮ → Configurações) e se há estouros | |
 | 7 | Knob do CK61 que manda CC 91 (reverb) num preset sem reverb | O reverb liga e o mix acompanha | |
-| 8 | Aba ARP: ligar, segurar um acorde | Arpejo no tempo; mudar modo, oitavas, divisão, tempo e duração enquanto toca | |
+| 8 | PAINEL › Arp (ou o botão ARP do PALCO): ligar, segurar um acorde | Arpejo no tempo; mudar modo, oitavas, divisão, tempo e duração enquanto toca | |
 | 9 | Hold: tocar um acorde, soltar | Continua; um acorde novo substitui o anterior | |
 | 10 | Ligar/desligar o arpejador com teclas apertadas | Nenhuma nota fica presa | |
 | 11 | Preset "Arpejo Clássico" (041) | Arpejo com delay | |
@@ -47,10 +47,10 @@ Com o CK61 ligado por USB. Depois do teste, rodar `tools\pull-log.ps1` (o log re
 
 | # | Passo | Esperado | Resultado |
 |---|---|---|---|
-| 1 | Na aba FILTRO, sem aprender nada, girar o knob do CK61 que manda CC 74 | O Cutoff na tela gira junto (depois de passar pelo valor atual, pela captura suave) | |
-| 2 | Girar os knobs que mandam CC 73 e CC 72 | Ataque e release do envelope de amplitude mudam (aba ENV) | |
+| 1 | No PAINEL › Filtro, sem aprender nada, girar o knob do CK61 que manda CC 74 | O Cutoff na tela gira junto (depois de passar pelo valor atual, pela captura suave) | |
+| 2 | Girar os knobs que mandam CC 73 e CC 72 | Ataque e release do envelope de amplitude mudam (PAINEL › Amp · Voz) | |
 | 3 | Mexer em cada controle do painel do CK61 e ler ⋮ → Controle MIDI → "Última mensagem" | **Anotar em NOTES.md o nome de cada controle físico e o CC que ele manda** | |
-| 4 | Tocar em MIDI na barra, tocar no knob Drive (aba OSC) e mexer num controle do CK61 | Aparece "Drive · MIXER ← CC xx"; o Drive passa a seguir esse controle na hora | |
+| 4 | Tocar em MIDI na barra, tocar no knob Drive (PAINEL › Fonte) e mexer num controle do CK61 | Aparece "Drive · MIXER ← CC xx"; o Drive passa a seguir esse controle na hora | |
 | 5 | Aprender um botão do CK61 para ▶ (próximo preset) | Cada toque no botão avança um preset | |
 | 6 | Se no passo 5 só um toque a cada dois funcionar | Em Controle MIDI, ligar "qualquer valor dispara" nessa associação; agora todo toque avança | |
 | 7 | Aprender uma tecla para "Pânico" | A tecla para de tocar nota e corta o som | |
@@ -69,23 +69,23 @@ Instalar: `adb install -r app\build\outputs\apk\debug\app-debug.apk`. Depois do 
 
 | # | Passo | Esperado | Resultado |
 |---|---|---|---|
-| 1 | Abrir o app | Tela cheia em paisagem; barra superior com preset; abas OSC · FILTRO · ENV · MOD | |
+| 1 | Abrir o app | Tela cheia em paisagem; barra superior com preset, chave Analógico/FM e chave Palco/Painel; o PALCO abre com as oito macros e o teclado | |
 | 2 | Girar knobs arrastando para cima/baixo | Responde ao dedo sem pular; o valor aparece grande acima do knob | |
 | 3 | Arrastar para o lado depois de tocar | Ajuste fino (bem mais lento) | |
 | 4 | Dois toques num knob | Volta ao valor padrão | |
 | 5 | Dois knobs ao mesmo tempo com dois dedos | Os dois se movem | |
-| 6 | Tamanho dos knobs e textos | Anotar: confortável / pequeno demais; alguma aba rola? (no emulador, só o LFO 1 rola na aba MOD) | |
-| 7 | Aba FILTRO: mexer em cutoff e ressonância | A curva acompanha; o som acompanha | |
-| 8 | Aba ENV: arrastar os pontos do desenho | Os knobs abaixo acompanham | |
+| 6 | Tamanho dos knobs e textos | Anotar: confortável / pequeno demais; algum cartão rola? (no emulador, nenhum rola) | |
+| 7 | PAINEL › Filtro: mexer em cutoff e ressonância | A curva acompanha; o som acompanha | |
+| 8 | PAINEL › Amp · Voz: arrastar os pontos do desenho | Os knobs abaixo acompanham | |
 | 9 | ◀ ▶ com uma nota soando (pedal) | Troca de som sem estalo; a nota continua | |
 | 10 | Ouvir os presets de fábrica com o CK61 (os 10 primeiros já foram vistos; os 30 novos de 012 a 086 são escritos por valores, sem audição) | Anotar por preset: bom / ajustar (o quê) / ruim | |
 | 11 | Lead Sync: tocar e segurar | O timbre "varre" no ataque sem mudar a nota (sync com poly-mod) | |
 | 12 | Trocar o modelo do filtro com o mesmo preset | Volume parecido entre os quatro modelos | |
-| 13 | CK61: mexer no knob que manda CC 74 (cutoff) estando na aba OSC | A aba FILTRO pisca; na aba FILTRO, o knob Cutoff gira junto | |
+| 13 | CK61: mexer no knob que manda CC 74 (cutoff) estando em PAINEL › Fonte | O bloco Filtro da faixa pisca; em Filtro, o knob Cutoff gira junto | |
 | 14 | Salvar como novo, renomear, favoritar, apagar | Tudo funciona; o preset apagado some da lista | |
 | 15 | Exportar e importar (navegador de presets) | Arquivo criado; importar de volta cria cópias "(2)" | |
 | 16 | Fechar o app (botão home) com edição não salva e abrir de novo | Volta no mesmo preset, com a edição e o "• editado" | |
-| 17 | Vibração | Tique nos seletores, abas e knobs de passo; desligável em ⋮ | |
+| 17 | Vibração | Tique nos seletores, famílias e knobs de passo; desligável em ⋮ | |
 | 18 | Salvar preset com o teclado virtual aberto | Anotar se o botão "Salvar como novo" fica escondido atrás do teclado (visto no emulador) | |
 
 ---
@@ -139,8 +139,23 @@ Parecer geral já dado por você em 12/11/2026 ("Já está funcionando perfeitam
 | 20 | Pedal de sustain | Segura as notas; ao soltar elas morrem no release do patch | |
 | 21 | 16 notas FM seguradas (pedal), ler "Carga do motor" | Anotar o pico; meta abaixo de 30 %; sem estouros | |
 | 22 | Trocar o seletor Motor (Analógico ↔ FM) com uma nota segurada | Sem travar nem estalar alto; a nota some e a próxima toca no motor novo | |
-| 23 | Editar o nível do OP1 (aba OPERADOR) durante uma nota | O som muda sem pular; o preset passa a "editado" | |
+| 23 | Editar o nível do OP1 (PAINEL › Operadores) durante uma nota | O som muda sem pular; o preset passa a "editado" | |
 | 24 | Importar um `.syx` pelo botão Importar (da pasta Downloads do celular) | Mensagem "N presets importados" dentro do navegador; nova prateleira "DX7 <nome do arquivo>" | |
 | 25 | Exportar uma voz (segurar o cartão, Exportar .syx) e importar de volta | Arquivo de 163 bytes; volta como "DX7 Importados" com o sufixo "(2)" no nome | |
 | 26 | Program Change 65 no CK61 | Carrega ROM1A 1 (BRASS 1) | |
-| 27 | Reabrir o app depois de fechar | Volta o último preset (inclusive FM) e as abas FM | |
+| 27 | Reabrir o app depois de fechar | Volta o último preset (inclusive FM) e as famílias FM | |
+
+## Plano 7: telas PALCO e PAINEL
+As telas novas foram vistas no emulador (landscape 2400 x 1080). No aparelho ainda falta conferir o tamanho dos toques e o desempenho dos desenhos.
+
+| # | Passo | Esperado | Resultado |
+|---|---|---|---|
+| 28 | Abrir o app e tocar uma nota no teclado da tela | A tecla acende na cor da nota; o retrato mostra a onda; o medidor da barra sobe; "N vozes" bate com o motor | |
+| 29 | PALCO: girar cada macro (Brilho, Corpo, Ataque, Cauda, Calor, Movimento, Ritmo, Espaço) com uma nota soando, no analógico e no FM | O som muda como o nome diz; no FM a macro repousa no meio e anda para os dois lados | |
+| 30 | PALCO: SEGURAR, tocar um acorde, soltar as teclas | As notas continuam; ao desligar o SEGURAR elas soltam no release | |
+| 31 | PALCO: pitch bend e roda de modulação (as faixas ao lado do teclado) | O bend volta ao meio ao soltar; a roda fica onde foi deixada; o som acompanha | |
+| 32 | PAINEL: passar por todas as famílias, no analógico e no FM | Todos os controles à mão, sem rolar; nenhum texto cortado; toques confortáveis (anotar se algum knob é pequeno demais) | |
+| 33 | PAINEL › Efeitos: ligar cada efeito com uma nota soando | O desenho do efeito acende e o som muda; desligado, o desenho apaga | |
+| 34 | PAINEL › Algoritmo: tocar num operador | Abre PAINEL › Operadores já nesse operador | |
+| 35 | Fazer o CK61 mandar um CC que mexe em parâmetro de outra família (por exemplo CC 74 estando em Efeitos) | O bloco da família na faixa pisca; o knob gira ao voltar para ela | |
+| 36 | Tocar com 8 a 16 notas, ver "Carga do motor" (⋮) | Anotar se os desenhos pesam: o pico de CPU e se há estouros comparados com a versão anterior | |

@@ -37,4 +37,26 @@ object KnobGrid {
     }
     return best
   }
+
+  // The compact grid of the card layout: a smaller label block and gap, so a card shows all its knobs without scrolling.
+  const val COMPACT_MAX = 64f
+  const val COMPACT_MIN = 34f
+  const val COMPACT_LABEL = 26f
+  const val COMPACT_GAP = 4f
+
+  /**
+   * Columns and knob size (dp) for [n] compact knobs in [width] x [height] dp. With [columns] > 0 the column count is
+   * fixed (a card that wants its rates and levels on separate rows); otherwise the best one is picked.
+   */
+  fun fitCompact(n: Int, width: Float, height: Float, columns: Int = 0): Fit {
+    if (n <= 0) return Fit(1, COMPACT_MAX)
+    var best = Fit(1, Float.NEGATIVE_INFINITY)
+    val options = if (columns > 0) columns..columns else 1..n
+    for (c in options) {
+      val rows = ceil(n / c.toFloat())
+      val size = min(min(width / c - COMPACT_GAP, height / rows - COMPACT_LABEL - COMPACT_GAP), COMPACT_MAX)
+      if (size > best.knob) best = Fit(c, size)
+    }
+    return best
+  }
 }

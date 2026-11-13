@@ -19,6 +19,8 @@ enum ParamId : int {
 
 constexpr int kOscStride = kOsc2Wave - kOsc1Wave;
 constexpr int kLfoStride = kLfo2Wave - kLfo1Wave;
+constexpr int kFmOpStride = kFmOp2R1 - kFmOp1R1;
+constexpr int kFmGlobalCount = kFmTranspose - kFmPitchEnvR1 + 1;  // 19
 
 extern const ParamInfo kParams[kNumParams];
 

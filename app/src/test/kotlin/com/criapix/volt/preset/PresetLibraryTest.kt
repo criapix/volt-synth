@@ -163,4 +163,22 @@ class PresetLibraryTest {
     assertEquals(5, PresetCodec.decode(PresetCodec.encode(PresetFile(name = "S", slot = 5))).slot)
     assertEquals(0, PresetCodec.decode("""{"format":1,"name":"Velho"}""").slot)
   }
+
+  @Test fun bankCategoriesDropALeadingDx7FromTheFileName() {
+    val bank = File("src/main/assets/dx7/rom3a.syx").readBytes()
+    val factory = factoryDir()
+    for ((stem, cat) in listOf("DX7 rom3a" to "DX7 rom3a", "dx7_rom3a" to "DX7 rom3a", "DX7" to "DX7 importado", "meu cartucho" to "DX7 meu cartucho")) {
+      val lib = PresetLibrary(DirFactory(factory), tmp.newFolder(), MemFavorites())
+      assertEquals(stem, cat, lib.importBytes(bank, stem).refs.first().category)
+    }
+  }
+
+  @Test fun singleVoicesShareOneImportedCategory() {
+    val lib = library()
+    val voice = Dx7Codec.writeVoice(Dx7Codec.readBank(File("src/main/assets/dx7/rom1a.syx").readBytes(), "x").presets[0])
+    val a = lib.importBytes(voice, "um").refs.single()
+    val b = lib.importBytes(voice, "dois").refs.single()
+    assertEquals("DX7 Importados", a.category)
+    assertEquals("DX7 Importados", b.category)
+  }
 }

@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -48,6 +49,7 @@ fun PresetBrowser(model: AppModel, io: ScreenIo, onClose: () -> kotlin.Unit) {
   val presets by model.presets.collectAsStateWithLifecycle()
   val favorites by model.favorites.collectAsStateWithLifecycle()
   val current by model.current.collectAsStateWithLifecycle()
+  val message by model.message.collectAsStateWithLifecycle()
   var pickedShelf by remember { mutableStateOf<Shelf>(Shelf.All) }
   var query by remember { mutableStateOf("") }
   var editing by remember { mutableStateOf<PresetRef?>(null) }
@@ -66,6 +68,7 @@ fun PresetBrowser(model: AppModel, io: ScreenIo, onClose: () -> kotlin.Unit) {
 
   Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false)) {
     Surface(Modifier.fillMaxSize(), color = VoltColors.background) {
+     Box(Modifier.fillMaxSize()) {
       Row(Modifier.fillMaxSize().padding(12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         LazyColumn(Modifier.width(150.dp).fillMaxHeight()) {
           items(shelves) { s ->
@@ -125,6 +128,13 @@ fun PresetBrowser(model: AppModel, io: ScreenIo, onClose: () -> kotlin.Unit) {
           }
         }
       }
+      // The dialog is its own window and covers the screen's toast, so it shows the message too.
+      // The screen clears the message after a few seconds; it is not cleared here.
+      message?.let { m ->
+        Text(m, color = VoltColors.text, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 16.dp)
+          .background(VoltColors.raised, RoundedCornerShape(8.dp)).padding(12.dp))
+      }
+     }
     }
   }
   editing?.let { ref -> EditPresetDialog(model, io, ref, onClose = { editing = null }) }

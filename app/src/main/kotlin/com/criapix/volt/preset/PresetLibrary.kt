@@ -47,6 +47,12 @@ class PresetLibrary(
   companion object {
     const val FACTORY = "factory:"
     const val USER = "user:"
+    /** Label of the category ("DX7 Importados") that holds single voices imported from .syx files. */
+    const val SINGLE_VOICES = "Importados"
+
+    /** File stem -> bank label: a leading "DX7" and its separators are dropped (the category adds "DX7 "). */
+    fun bankLabel(stem: String): String =
+      stem.trim().replace(Regex("^dx7[ _-]*", RegexOption.IGNORE_CASE), "").trim().ifEmpty { "importado" }
   }
 
   private val jsonFactory: List<Pair<PresetRef, PresetFile>> = factory.list().mapNotNull { (stem, text) ->
@@ -117,7 +123,9 @@ class PresetLibrary(
    */
   fun importBytes(bytes: ByteArray, stem: String): ImportResult {
     if (bytes.firstOrNull() != 0xF0.toByte()) return ImportResult(import(bytes.toString(Charsets.UTF_8)), true)
-    val read = Dx7Codec.readAny(bytes, stem)
+    // A single voice goes to a shared shelf; a bank gets its own, named after the file without a leading "DX7".
+    val label = if (bytes.size == 163) SINGLE_VOICES else bankLabel(stem)
+    val read = Dx7Codec.readAny(bytes, label)
     return ImportResult(createAll(read.presets), read.checksumOk)
   }
 

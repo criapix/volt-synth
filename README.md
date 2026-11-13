@@ -70,6 +70,21 @@ Anote o veredito de cada um em `docs/PRESET-REVIEW.md`.
 
 **Faça backup do `.jks` e das senhas**: sem eles nenhuma versão futura consegue atualizar o app instalado. Sem `keystore.properties` o Gradle gera `app-release-unsigned.apk`, que o Android não instala. O debug usa outro id (`com.criapix.volt.debug`, "Volt dev") e convive com o release.
 
+### Release automática (GitHub Actions)
+
+O workflow [Release APK](.github/workflows/release.yml) compila, roda os testes Kotlin, assina o APK e o publica numa Release do GitHub, com o arquivo `.sha256` ao lado.
+
+```powershell
+# uma vez, depois de criar a chave e o keystore.properties (acima):
+.\tools\set-release-secrets.ps1      # guarda a chave e as senhas nos segredos do repositório (as senhas não aparecem na tela)
+
+# a cada versão: suba versionName e versionCode em app\build.gradle.kts, faça o commit e crie a tag igual à versão
+git tag v1.1.0
+git push origin v1.1.0              # o Actions publica a release com volt-1.1.0.apk
+```
+
+A tag precisa ser igual ao `versionName` (`v1.1.0` para `"1.1.0"`); se não for, o workflow falha antes de compilar. Tags com hífen (`v1.2.0-rc1`) viram pré-lançamento. Em **Actions → Release APK → Run workflow** há uma compilação de teste que guarda o APK só como artefato, sem criar release (sem os segredos ela sai **sem assinatura**, só para conferir o build).
+
 ## Compilar (Windows, PowerShell)
 
 ```powershell

@@ -35,13 +35,19 @@ android {
     }
   }
 
+  // The release key comes from keystore.properties (local builds) or, failing that, from the
+  // VOLT_* environment variables (GitHub Actions). With neither, Gradle builds an unsigned APK.
+  fun signing(property: String, env: String): String? =
+    keystoreProps.getProperty(property) ?: System.getenv(env)?.takeIf { it.isNotBlank() }
+
   signingConfigs {
-    if (keystoreProps.getProperty("storeFile") != null) {
+    val storeFile = signing("storeFile", "VOLT_STORE_FILE")
+    if (storeFile != null) {
       create("release") {
-        storeFile = file(keystoreProps.getProperty("storeFile"))
-        storePassword = keystoreProps.getProperty("storePassword")
-        keyAlias = keystoreProps.getProperty("keyAlias")
-        keyPassword = keystoreProps.getProperty("keyPassword")
+        this.storeFile = file(storeFile)
+        storePassword = signing("storePassword", "VOLT_STORE_PASSWORD")
+        keyAlias = signing("keyAlias", "VOLT_KEY_ALIAS")
+        keyPassword = signing("keyPassword", "VOLT_KEY_PASSWORD")
       }
     }
   }

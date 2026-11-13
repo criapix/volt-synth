@@ -47,6 +47,8 @@ Seis operadores, 32 algoritmos, envelopes de 4 taxas e 4 níveis, escala de tecl
 
 Versão 1.0.0. Todos os cinco planos estão implementados: motor C++ de 16 vozes (3 osciladores, filtro Ladder / Roland 12 dB / Roland 24 dB / Prophet, 2 envelopes, 2 LFOs, poly-mod, modos poly/mono/legato/unison), saída de áudio Oboe de baixa latência, entrada MIDI USB com mapa de controladores de fábrica, a tela de toque (abas OSC · FILTRO · ENV · MOD · ARP · FX, knobs, curva do filtro e envelopes ao vivo), presets (64 de fábrica nivelados por medição, os seus, navegador, favoritos, importar/exportar, sessão restaurada), MIDI Learn, seis efeitos (distorção, phaser, flanger, chorus, delay, reverb), arpejador, teclado deslizante na tela e polifonia que cai sozinha quando o celular não acompanha (com teto manual de 8, 12 ou 16 vozes em ⋮). Há ainda ícone, "Sobre o Volt" e exportação de log.
 
+Em desenvolvimento, ainda sem versão nova: o motor FM de 6 operadores compatível com o DX7 (núcleo msfa, extraído do Dexed pelo projeto Synth_Dexed), com os 32 algoritmos, o editor completo (abas ALGO · OPERADOR · PITCH/LFO), leitura e gravação de `.syx` (cartucho de 32 vozes e voz única) e aftertouch e breath vindos do MIDI. O que foi verificado: testes no PC (as 256 vozes dos cartuchos de fábrica soam, sem NaN e sem aperto do limitador, e a saída do motor coincide com a do msfa chamado direto) e as telas no emulador. **O som do FM ainda não foi avaliado no aparelho.**
+
 O que foi e o que não foi testado: o motor e os 64 presets são medidos por testes no PC (soam, não geram NaN, liberam as vozes, nível dentro de uma janela); a tela foi vista no emulador. **No aparelho, só foram ouvidos os 10 primeiros presets e o caminho CK61 → som (plano 1).** Os outros 54 presets, os efeitos, o arpejador, o teclado na tela, o MIDI Learn e a polifonia sob carga ainda não foram avaliados no celular: veja `docs/DEVICE-TEST.md`, `docs/PRESET-REVIEW.md` e `docs/NOTES.md`.
 
 ## Ouvir os presets no PC
@@ -89,6 +91,10 @@ Conecte o teclado por cabo USB (celular como host) antes ou depois de abrir o ap
 
 Os presets do usuário ficam dentro do app (pasta privada); use **Exportar** no navegador de presets para fazer backup e **Importar** para trazê-los de volta. Um preset é um arquivo JSON com `name`, `category` e `params`, que mapeia o nome permanente de cada parâmetro ao seu valor real (Hz, segundos, semitons); o que faltar assume o padrão do motor. Os presets de fábrica são somente leitura: para alterar um, salve como novo.
 
+## Cartuchos do DX7
+
+Os 8 cartuchos de fábrica do DX7 (ROM1A a ROM4B, 256 vozes) são dados da Yamaha e **não fazem parte deste repositório**. Para tê-los no navegador de presets, coloque os seus `rom1a.syx` … `rom4b.syx` (ou qualquer banco `.syx` de 32 vozes) em `app/src/main/assets/dx7/` antes de compilar: cada arquivo vira uma prateleira "DX7 NOME". Sem eles o app funciona do mesmo jeito, e **Importar** aceita qualquer `.syx` em tempo de execução. Os testes que dependem dos cartuchos são pulados quando a pasta está vazia. Detalhes em [docs/DX7-CARTUCHOS.md](docs/DX7-CARTUCHOS.md).
+
 ## Licença
 
 GPL-3.0-or-later (arquivo `LICENSE`). Bibliotecas de terceiros, em `third_party/`:
@@ -98,5 +104,6 @@ GPL-3.0-or-later (arquivo `LICENSE`). Bibliotecas de terceiros, em `third_party/
 - sst-effects: GPL-3
 - fmt: MIT
 - simde: MIT
+- Synth_Dexed (núcleo msfa do motor FM): arquivos usados sob Apache 2.0; o projeto como um todo é GPL-3
 
 Design: [docs/plans/2026-11-11-volt-design.md](docs/plans/2026-11-11-volt-design.md)

@@ -2,6 +2,8 @@
 
 Data: 2026-11-12. Estado: design validado com o usuário; ainda sem código.
 
+> **Atualização (publicação):** os cartuchos de fábrica da Yamaha não são distribuídos no repositório público. Ficam fora do git (`.gitignore`), cada pessoa coloca os seus em `app/src/main/assets/dx7/`, e os testes que dependem deles são pulados quando a pasta está vazia. Veja `docs/DX7-CARTUCHOS.md`. O resto deste documento descreve o design original, em que os cartuchos iam no APK.
+
 Este documento é autossuficiente. Quem implementar não terá acesso à conversa que o gerou. Ele complementa o design original, [2026-11-11-volt-design.md](2026-11-11-volt-design.md), cujas regras (thread de áudio, tabela única de parâmetros, licença) continuam valendo.
 
 ## 1. O que é

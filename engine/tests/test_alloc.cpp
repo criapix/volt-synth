@@ -44,3 +44,22 @@ TEST(alloc_render_never_touches_the_heap) {
   }
   CHECK(g_allocs.load() == before);
 }
+
+TEST(alloc_render_fm_never_touches_the_heap) {
+  Engine e;
+  e.setSampleRate(48000.0f);
+  static float buf[2 * 512];
+  e.post({Event::SetParam, kEngineType, 1.0f});
+  e.render(buf, 512);  // warm-up
+  long before = g_allocs.load();
+  for (int n = 0; n < 16; ++n) e.post({Event::NoteOn, 40 + n * 3, 0.8f});
+  for (int round = 0; round < 200; ++round) {
+    if (round == 20) e.post({Event::ModWheel, 0, 0.8f});
+    if (round == 40) e.post({Event::Aftertouch, 0, 0.6f});
+    if (round == 60) e.post({Event::Breath, 0, 0.5f});
+    if (round % 25 == 10) e.post({Event::SetParam, kFmOp1Level, norm(kFmOp1Level, (float)(20 + round % 70))});
+    if (round == 100) for (int n = 0; n < 16; ++n) e.post({Event::NoteOff, 40 + n * 3, 0.0f});
+    e.render(buf, 1 + (round * 37) % 512);
+  }
+  CHECK(g_allocs.load() == before);
+}

@@ -79,6 +79,7 @@ if (VOLT_TESTS)
     tests/test_dx7_codec.cpp
     tests/test_fm_params.cpp
     tests/test_fm_block.cpp
+    tests/test_engine_fm.cpp
   )
   target_link_libraries(volt_tests PRIVATE volt_engine)
   set(VOLT_PRESETS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../app/src/main/assets/presets/factory)

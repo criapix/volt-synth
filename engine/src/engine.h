@@ -5,6 +5,7 @@
 #include "arp.h"
 #include "event_queue.h"
 #include "filter.h"
+#include "fm/fm_block.h"
 #include "fx/fx_chain.h"
 #include "params.h"
 #include "voice.h"
@@ -50,6 +51,12 @@ class Engine {
   void noteOffNow(int note);  // release ignoring the sustain pedal (arpeggio steps)
   void runArp();
   void releaseOrSustain(Voice& v);
+  // Every voice state change goes through these so FM mode mirrors it to fm_ (Voice keeps the bookkeeping).
+  void releaseVoice(Voice& v);
+  void quickReleaseVoice(Voice& v);
+  void killVoice(Voice& v);
+  void killAllVoices();
+  void syncEngineType();  // fmMode_ follows engine.type; a change silences every voice
   Voice* allocPoly(int note);
   void startVoice(Voice& v, int note, float velocity, float detune, float pan, float gain);
 
@@ -67,6 +74,9 @@ class Engine {
   float fadeGain_ = 1.0f;
 
   std::unique_ptr<FxChain> fx_;  // allocated in the constructor (~17 MB), off the audio thread
+  std::unique_ptr<FmBlock> fm_;  // allocated in the constructor, off the audio thread
+  bool fmMode_ = false;
+  alignas(16) float mono_[kBlock];
   Arp arp_;
   bool arpOn_ = false;
   bool keyHeld_[128] = {};

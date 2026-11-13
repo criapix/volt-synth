@@ -22,4 +22,17 @@ class BrowserFilterTest {
     assertEquals(listOf("factory:2"), BrowserFilter.apply(list, Shelf.All, "analogico", emptySet()).map { it.id })
     assertEquals(listOf("factory:1", "user:a"), BrowserFilter.apply(list, Shelf.All, "BAIXO", emptySet()).map { it.id })
   }
+
+  @Test fun libraryShelvesAddDx7CategoriesInFirstAppearanceOrder() {
+    val dx = list + listOf(
+      PresetRef("factory:dx7-rom1b-01", "A", "DX7 ROM1B"),
+      PresetRef("factory:dx7-rom1a-01", "B", "DX7 ROM1A"),
+      PresetRef("factory:dx7-rom1b-02", "C", "DX7 ROM1B"),
+    )
+    val shelves = Shelf.forLibrary(dx)
+    assertEquals(Shelf.ALL + listOf(Shelf.Category("DX7 ROM1B"), Shelf.Category("DX7 ROM1A")), shelves)
+    assertEquals("DX7 ROM1B", shelves[Shelf.ALL.size].label)
+    assertEquals(Shelf.ALL, Shelf.forLibrary(list))
+    assertEquals(listOf("factory:dx7-rom1a-01"), BrowserFilter.apply(dx, Shelf.Category("DX7 ROM1A"), "", emptySet()).map { it.id })
+  }
 }

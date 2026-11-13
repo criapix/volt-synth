@@ -52,12 +52,18 @@ fun PresetBrowser(model: AppModel, io: ScreenIo, onClose: () -> kotlin.Unit) {
   var query by remember { mutableStateOf("") }
   var editing by remember { mutableStateOf<PresetRef?>(null) }
   val shown = BrowserFilter.apply(presets, shelf, query, favorites)
+  val shelves = remember(presets) { Shelf.forLibrary(presets) }
+  // A shelf made only of the user's FM presets can be exported as a 32-voice bank.
+  val bankCategory = (shelf as? Shelf.Category)?.key?.takeIf { key ->
+    val inShelf = presets.filter { it.category == key }
+    inShelf.isNotEmpty() && inShelf.all { it.isUser } && inShelf.all { model.isFm(it.id) }
+  }
 
   Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false)) {
     Surface(Modifier.fillMaxSize(), color = VoltColors.background) {
       Row(Modifier.fillMaxSize().padding(12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         LazyColumn(Modifier.width(150.dp).fillMaxHeight()) {
-          items(Shelf.ALL) { s ->
+          items(shelves) { s ->
             Text(
               s.label, fontSize = 14.sp,
               color = if (s == shelf) Color.Black else VoltColors.text,
@@ -72,6 +78,12 @@ fun PresetBrowser(model: AppModel, io: ScreenIo, onClose: () -> kotlin.Unit) {
             OutlinedTextField(query, { query = it }, placeholder = { Text("Buscar") }, singleLine = true, modifier = Modifier.weight(1f))
             TextButton(onClick = io.onImport) { Text("Importar") }
             TextButton(onClick = io.onExport) { Text("Exportar") }
+            if (bankCategory != null) TextButton(onClick = {
+              model.exportSyxBank(bankCategory)?.let { (bytes, dropped) ->
+                val done = if (dropped > 0) "Banco salvo; $dropped presets ficaram de fora (máximo 32)" else "Banco .syx salvo"
+                io.onExportSyx(bankCategory, bytes, done)
+              }
+            }) { Text("Exportar banco .syx") }
             TextButton(onClick = onClose) { Text("Fechar") }
           }
           if (shown.isEmpty()) Text("Nenhum preset aqui.", color = VoltColors.dim, modifier = Modifier.padding(16.dp))
@@ -84,7 +96,7 @@ fun PresetBrowser(model: AppModel, io: ScreenIo, onClose: () -> kotlin.Unit) {
                   .pointerInput(ref.id) {
                     detectTapGestures(
                       onTap = { model.select(ref.id); io.haptics.tick() },
-                      onLongPress = { if (ref.isUser) editing = ref },
+                      onLongPress = { if (ref.isUser || model.isFm(ref.id)) editing = ref },
                     )
                   }
                   .padding(horizontal = 10.dp),
@@ -106,14 +118,31 @@ fun PresetBrowser(model: AppModel, io: ScreenIo, onClose: () -> kotlin.Unit) {
       }
     }
   }
-  editing?.let { ref -> EditPresetDialog(model, ref, onClose = { editing = null }) }
+  editing?.let { ref -> EditPresetDialog(model, io, ref, onClose = { editing = null }) }
 }
 
-/** Rename or delete one user preset. */
+/** Rename or delete one user preset; export an FM preset as .syx. Factory presets only get the export. */
 @Composable
-private fun EditPresetDialog(model: AppModel, ref: PresetRef, onClose: () -> kotlin.Unit) {
+private fun EditPresetDialog(model: AppModel, io: ScreenIo, ref: PresetRef, onClose: () -> kotlin.Unit) {
   var name by remember { mutableStateOf(ref.name) }
   var confirmDelete by remember { mutableStateOf(false) }
+  val canExport = remember(ref.id) { model.isFm(ref.id) }
+  val exportButton: @Composable () -> kotlin.Unit = {
+    TextButton(onClick = {
+      model.exportSyx(ref.id)?.let { io.onExportSyx(ref.name, it, "Preset .syx salvo") }
+      onClose()
+    }) { Text("Exportar .syx") }
+  }
+  if (!ref.isUser) {
+    AlertDialog(
+      onDismissRequest = onClose,
+      title = { Text(ref.name) },
+      text = { Text("Preset de fábrica: dá para exportar como .syx.", color = VoltColors.dim) },
+      confirmButton = exportButton,
+      dismissButton = { TextButton(onClick = onClose) { Text("Cancelar") } },
+    )
+    return
+  }
   AlertDialog(
     onDismissRequest = onClose,
     title = { Text(if (confirmDelete) "Apagar \"${ref.name}\"?" else "Editar preset") },
@@ -124,6 +153,7 @@ private fun EditPresetDialog(model: AppModel, ref: PresetRef, onClose: () -> kot
     },
     dismissButton = {
       Row {
+        if (!confirmDelete && canExport) exportButton()
         if (!confirmDelete) TextButton(onClick = { confirmDelete = true }) { Text("Apagar…", color = VoltColors.danger) }
         TextButton(onClick = onClose) { Text("Cancelar") }
       }

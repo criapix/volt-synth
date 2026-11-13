@@ -21,7 +21,7 @@ object VoltColors {
 fun categoryLabel(key: String): String = when (key) {
   "Bass" -> "Baixo"; "Lead" -> "Lead"; "Pad" -> "Pad"; "Brass" -> "Metais"
   "Strings" -> "Cordas"; "Keys" -> "Teclas"; "Pluck" -> "Pluck"; "FX" -> "Efeitos"
-  else -> "—"
+  else -> if (key.startsWith("DX7 ")) key else "—"  // DX7 cartridges and imported banks: shown as they are
 }
 
 @Composable

@@ -13,6 +13,10 @@ sealed interface Shelf {
 
   companion object {
     val ALL: List<Shelf> = listOf(All, Favorites, User) + PresetCodec.CATEGORIES.map { Category(it) }
+
+    /** Fixed shelves, the analog categories, then one shelf per DX7 category in first-appearance order. */
+    fun forLibrary(list: List<PresetRef>): List<Shelf> =
+      ALL + list.map { it.category }.filter { it.startsWith("DX7 ") }.distinct().map { Category(it) }
   }
 }
 

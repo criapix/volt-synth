@@ -61,6 +61,8 @@ class ScreenIo(
   val midiSettings: MidiSettings,
   val onExport: () -> kotlin.Unit,
   val onImport: () -> kotlin.Unit,
+  /** Saves a .syx: suggested file name (without extension), the bytes, and the message shown when it worked. */
+  val onExportSyx: (String, ByteArray, String) -> kotlin.Unit = { _, _, _ -> },
   val voiceLimit: () -> Int = { 16 },
   val maxVoices: MaxVoices = MaxVoices.Fixed,
   val onExportLog: () -> kotlin.Unit = {},

@@ -132,6 +132,46 @@ class AppModel(
     0
   }
 
+  /** Adds the presets in a file the user picked (JSON or DX7 sysex). Returns how many were added. */
+  fun importBytes(bytes: ByteArray, stem: String): Int = try {
+    val r = library.importBytes(bytes, stem)
+    val n = r.refs.size
+    refresh()
+    val count = if (n == 1) "1 preset" else "$n presets"
+    _message.value = if (r.checksumOk) "$count importado${if (n == 1) "" else "s"}" else "Importado com checksum inválido: $count"
+    log("PRESET importados: $n${if (r.checksumOk) "" else " (checksum inválido)"}")
+    n
+  } catch (e: PresetError) {
+    _message.value = e.message
+    0
+  }
+
+  /** True when the preset is an FM (DX7) voice. */
+  fun isFm(id: String): Boolean = try {
+    library.read(id).params["engine.type"] == 1f
+  } catch (e: PresetError) {
+    false
+  }
+
+  /** The preset as a 163-byte single-voice sysex, or null when it is not an FM preset. */
+  fun exportSyx(id: String): ByteArray? = try {
+    library.read(id).takeIf { it.params["engine.type"] == 1f }?.let(Dx7Codec::writeVoice)
+  } catch (e: PresetError) {
+    null
+  }
+
+  /**
+   * The user's FM presets of [category] as a 32-voice bank (library order), with the number of presets dropped
+   * beyond 32. Null when there are none. Fewer than 32 are padded with INIT VOICE.
+   */
+  fun exportSyxBank(category: String): Pair<ByteArray, Int>? {
+    val fm = library.all().filter { it.isUser && it.category == category }.mapNotNull { ref ->
+      runCatching { library.read(ref.id) }.getOrNull()?.takeIf { it.params["engine.type"] == 1f }
+    }
+    if (fm.isEmpty()) return null
+    return Dx7Codec.writeBank(fm.take(32)) to (fm.size - 32).coerceAtLeast(0)
+  }
+
   fun showMessage(text: String) { _message.value = text }
   fun clearMessage() { _message.value = null }
 

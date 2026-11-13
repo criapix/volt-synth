@@ -10,6 +10,9 @@ data class PresetRef(val id: String, val name: String, val category: String) {
 /** Read-only presets shipped with the app: (file stem, JSON text), in order. */
 fun interface FactorySource { fun list(): List<Pair<String, String>> }
 
+/** DX7 cartridges (.syx banks) shipped with the app: (file stem, bytes), sorted by file name. */
+fun interface CartridgeSource { fun list(): List<Pair<String, ByteArray>> }
+
 interface FavoriteStore {
   fun load(): Set<String>
   fun save(ids: Set<String>)
@@ -21,19 +24,48 @@ class DirFactory(private val dir: File) : FactorySource {
     .sortedBy { it.name }.map { it.name.removeSuffix(".json") to it.readText() }
 }
 
+/** DX7 cartridges from a directory (tests). The app uses [AssetCartridges]. */
+class DirCartridges(private val dir: File) : CartridgeSource {
+  override fun list() = dir.listFiles { f -> f.name.endsWith(".syx") }.orEmpty()
+    .sortedBy { it.name }.map { it.name.removeSuffix(".syx") to it.readBytes() }
+}
+
+/** What an import added; [checksumOk] is false when a .syx file had a bad checksum (the voices are still imported). */
+data class ImportResult(val refs: List<PresetRef>, val checksumOk: Boolean)
+
 /**
  * Factory presets (read-only) followed by the user's presets (one JSON file each in [userDir]).
  * Not thread-safe: call from the UI thread. Files are tiny, so plain blocking I/O is fine.
  */
-class PresetLibrary(factory: FactorySource, private val userDir: File, private val favorites: FavoriteStore) {
+class PresetLibrary(
+  factory: FactorySource,
+  private val userDir: File,
+  private val favorites: FavoriteStore,
+  cartridges: CartridgeSource = CartridgeSource { emptyList() },
+  log: (String) -> Unit = {},
+) {
   companion object {
     const val FACTORY = "factory:"
     const val USER = "user:"
   }
 
-  private val factoryPresets: List<Pair<PresetRef, PresetFile>> = factory.list().mapNotNull { (stem, text) ->
+  private val jsonFactory: List<Pair<PresetRef, PresetFile>> = factory.list().mapNotNull { (stem, text) ->
     runCatching { PresetCodec.decode(text) }.getOrNull()?.let { PresetRef(FACTORY + stem, it.name, it.category) to it }
   }
+
+  /** Cartridge voices: id factory:dx7-<stem>-<NN>, category "DX7 <STEM>". A broken cartridge is skipped. */
+  private val cartridgeVoices: List<Pair<PresetRef, PresetFile>> = cartridges.list().sortedBy { it.first }.flatMap { (stem, bytes) ->
+    try {
+      Dx7Codec.readBank(bytes, stem.uppercase()).presets.mapIndexed { i, p ->
+        PresetRef("${FACTORY}dx7-${stem.lowercase()}-${(i + 1).toString().padStart(2, '0')}", p.name, p.category) to p
+      }
+    } catch (e: PresetError) {
+      log("PRESET cartucho ignorado: $stem (${e.message})")
+      emptyList()
+    }
+  }
+
+  private val factoryPresets = jsonFactory + cartridgeVoices
   private val favs = favorites.load().toMutableSet()
   private var cache: List<PresetRef>? = null
 
@@ -78,6 +110,16 @@ class PresetLibrary(factory: FactorySource, private val userDir: File, private v
 
   /** Adds every preset in [text] (a preset or a bank) as a new user preset. Names that exist get " (2)", " (3)"... */
   fun import(text: String): List<PresetRef> = PresetCodec.decodeAny(text).map { create(it.copy(name = uniqueName(it.name))) }
+
+  /**
+   * Adds the presets in a file's [bytes] as new user presets. A file starting with 0xF0 is DX7 sysex (category
+   * "DX7 <stem>"); anything else is JSON text. Throws [PresetError] when the file cannot be used.
+   */
+  fun importBytes(bytes: ByteArray, stem: String): ImportResult {
+    if (bytes.firstOrNull() != 0xF0.toByte()) return ImportResult(import(bytes.toString(Charsets.UTF_8)), true)
+    val read = Dx7Codec.readAny(bytes, stem)
+    return ImportResult(read.presets.map { create(it.copy(name = uniqueName(it.name))) }, read.checksumOk)
+  }
 
   private fun uniqueName(name: String): String {
     val taken = all().filter { it.isUser }.map { it.name.lowercase() }.toSet()

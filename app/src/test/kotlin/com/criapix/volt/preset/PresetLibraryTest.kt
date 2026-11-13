@@ -87,4 +87,55 @@ class PresetLibraryTest {
     File(tmp.root, "user").apply { mkdirs() }.resolve("lixo.json").writeText("nada")
     assertEquals(2, lib.all().size)
   }
+
+  private fun cartridgeDir(): File = tmp.newFolder("dx7").also { d ->
+    File("src/main/assets/dx7/rom1a.syx").copyTo(File(d, "rom1a.syx"))
+    File("src/main/assets/dx7/rom1b.syx").copyTo(File(d, "rom1b.syx"))
+  }
+
+  private fun libraryWithDx7() =
+    PresetLibrary(DirFactory(factoryDir()), File(tmp.root, "user"), MemFavorites(), DirCartridges(cartridgeDir()))
+
+  @Test fun cartridgesFollowTheJsonFactoryPresets() {
+    val lib = libraryWithDx7()
+    val ids = lib.all().map { it.id }
+    assertEquals(listOf("factory:010-a", "factory:020-b", "factory:dx7-rom1a-01"), ids.take(3))
+    assertEquals("factory:dx7-rom1b-32", ids[2 + 63])
+    assertEquals("BRASS   1", lib.read("factory:dx7-rom1a-01").name)
+    assertEquals("DX7 ROM1A", lib.all()[2].category)
+    assertThrows(IllegalArgumentException::class.java) { lib.delete("factory:dx7-rom1a-01") }
+    assertThrows(IllegalArgumentException::class.java) { lib.overwrite("factory:dx7-rom1a-01", PresetFile(name = "X")) }
+  }
+
+  @Test fun userPresetsComeAfterTheCartridges() {
+    val lib = libraryWithDx7()
+    lib.create(PresetFile(name = "Meu"))
+    assertEquals(2 + 64 + 1, lib.all().size)
+    assertTrue(lib.all().last().isUser)
+  }
+
+  @Test fun aBrokenCartridgeIsSkippedAndLogged() {
+    val dir = cartridgeDir()
+    File(dir, "aaa.syx").writeBytes(ByteArray(100) { 0x11 })
+    val logs = mutableListOf<String>()
+    val lib = PresetLibrary(DirFactory(factoryDir()), File(tmp.root, "user"), MemFavorites(), DirCartridges(dir)) { logs += it }
+    assertEquals(2 + 64, lib.all().size)
+    assertEquals("factory:dx7-rom1a-01", lib.all()[2].id)
+    assertEquals(1, logs.size)
+  }
+
+  @Test fun importingASyxBankAddsThirtyTwoUserPresets() {
+    val lib = libraryWithDx7()
+    val r = lib.importBytes(File("src/main/assets/dx7/rom2a.syx").readBytes(), "meu-cartucho")
+    assertEquals(32, r.refs.size)
+    assertTrue(r.checksumOk)
+    assertTrue(r.refs.all { it.isUser && it.category == "DX7 meu-cartucho" })
+    assertEquals(1f, lib.read(r.refs[0].id).params["engine.type"])
+  }
+
+  @Test fun importBytesStillTakesJson() {
+    val lib = library()
+    val r = lib.importBytes(PresetCodec.encode(PresetFile(name = "Json")).toByteArray(), "x")
+    assertEquals(listOf("Json"), r.refs.map { it.name })
+  }
 }

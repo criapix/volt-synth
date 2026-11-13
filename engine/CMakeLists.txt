@@ -38,6 +38,7 @@ add_library(volt_engine STATIC
   src/fx/fx_chain.cpp
   src/fm/dx7_codec.cpp
   src/fm/fm_params.cpp
+  src/fm/fm_block.cpp
 )
 target_include_directories(volt_engine PUBLIC src)
 target_link_libraries(volt_engine PUBLIC msfa)
@@ -77,6 +78,7 @@ if (VOLT_TESTS)
     tests/test_msfa.cpp
     tests/test_dx7_codec.cpp
     tests/test_fm_params.cpp
+    tests/test_fm_block.cpp
   )
   target_link_libraries(volt_tests PRIVATE volt_engine)
   set(VOLT_PRESETS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../app/src/main/assets/presets/factory)

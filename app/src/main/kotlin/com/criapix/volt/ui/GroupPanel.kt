@@ -56,7 +56,7 @@ fun GroupPanel(group: Group, state: SynthState, onStep: () -> kotlin.Unit, modif
       Drawing.FENV -> EnvelopeView(state, "fenv", Modifier.weight(0.45f).fillMaxWidth().padding(vertical = 6.dp))
       Drawing.AENV -> EnvelopeView(state, "aenv", Modifier.weight(0.45f).fillMaxWidth().padding(vertical = 6.dp))
       Drawing.ALGORITHM -> AlgorithmStepper(state, onStep, Modifier.weight(1f).fillMaxWidth().padding(vertical = 6.dp))
-      Drawing.PITCH_ENV -> {}  // drawn from Task 13 on
+      Drawing.PITCH_ENV -> Dx7EnvelopeView(state, "fm.pitchenv", pitch = true, modifier = Modifier.weight(0.5f).fillMaxWidth().padding(vertical = 4.dp))
       Drawing.NONE -> {}
     }
     if (knobs.isNotEmpty()) {

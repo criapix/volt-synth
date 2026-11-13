@@ -207,3 +207,94 @@ fun AlgorithmView(state: SynthState, modifier: Modifier = Modifier) {
     drawText(big, topLeft = Offset(6.dp.toPx(), 2.dp.toPx()))
   }
 }
+
+/**
+ * A DX7 envelope (four rates, four levels) with draggable handles. [prefix] is "fm.op3" or "fm.pitchenv"; the
+ * parameters are `$prefix.r1..r4` and `$prefix.l1..l4`, all steps 0..99. With [pitch] the levels are centred at
+ * 50 (no shift) and a centre line is drawn. A handle's horizontal drag changes its rate, the vertical one its level.
+ */
+@Composable
+fun Dx7EnvelopeView(state: SynthState, prefix: String, pitch: Boolean = false, modifier: Modifier = Modifier) {
+  val p = state.params
+  val rateParams = (1..4).map { p["$prefix.r$it"]!! }
+  val levelParams = (1..4).map { p["$prefix.l$it"]!! }
+  val rn = rateParams.map { state.value(it.id).collectAsStateWithLifecycle().value }
+  val ln = levelParams.map { state.value(it.id).collectAsStateWithLifecycle().value }
+  val rates = IntArray(4) { rateParams[it].toReal(rn[it]).toInt() }
+  val levels = IntArray(4) { levelParams[it].toReal(ln[it]).toInt() }
+  val measurer = rememberTextMeasurer()
+
+  Canvas(
+    modifier.fillMaxSize().pointerInput(prefix) {
+      awaitEachGesture {
+        val down = awaitFirstDown()
+        down.consume()
+        val startRates = IntArray(4) { rateParams[it].toReal(state.norm(rateParams[it].id)).toInt() }
+        val startLevels = IntArray(4) { levelParams[it].toReal(state.norm(levelParams[it].id)).toInt() }
+        val pts = Dx7Envelope.points(startRates, startLevels)
+        val handle = Dx7Envelope.nearest(pts, down.position.x / size.width, 1f - down.position.y / size.height)
+        var dx = 0f
+        var dy = 0f
+        while (true) {
+          val ev = awaitPointerEvent()
+          val ch = ev.changes.firstOrNull { it.id == down.id } ?: break
+          if (!ch.pressed) break
+          val m = ch.positionChange(); ch.consume()
+          dx += m.x / size.width; dy += m.y / size.height
+          val (rate, level) = Dx7Envelope.drag(startRates[handle], startLevels[handle], dx, dy)
+          if (rate != rateParams[handle].toReal(state.norm(rateParams[handle].id)).toInt()) state.set(rateParams[handle].id, rateParams[handle].toNorm(rate.toFloat()))
+          if (level != levelParams[handle].toReal(state.norm(levelParams[handle].id)).toInt()) state.set(levelParams[handle].id, levelParams[handle].toNorm(level.toFloat()))
+        }
+      }
+    },
+  ) {
+    val pad = 10.dp.toPx()
+    val w = size.width - 2 * pad
+    val h = size.height - 2 * pad
+    fun at(pt: Dx7Envelope.Pt) = Offset(pad + pt.x * w, pad + h - pt.level * h)
+    drawLine(VoltColors.track, Offset(pad, pad + h), Offset(pad + w, pad + h), 1f)
+    if (pitch) drawLine(VoltColors.track, Offset(pad, pad + h / 2), Offset(pad + w, pad + h / 2), 2f)
+    val pts = Dx7Envelope.points(rates, levels)
+    val path = Path()
+    pts.forEachIndexed { i, pt -> val o = at(pt); if (i == 0) path.moveTo(o.x, o.y) else path.lineTo(o.x, o.y) }
+    drawPath(path, VoltColors.accent2, style = Stroke(4f))
+    // the plateau marks the key being held
+    val sus = at(pts[3]); val susEnd = at(pts[4])
+    drawLine(VoltColors.accent2.copy(alpha = 0.35f), Offset(sus.x, pad), Offset(sus.x, pad + h), 1f)
+    drawLine(VoltColors.accent2.copy(alpha = 0.35f), Offset(susEnd.x, pad), Offset(susEnd.x, pad + h), 1f)
+    Dx7Envelope.handles(pts).forEachIndexed { i, pt ->
+      val o = at(pt)
+      drawCircle(VoltColors.accent, 12f, o)
+      val t = measurer.measure(
+        (i + 1).toString(),
+        TextStyle(fontSize = 10.sp, lineHeight = 12.sp, fontWeight = FontWeight.Bold, color = VoltColors.text),
+      )
+      drawText(t, topLeft = Offset(o.x - t.size.width / 2f, (o.y - 16.dp.toPx() - t.size.height).coerceAtLeast(0f)))
+    }
+  }
+}
+
+/** Keyboard level scaling of an operator, as a picture (no handles): the left and right curves around the break point. */
+@Composable
+fun KeyScalingView(state: SynthState, op: Int, modifier: Modifier = Modifier) {
+  val p = state.params
+  val names = listOf("kls.break", "kls.ldepth", "kls.lcurve", "kls.rdepth", "kls.rcurve")
+  val values = names.map { n ->
+    val prm = p["fm.op$op.$n"]!!
+    prm.toReal(state.value(prm.id).collectAsStateWithLifecycle().value).toInt()
+  }
+  val breakNote = values[0]
+  val pts = KeyScaling.polyline(breakNote, values[1], values[2], values[3], values[4])
+  Canvas(modifier.fillMaxSize()) {
+    val pad = 6.dp.toPx()
+    val w = size.width - 2 * pad
+    val h = size.height - 2 * pad
+    fun y(change: Float) = pad + h / 2 - change * h / 2
+    drawLine(VoltColors.track, Offset(pad, y(0f)), Offset(pad + w, y(0f)), 1f)
+    val bx = pad + w * breakNote / KeyScaling.NOTES.toFloat()
+    drawLine(VoltColors.accent.copy(alpha = 0.5f), Offset(bx, pad), Offset(bx, pad + h), 2f)
+    val path = Path()
+    pts.forEachIndexed { i, (x, c) -> if (i == 0) path.moveTo(pad + x * w, y(c)) else path.lineTo(pad + x * w, y(c)) }
+    drawPath(path, VoltColors.accent2, style = Stroke(4f))
+  }
+}

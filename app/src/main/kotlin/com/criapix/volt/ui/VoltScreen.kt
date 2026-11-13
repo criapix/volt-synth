@@ -102,7 +102,6 @@ fun VoltScreen(model: AppModel, io: ScreenIo) {
   val tabs = Panel.tabsFor(fm)
   var savedTab by rememberSaveable { mutableStateOf(Tab.OSC) }
   val tab = if (savedTab in tabs) savedTab else tabs.first()  // falls back when the voice type changes
-  var operator by rememberSaveable { mutableIntStateOf(1) }
   var flash by remember { mutableStateOf<Tab?>(null) }
   var midiLit by remember { mutableStateOf(false) }
   var level by remember { mutableFloatStateOf(0f) }
@@ -178,24 +177,12 @@ fun VoltScreen(model: AppModel, io: ScreenIo) {
         )
         Box(Modifier.weight(1f).fillMaxWidth()) {
           Row(Modifier.fillMaxSize().padding(horizontal = 8.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            if (tab == Tab.OP) {
-              // Interim layout (Task 13 replaces it): operator chips and the selected operator's group.
-              Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Row(Modifier.fillMaxWidth().height(34.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                  (1..6).forEach { n ->
-                    val on = n == operator
-                    Box(
-                      Modifier.weight(1f).fillMaxHeight()
-                        .background(if (on) VoltColors.accent else VoltColors.raised, RoundedCornerShape(8.dp))
-                        .clickable { operator = n; io.haptics.tick() },
-                      contentAlignment = Alignment.Center,
-                    ) { Text("OP$n", fontSize = 13.sp, lineHeight = 16.sp, fontWeight = FontWeight.Bold, color = if (on) Color.Black else VoltColors.text) }
-                  }
-                }
-                GroupPanel(Panel.operators[operator - 1], state, onStep = io.haptics::tick, modifier = Modifier.weight(1f).fillMaxWidth())
+            when (tab) {
+              Tab.OP -> OperatorTab(state, onStep = io.haptics::tick, modifier = Modifier.fillMaxSize())
+              Tab.PITCH -> PitchTab(state, onStep = io.haptics::tick, modifier = Modifier.fillMaxSize())
+              else -> Panel.groups.getValue(tab).forEach { g ->
+                GroupPanel(g, state, onStep = io.haptics::tick, modifier = Modifier.weight(g.weight).fillMaxHeight())
               }
-            } else Panel.groups.getValue(tab).forEach { g ->
-              GroupPanel(g, state, onStep = io.haptics::tick, modifier = Modifier.weight(g.weight).fillMaxHeight())
             }
           }
           KeyboardSlot(keyboard, onNoteOn = { n, v -> state.noteOn(n, v) }, onNoteOff = { n -> state.noteOff(n) }, onClose = { keyboard = false })

@@ -50,6 +50,11 @@ class AlgorithmsTest {
     assertEquals(6, a.feedback); assertEquals(6, a.feedbackFrom)
   }
 
+  @Test fun rolesAreCarrierOrModulator() {
+    assertEquals(listOf("C", "M", "C", "M", "C", "M"), (1..6).map { alg(5).role(it) })
+    assertEquals(List(6) { "C" }, (1..6).map { alg(32).role(it) })
+  }
+
   @Test fun algorithm5IsThreePairs() {
     val a = alg(5)
     assertEquals(setOf(1, 3, 5), a.carriers)

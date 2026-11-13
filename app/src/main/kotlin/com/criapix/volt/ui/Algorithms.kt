@@ -13,6 +13,9 @@ data class Algo(
 ) {
   /** The operators that [op] modulates. */
   fun targetsOf(op: Int): Set<Int> = modulators.filterValues { op in it }.keys
+
+  /** "C" for a carrier (heard directly), "M" for a modulator. */
+  fun role(op: Int): String = if (op in carriers) "C" else "M"
 }
 
 /** A box position: [row] 0 is the top row, `rows - 1` the bottom (carriers) row. */

@@ -29,7 +29,7 @@ void Engine::setSampleRate(float sr) {
   for (auto& f : filters_) f.setSampleRate(sr);
   if (fx_) fx_->setSampleRate(sr);
   arp_.setSampleRate(sr);
-  if (fm_) fm_->setSampleRate(sr);  // before setPatch and before any note
+  if (fm_) { fm_->setSampleRate(sr); fm_->setPatch(value_); }  // tables first; setPatch reads the rate tables
 }
 
 bool Engine::post(const Event& e) {
@@ -51,6 +51,7 @@ void Engine::applyPending() {
     if (pendingSet_[i]) { target_[i] = value_[i] = pending_[i]; pendingSet_[i] = false; }
   syncEngineType();
   fm_->setPatch(value_);
+  fmDirty_ = false;
 }
 
 void Engine::killVoice(Voice& v) {
@@ -84,6 +85,7 @@ void Engine::syncEngineType() {
 void Engine::render(float* out, int frames) {
   Event e;
   while (queue_.pop(e)) handle(e);
+  flushFm();
 
   int done = 0;
   while (done < frames) {
@@ -102,6 +104,7 @@ void Engine::render(float* out, int frames) {
 void Engine::handle(const Event& e) {
   switch (e.type) {
     case Event::NoteOn:
+      flushFm();
       if (e.b <= 0.0f) keyUp(e.a); else keyDown(e.a, e.b);
       break;
     case Event::NoteOff: keyUp(e.a); break;
@@ -110,8 +113,8 @@ void Engine::handle(const Event& e) {
         target_[e.a] = denorm(e.a, e.b);
         if (kParams[e.a].curve == Curve::Step) value_[e.a] = target_[e.a];
         pendingSet_[e.a] = false;  // an explicit change after a patch overrides the patch's value
-        if (e.a == kEngineType) syncEngineType();
-        if (e.a == kEngineType || e.a >= kFmOp1R1) fm_->setPatch(value_);
+        if (e.a == kEngineType) { syncEngineType(); fmDirty_ = true; }  // kills voices now, patch pushed once later
+        else if (e.a >= kFmOp1R1 && fmMode_) fmDirty_ = true;  // analog: the type switch re-syncs
       }
       break;
     case Event::PatchParam:

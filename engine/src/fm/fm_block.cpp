@@ -94,6 +94,8 @@ FmBlock::~FmBlock() = default;
 void FmBlock::setSampleRate(float sr) {
   m_->sr = sr;
   Exp2::init(); Tanh::init(); Sin::init();
+  // msfa's Freqlut/Porta tables are built once (initDone); reset the flags so a later rate change rebuilds them.
+  Freqlut::initDone = false; Porta::initDone = false;
   Freqlut::init(sr); ::Lfo::init(sr); PitchEnv::init(sr); Env::init_sr(sr); Porta::init_sr(sr);
 }
 

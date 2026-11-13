@@ -76,6 +76,8 @@ class Engine {
   std::unique_ptr<FxChain> fx_;  // allocated in the constructor (~17 MB), off the audio thread
   std::unique_ptr<FmBlock> fm_;  // allocated in the constructor, off the audio thread
   bool fmMode_ = false;
+  bool fmDirty_ = false;  // fm.* or engine.type changed: setPatch once after the event drain
+  void flushFm() { if (fmDirty_) { fm_->setPatch(value_); fmDirty_ = false; } }
   alignas(16) float mono_[kBlock];
   Arp arp_;
   bool arpOn_ = false;

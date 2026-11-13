@@ -30,4 +30,6 @@ object Native {
   /** Every parameter at once, normalized, indexed by id. False when the engine queue is full (nothing applied). */
   external fun loadPatch(values: FloatArray): Boolean
   external fun activeVoices(): Int
+  /** msfa's algorithm table: 32 algorithms x 6 operator flag values (index 0 of each = OP6). */
+  external fun fmAlgorithms(): IntArray
 }

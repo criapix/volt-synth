@@ -124,7 +124,7 @@ object ParamUi {
       put("fm.op$n.coarse", KnobUi("Coarse", ValueUnit.RAW))
       put("fm.op$n.fine", KnobUi("Fine", ValueUnit.RAW))
       put("fm.op$n.detune", KnobUi("Detune", ValueUnit.SIGNED, bipolar = true))
-      put("fm.op$n.on", ToggleUi("Ligado"))
+      put("fm.op$n.on", ToggleUi("OP$n"))
     }
     for (i in 1..4) put("fm.pitchenv.r$i", KnobUi("R$i", ValueUnit.RAW))
     for (i in 1..4) put("fm.pitchenv.l$i", KnobUi("L$i", ValueUnit.RAW))

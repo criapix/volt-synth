@@ -47,3 +47,17 @@ JNI(jboolean, loadPatch)(JNIEnv* env, jobject, jfloatArray values) {
 JNI(jint, activeVoices)(JNIEnv*, jobject) { return g_audio.engine().activeVoices(); }
 JNI(jint, voiceLimit)(JNIEnv*, jobject) { return g_audio.engine().voiceLimit(); }
 JNI(void, setMaxVoices)(JNIEnv*, jobject, jint n) { g_audio.setMaxVoices(n); }
+
+// msfa's algorithm table is a protected static member of FmCore; a trivial subclass reads it once for the UI.
+#include "fm_core.h"
+struct AlgoPeek : FmCore {
+  void render(int32_t*, FmOpParams*, int32_t, int32_t*, int32_t) override {}
+  static int32_t flags(int alg, int op) { return algorithms[alg].ops[op]; }
+};
+JNI(jintArray, fmAlgorithms)(JNIEnv* env, jobject) {
+  jint buf[32 * 6];
+  for (int a = 0; a < 32; ++a) for (int o = 0; o < 6; ++o) buf[a * 6 + o] = AlgoPeek::flags(a, o);
+  jintArray out = env->NewIntArray(32 * 6);
+  env->SetIntArrayRegion(out, 0, 32 * 6, buf);
+  return out;
+}

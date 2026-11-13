@@ -71,3 +71,10 @@ Presets sem veredito saem como estão. Nenhum preset foi aprovado por mim: eu n�
 | 62 | Ondas do Mar | Efeitos | -39.4 | | ataque (0,6 s) e filtro (3 kHz) diferentes do plano para passar o piso de nível; avaliar |
 | 63 | Bolhas | Efeitos | -29.5 | |  |
 | 64 | Arpejo com Eco | Pluck | -23.0 | |  |
+
+## DX7 (256 vozes dos cartuchos de fábrica)
+Parecer geral do usuário em 12/11/2026, depois de instalar o APK no S25 Ultra: "Já está funcionando perfeitamente". **Nenhuma voz foi avaliada individualmente.** Para ouvir as 256 no PC: `.\tools\render-presets.ps1` gera `build\render\dx7\<cartucho>-<NN>.wav` e a seção DX7 do `index.html` (precisa dos `.syx` em `app/src/main/assets/dx7/`). O nível das vozes é o do original, sem nivelamento por voz (mediana −22,8 dB, de −61,4 a −8,8 dB); 31 vozes não soltam sozinhas por projeto do patch.
+
+| Cartucho | Voz | Nome | Veredito | Observação |
+|---|---|---|---|---|
+| ROM1A | 11 | E.PIANO 1 | | |

@@ -126,3 +126,21 @@ Instalar: `adb install -r app\build\outputs\apk\debug\app-debug.apk`. Anotar os 
 | 15 | `voice.mode` em 1 (mono), 2 (legato) e 3 (unison) | Uma nota por vez; em unison o som engrossa | |
 
 Observação: Ladder (0) e Prophet (3) saem ~6 dB mais baixos que os Roland (1 e 2) no mesmo preset; ao trocar `filter.model` o volume muda por isso.
+
+## Plano 6: motor FM / DX7
+Parecer geral já dado por você em 12/11/2026 ("Já está funcionando perfeitamente"). Os passos abaixo são o que ainda não foi medido ou conferido com detalhe.
+
+| # | Passo | Esperado | Resultado |
+|---|---|---|---|
+| 16 | Navegador: as prateleiras "DX7 ROM1A" … "ROM4B" (com os `.syx` em `app/src/main/assets/dx7/` ao compilar) | 32 vozes cada, nomes originais; ROM1A 1 é a posição 065 | |
+| 17 | Carregar ROM1A 11 (E.PIANO 1) e tocar com velocity fraca e forte | O timbre muda com a velocity; sem estalo | |
+| 18 | Uma voz com LFO e PMD (por exemplo TAKE OFF) com a roda de modulação do CK61 | A roda controla a profundidade do vibrato/efeito do LFO | |
+| 19 | Aftertouch no CK61, se ele enviar (anotar se não envia) | Chega ao motor (pressão de canal); sem efeito se o patch não roteia para aftertouch | |
+| 20 | Pedal de sustain | Segura as notas; ao soltar elas morrem no release do patch | |
+| 21 | 16 notas FM seguradas (pedal), ler "Carga do motor" | Anotar o pico; meta abaixo de 30 %; sem estouros | |
+| 22 | Trocar o seletor Motor (Analógico ↔ FM) com uma nota segurada | Sem travar nem estalar alto; a nota some e a próxima toca no motor novo | |
+| 23 | Editar o nível do OP1 (aba OPERADOR) durante uma nota | O som muda sem pular; o preset passa a "editado" | |
+| 24 | Importar um `.syx` pelo botão Importar (da pasta Downloads do celular) | Mensagem "N presets importados" dentro do navegador; nova prateleira "DX7 <nome do arquivo>" | |
+| 25 | Exportar uma voz (segurar o cartão, Exportar .syx) e importar de volta | Arquivo de 163 bytes; volta como "DX7 Importados" com o sufixo "(2)" no nome | |
+| 26 | Program Change 65 no CK61 | Carrega ROM1A 1 (BRASS 1) | |
+| 27 | Reabrir o app depois de fechar | Volta o último preset (inclusive FM) e as abas FM | |

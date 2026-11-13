@@ -20,8 +20,8 @@ android {
     applicationId = "com.criapix.volt"
     minSdk = 26
     targetSdk = 36
-    versionCode = 100
-    versionName = "1.0.0"
+    versionCode = 110
+    versionName = "1.1.0"
     manifestPlaceholders["appLabel"] = "Volt"
     ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
     externalNativeBuild { cmake { arguments += "-DANDROID_STL=c++_shared" } }

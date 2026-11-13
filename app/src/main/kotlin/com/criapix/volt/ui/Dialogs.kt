@@ -172,7 +172,7 @@ private fun AboutDialog(version: String, onClose: () -> kotlin.Unit) {
         Text("Licença: GNU GPL versão 3 ou posterior. Você pode usar, estudar, modificar e redistribuir o Volt nos termos dessa licença; o código-fonte acompanha cada cópia distribuída.", fontSize = 13.sp, lineHeight = 18.sp)
         Text("Bibliotecas de terceiros", color = VoltColors.dim, fontSize = 12.sp)
         Text(
-          "Oboe (Google) — Apache 2.0\nsst-filters, sst-basic-blocks, sst-effects (Surge Synth Team) — GPL-3\nfmt — MIT\nSIMDe — MIT\nJetpack Compose, AndroidX, kotlinx.serialization — Apache 2.0",
+          "Oboe (Google) — Apache 2.0\nsst-filters, sst-basic-blocks, sst-effects (Surge Synth Team) — GPL-3\nfmt — MIT\nSIMDe — MIT\nSynth_Dexed / msfa, núcleo FM (Google, Pascal Gauthier) — Apache 2.0\nJetpack Compose, AndroidX, kotlinx.serialization — Apache 2.0",
           fontSize = 12.sp, lineHeight = 17.sp, fontFamily = FontFamily.Monospace,
         )
       }

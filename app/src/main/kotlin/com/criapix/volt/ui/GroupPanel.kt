@@ -40,6 +40,7 @@ fun GroupPanel(group: Group, state: SynthState, onStep: () -> kotlin.Unit, modif
       Drawing.FILTER_CURVE -> FilterCurveView(state, Modifier.weight(1f).fillMaxWidth().padding(top = 6.dp))
       Drawing.FENV -> EnvelopeView(state, "fenv", Modifier.weight(0.45f).fillMaxWidth().padding(vertical = 6.dp))
       Drawing.AENV -> EnvelopeView(state, "aenv", Modifier.weight(0.45f).fillMaxWidth().padding(vertical = 6.dp))
+      Drawing.ALGORITHM, Drawing.PITCH_ENV -> {}  // drawn from Tasks 12-13 on
       Drawing.NONE -> {}
     }
     if (knobs.isNotEmpty()) {

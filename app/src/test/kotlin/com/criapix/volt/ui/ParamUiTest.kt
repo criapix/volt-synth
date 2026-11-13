@@ -49,5 +49,16 @@ class ParamUiTest {
     assertEquals("4", f("voice.unison", 4f))
     assertEquals("Ladder", f("filter.model", 0f))
     assertEquals("lig.", f("osc1.sync", 1f))
+    assertEquals("99", f("fm.op1.level", 99f))
+    assertEquals("-3", f("fm.op1.detune", -3f))
+    assertEquals("0", f("fm.op1.detune", 0f))
+    assertEquals("+4", f("fm.op1.detune", 4f))
+    assertEquals("C3", f("fm.op1.kls.break", 39f))
+    assertEquals("A-1", f("fm.op1.kls.break", 0f))
+    assertEquals("C8", f("fm.op1.kls.break", 99f))
+    assertEquals("C#3", f("fm.op1.kls.break", 40f))
+    assertEquals("Seno", f("fm.lfo.wave", 4f))
+    assertEquals("+12", f("fm.transpose", 12f))
+    assertEquals("FM", f("engine.type", 1f))
   }
 }

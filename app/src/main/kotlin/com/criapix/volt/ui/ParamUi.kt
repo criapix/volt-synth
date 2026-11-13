@@ -5,7 +5,7 @@ import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
-enum class ValueUnit { HZ, SEC, GLIDE, PCT, BIPCT, SEMI, CENT, OCT, BEND, COUNT, BPM }
+enum class ValueUnit { HZ, SEC, GLIDE, PCT, BIPCT, SEMI, CENT, OCT, BEND, COUNT, BPM, RAW, SIGNED, NOTE }
 
 sealed interface Widget { val label: String }
 data class KnobUi(override val label: String, val unit: ValueUnit, val bipolar: Boolean = false) : Widget
@@ -105,6 +105,46 @@ object ParamUi {
     put("arp.octaves", KnobUi("Oitavas", ValueUnit.COUNT))
     put("arp.bpm", KnobUi("Tempo", ValueUnit.BPM))
     put("arp.gate", KnobUi("Duração", ValueUnit.PCT))
+
+    put("engine.type", ChoiceUi("Motor", listOf("Analógico", "FM")))
+    val curves = listOf("-LIN", "-EXP", "+EXP", "+LIN")
+    for (n in 1..6) {
+      for (i in 1..4) put("fm.op$n.r$i", KnobUi("R$i", ValueUnit.RAW))
+      for (i in 1..4) put("fm.op$n.l$i", KnobUi("L$i", ValueUnit.RAW))
+      put("fm.op$n.kls.break", KnobUi("Break", ValueUnit.NOTE))
+      put("fm.op$n.kls.ldepth", KnobUi("Prof. E", ValueUnit.RAW))
+      put("fm.op$n.kls.rdepth", KnobUi("Prof. D", ValueUnit.RAW))
+      put("fm.op$n.kls.lcurve", ChoiceUi("Curva", curves))
+      put("fm.op$n.kls.rcurve", ChoiceUi("Curva", curves))
+      put("fm.op$n.rate.scale", KnobUi("Escala taxa", ValueUnit.RAW))
+      put("fm.op$n.ams", KnobUi("AMS", ValueUnit.RAW))
+      put("fm.op$n.vel", KnobUi("Velocity", ValueUnit.RAW))
+      put("fm.op$n.level", KnobUi("Nível", ValueUnit.RAW))
+      put("fm.op$n.mode", ChoiceUi("Modo", listOf("Razão", "Fixo")))
+      put("fm.op$n.coarse", KnobUi("Coarse", ValueUnit.RAW))
+      put("fm.op$n.fine", KnobUi("Fine", ValueUnit.RAW))
+      put("fm.op$n.detune", KnobUi("Detune", ValueUnit.SIGNED, bipolar = true))
+      put("fm.op$n.on", ToggleUi("Ligado"))
+    }
+    for (i in 1..4) put("fm.pitchenv.r$i", KnobUi("R$i", ValueUnit.RAW))
+    for (i in 1..4) put("fm.pitchenv.l$i", KnobUi("L$i", ValueUnit.RAW))
+    put("fm.algorithm", KnobUi("Algoritmo", ValueUnit.RAW))
+    put("fm.feedback", KnobUi("Feedback", ValueUnit.RAW))
+    put("fm.oscsync", ToggleUi("Key sync"))
+    put("fm.transpose", KnobUi("Transp.", ValueUnit.SIGNED, bipolar = true))
+    put("fm.lfo.speed", KnobUi("Veloc.", ValueUnit.RAW))
+    put("fm.lfo.delay", KnobUi("Atraso", ValueUnit.RAW))
+    put("fm.lfo.pmd", KnobUi("PMD", ValueUnit.RAW))
+    put("fm.lfo.amd", KnobUi("AMD", ValueUnit.RAW))
+    put("fm.lfo.sync", ToggleUi("Key sync"))
+    put("fm.lfo.wave", ChoiceUi("Onda", listOf("Tri", "Serra ↓", "Serra ↑", "Quad", "Seno", "S&H")))
+    put("fm.lfo.pms", KnobUi("PMS", ValueUnit.RAW))
+    for (c in listOf("wheel", "at", "breath")) {
+      put("fm.$c.range", KnobUi("Alcance", ValueUnit.RAW))
+      put("fm.$c.pitch", ToggleUi("Afinação"))
+      put("fm.$c.amp", ToggleUi("Volume"))
+      put("fm.$c.eg", ToggleUi("EG bias"))
+    }
   }
 
   fun of(name: String): Widget = table[name] ?: error("no on-screen description for parameter $name")
@@ -129,8 +169,16 @@ object ParamUi {
       ValueUnit.BEND -> "±${real.roundToInt()} st"
       ValueUnit.COUNT -> real.roundToInt().toString()
       ValueUnit.BPM -> "${real.roundToInt()} BPM"
+      ValueUnit.RAW -> real.roundToInt().toString()
+      ValueUnit.SIGNED -> signed(real.roundToInt(), "")
+      ValueUnit.NOTE -> noteName(21 + real.roundToInt())
     }
   }
+
+  private val NOTE_NAMES = listOf("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
+
+  /** MIDI note name with C3 = 60 (the DX7 convention): 21 = "A-1", 60 = "C3". */
+  fun noteName(midi: Int) = NOTE_NAMES[Math.floorMod(midi, 12)] + (Math.floorDiv(midi, 12) - 2)
 
   private fun seconds(s: Float) = when {
     s >= 1f -> fmt("%.2f s", s)

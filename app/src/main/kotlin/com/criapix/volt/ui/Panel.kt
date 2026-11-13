@@ -1,10 +1,14 @@
 package com.criapix.volt.ui
 
 /** The tabs. */
-enum class Tab(val title: String) { OSC("OSC"), FILTER("FILTRO"), ENV("ENV"), MOD("MOD"), ARP("ARP"), FX("FX") }
+enum class Tab(val title: String) {
+  OSC("OSC"), FILTER("FILTRO"), ENV("ENV"), MOD("MOD"),
+  ALGO("ALGO"), OP("OPERADOR"), PITCH("PITCH/LFO"),
+  ARP("ARP"), FX("FX"),
+}
 
 /** A drawing shown at the top of a group. */
-enum class Drawing { NONE, FILTER_CURVE, FENV, AENV }
+enum class Drawing { NONE, FILTER_CURVE, FENV, AENV, ALGORITHM, PITCH_ENV }
 
 data class Group(val title: String, val params: List<String>, val drawing: Drawing = Drawing.NONE, val weight: Float = 1f)
 
@@ -22,6 +26,24 @@ object Panel {
       (if (n == 1) listOf("lfo1.global", "lfo1.wheel") else emptyList()),
   )
 
+  /** Parameters shown outside any tab: the voice-type switch at the left end of the tab row. */
+  val header: List<String> = listOf("engine.type")
+
+  /** The tabs shown for each voice type. */
+  fun tabsFor(fm: Boolean): List<Tab> =
+    if (fm) listOf(Tab.ALGO, Tab.OP, Tab.PITCH, Tab.ARP, Tab.FX) else listOf(Tab.OSC, Tab.FILTER, Tab.ENV, Tab.MOD, Tab.ARP, Tab.FX)
+
+  private fun op(n: Int) = Group(
+    "OP$n",
+    listOf(
+      "r1", "r2", "r3", "r4", "l1", "l2", "l3", "l4", "kls.break", "kls.ldepth", "kls.rdepth", "kls.lcurve", "kls.rcurve",
+      "rate.scale", "ams", "vel", "level", "mode", "coarse", "fine", "detune",
+    ).map { "fm.op$n.$it" },
+  )
+
+  /** One group per operator; the screen shows the selected one. */
+  val operators: List<Group> = (1..6).map(::op)
+
   val groups: Map<Tab, List<Group>> = linkedMapOf(
     Tab.OSC to listOf(osc(1), osc(2), osc(3), Group("MIXER", listOf("mix.sub", "mix.noise", "mix.drive", "master.volume"), weight = 0.8f)),
     Tab.FILTER to listOf(
@@ -38,6 +60,16 @@ object Panel {
       lfo(2),
       Group("POLY-MOD", listOf("pmod.fenv.pitch", "pmod.fenv.pw", "pmod.osc2.pitch", "pmod.osc2.pw"), weight = 0.8f),
       Group("VOZ", listOf("voice.mode", "voice.unison", "voice.detune", "voice.spread", "voice.glide", "voice.glide_legato", "voice.drift", "voice.bend")),
+    ),
+    Tab.ALGO to listOf(
+      Group("ALGORITMO", listOf("fm.algorithm"), Drawing.ALGORITHM, weight = 2f),
+      Group("GLOBAL", listOf("fm.feedback", "fm.oscsync", "fm.transpose") + (1..6).map { "fm.op$it.on" }),
+    ),
+    Tab.OP to operators,
+    Tab.PITCH to listOf(
+      Group("ENV DE PITCH", listOf("r1", "r2", "r3", "r4", "l1", "l2", "l3", "l4").map { "fm.pitchenv.$it" }, Drawing.PITCH_ENV),
+      Group("LFO", listOf("speed", "delay", "pmd", "amd", "sync", "wave", "pms").map { "fm.lfo.$it" }),
+      Group("CONTROLES", listOf("wheel", "at", "breath").flatMap { c -> listOf("range", "pitch", "amp", "eg").map { "fm.$c.$it" } }),
     ),
     Tab.ARP to listOf(
       Group("ARPEJADOR", listOf("arp.on", "arp.hold", "arp.mode", "arp.division", "arp.octaves", "arp.bpm", "arp.gate"), weight = 2f),

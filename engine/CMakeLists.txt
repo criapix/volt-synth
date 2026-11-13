@@ -36,6 +36,7 @@ add_library(volt_engine STATIC
   src/filter.cpp
   src/fx/fx_sst.cpp
   src/fx/fx_chain.cpp
+  src/fm/dx7_codec.cpp
 )
 target_include_directories(volt_engine PUBLIC src)
 target_link_libraries(volt_engine PUBLIC msfa)
@@ -73,10 +74,12 @@ if (VOLT_TESTS)
     tests/test_presets.cpp
     tests/test_governor.cpp
     tests/test_msfa.cpp
+    tests/test_dx7_codec.cpp
   )
   target_link_libraries(volt_tests PRIVATE volt_engine)
   set(VOLT_PRESETS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../app/src/main/assets/presets/factory)
   target_compile_definitions(volt_tests PRIVATE VOLT_PRESETS_DIR="${VOLT_PRESETS_DIR}")
+  target_compile_definitions(volt_tests PRIVATE VOLT_DX7_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../app/src/main/assets/dx7")
   add_executable(volt_render tests/render.cpp)
   target_link_libraries(volt_render PRIVATE volt_engine)
   target_compile_definitions(volt_render PRIVATE VOLT_PRESETS_DIR="${VOLT_PRESETS_DIR}")

@@ -12,7 +12,9 @@ class FmBlock {
  public:
   FmBlock();
   ~FmBlock();
-  void setSampleRate(float sr);          // not on the audio thread: fills msfa's static tables
+  // Not on the audio thread: fills msfa's static tables. Call it once, before setPatch() and before any
+  // note (setPatch reads the LFO and envelope rates the tables set).
+  void setSampleRate(float sr);
 
   // Real parameter values (ParamId order). Rebuilds the msfa patch and updates sounding voices.
   void setPatch(const float* value);

@@ -104,8 +104,10 @@ TEST(fm_block_kill_is_immediate) {
 }
 
 TEST(fm_block_matches_raw_msfa_for_factory_voices) {
+  int cartridges = 0, compared = 0;
   for (auto& e : std::filesystem::directory_iterator(VOLT_DX7_DIR)) {
     if (e.path().extension() != ".syx") continue;
+    ++cartridges;
     std::ifstream in(e.path(), std::ios::binary);
     std::vector<uint8_t> bytes(std::istreambuf_iterator<char>(in), {});
     Dx7Bank bank;
@@ -129,7 +131,7 @@ TEST(fm_block_matches_raw_msfa_for_factory_voices) {
       const int midi = 60 + p[144] - 24;
       n.init(p.data(), midi, 100, midi, -1, &c);
       if (p[136]) n.oscSync();
-      double maxDiff = 0;
+      double maxDiff = 0, peak = 0;
       int32_t buf[64];
       for (int ch = 0; ch < 750; ++ch) {
         std::memset(buf, 0, sizeof(buf));
@@ -138,9 +140,15 @@ TEST(fm_block_matches_raw_msfa_for_factory_voices) {
           int32_t s = buf[i] >> 13;
           s = s > 32767 ? 32767 : (s < -32768 ? -32768 : s);
           maxDiff = std::max(maxDiff, std::fabs(s / 32768.0 - got[ch * 64 + i]));
+          peak = std::max(peak, std::fabs(s / 32768.0));
         }
       }
+      ++compared;
+      // A voice that is silent on both paths would pass the comparison without proving anything.
+      if (peak <= 0.0) { std::printf("    FAIL %s voice %d is silent\n", e.path().filename().string().c_str(), vi + 1); ++t::failures(); }
       if (maxDiff > 1e-6) { std::printf("    FAIL %s voice %d: max diff %g\n", e.path().filename().string().c_str(), vi + 1, maxDiff); ++t::failures(); }
     }
   }
+  CHECK(cartridges == 8);
+  CHECK(compared == 32);
 }

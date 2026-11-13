@@ -9,6 +9,7 @@
 #include "fm/dx7_codec.h"
 #include "fm/fm_params.h"
 #include "params.h"
+#include "dx7_fixtures.h"
 #include "test.h"
 
 using namespace volt;
@@ -35,6 +36,7 @@ TEST(fm_params_defaults_are_the_init_voice) {
 }
 
 TEST(fm_params_offsets_and_operator_order) {
+  DX7_REQUIRE("rom1a");
   // Known values of rom1a voice 1 (BRASS 1): algorithm byte 21, transpose byte 24, OP6 L1 = 98,
   // OP6 output level 82, OP1 output level 98, OP1 detune byte 14.
   Dx7Bank bank;
@@ -52,12 +54,12 @@ TEST(fm_params_offsets_and_operator_order) {
 }
 
 TEST(fm_params_round_trip_all_256_factory_voices) {
+  DX7_REQUIRE_ANY();
   int files = 0, voices = 0;
-  for (auto& e : std::filesystem::directory_iterator(VOLT_DX7_DIR)) {
-    if (e.path().extension() != ".syx") continue;
+  for (auto& path : dx7fx::dx7Cartridges()) {
     ++files;
     Dx7Bank bank;
-    readDx7Bank(readFile(e.path().string()), bank);
+    readDx7Bank(readFile(path), bank);
     for (auto& voice : bank.voices) {
       ++voices;
       float v[kNumParams];
@@ -71,6 +73,6 @@ TEST(fm_params_round_trip_all_256_factory_voices) {
       CHECK(v[kEngineType] == 1.0f);
     }
   }
-  CHECK(files == 8);
-  CHECK(voices == 256);
+  CHECK(files >= 1);
+  CHECK(voices == 32 * files);  // 8 files / 256 voices with the full factory set
 }

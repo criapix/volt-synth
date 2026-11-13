@@ -12,6 +12,7 @@
 #include <fstream>
 #include <iterator>
 #include "fm/dx7_codec.h"
+#include "dx7_fixtures.h"
 // raw msfa for the reference path (msfa headers last: synth.h defines macros)
 #include "controllers.h"
 #include "dx7note.h"
@@ -104,11 +105,12 @@ TEST(fm_block_kill_is_immediate) {
 }
 
 TEST(fm_block_matches_raw_msfa_for_factory_voices) {
+  DX7_REQUIRE_ANY();
   int cartridges = 0, compared = 0;
-  for (auto& e : std::filesystem::directory_iterator(VOLT_DX7_DIR)) {
-    if (e.path().extension() != ".syx") continue;
+  for (auto& cpath : dx7fx::dx7Cartridges()) {
+    const std::filesystem::path e_path(cpath);
     ++cartridges;
-    std::ifstream in(e.path(), std::ios::binary);
+    std::ifstream in(e_path, std::ios::binary);
     std::vector<uint8_t> bytes(std::istreambuf_iterator<char>(in), {});
     Dx7Bank bank;
     readDx7Bank(bytes, bank);
@@ -145,10 +147,10 @@ TEST(fm_block_matches_raw_msfa_for_factory_voices) {
       }
       ++compared;
       // A voice that is silent on both paths would pass the comparison without proving anything.
-      if (peak <= 0.0) { std::printf("    FAIL %s voice %d is silent\n", e.path().filename().string().c_str(), vi + 1); ++t::failures(); }
-      if (maxDiff > 1e-6) { std::printf("    FAIL %s voice %d: max diff %g\n", e.path().filename().string().c_str(), vi + 1, maxDiff); ++t::failures(); }
+      if (peak <= 0.0) { std::printf("    FAIL %s voice %d is silent\n", e_path.filename().string().c_str(), vi + 1); ++t::failures(); }
+      if (maxDiff > 1e-6) { std::printf("    FAIL %s voice %d: max diff %g\n", e_path.filename().string().c_str(), vi + 1, maxDiff); ++t::failures(); }
     }
   }
-  CHECK(cartridges == 8);
-  CHECK(compared == 32);
+  CHECK(cartridges >= 1);
+  CHECK(compared == 4 * cartridges);  // 8 cartridges / 32 voices with the full factory set
 }

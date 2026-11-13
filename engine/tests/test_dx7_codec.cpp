@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cstdio>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
@@ -6,6 +7,7 @@
 #include <string>
 #include <vector>
 #include "fm/dx7_codec.h"
+#include "dx7_fixtures.h"
 #include "test.h"
 
 using namespace volt;
@@ -15,18 +17,14 @@ std::vector<uint8_t> readFile(const std::string& path) {
   std::ifstream in(path, std::ios::binary);
   return std::vector<uint8_t>(std::istreambuf_iterator<char>(in), {});
 }
-std::vector<std::string> cartridges() {
-  std::vector<std::string> out;
-  for (auto& e : std::filesystem::directory_iterator(VOLT_DX7_DIR))
-    if (e.path().extension() == ".syx") out.push_back(e.path().string());
-  std::sort(out.begin(), out.end());
-  return out;
-}
+std::vector<std::string> cartridges() { return dx7fx::dx7Cartridges(); }
 }  // namespace
 
 TEST(dx7_codec_reads_the_eight_factory_cartridges) {
+  DX7_REQUIRE_ANY();
   auto files = cartridges();
-  CHECK(files.size() == 8);
+  // The full factory set is 8 files; a developer with their own set (1..7 files) is checked as is.
+  CHECK(!files.empty());
   for (auto& f : files) {
     Dx7Bank bank;
     const Dx7Status s = readDx7Bank(readFile(f), bank);
@@ -35,6 +33,7 @@ TEST(dx7_codec_reads_the_eight_factory_cartridges) {
 }
 
 TEST(dx7_codec_unpacks_known_values) {
+  DX7_REQUIRE("rom1a");
   Dx7Bank bank;
   CHECK(readDx7Bank(readFile(std::string(VOLT_DX7_DIR) + "/rom1a.syx"), bank) == Dx7Status::Ok);
   const uint8_t* v = bank.voices[0].data();
@@ -59,6 +58,7 @@ TEST(dx7_codec_unpacks_known_values) {
 // level or rate of 100 or 127 where the maximum is 99). The codec drops/clamps these on purpose, so
 // those files are checked by unpack -> pack -> unpack; all the others must be byte-identical.
 TEST(dx7_codec_bank_round_trip_is_byte_identical) {
+  DX7_REQUIRE_ANY();
   for (auto& f : cartridges()) {
     const auto bytes = readFile(f);
     const std::string name = std::filesystem::path(f).filename().string();
@@ -79,6 +79,7 @@ TEST(dx7_codec_bank_round_trip_is_byte_identical) {
 }
 
 TEST(dx7_codec_single_voice_round_trip) {
+  DX7_REQUIRE("rom1a");
   Dx7Bank bank;
   CHECK(readDx7Bank(readFile(std::string(VOLT_DX7_DIR) + "/rom1a.syx"), bank) == Dx7Status::Ok);
   const auto sx = writeDx7Voice(bank.voices[10]);
@@ -90,6 +91,7 @@ TEST(dx7_codec_single_voice_round_trip) {
 }
 
 TEST(dx7_codec_bad_checksum_still_reads_with_a_warning) {
+  DX7_REQUIRE("rom1a");
   auto bytes = readFile(std::string(VOLT_DX7_DIR) + "/rom1a.syx");
   bytes[4102] ^= 0x11;
   Dx7Bank bank;
@@ -98,6 +100,7 @@ TEST(dx7_codec_bad_checksum_still_reads_with_a_warning) {
 }
 
 TEST(dx7_codec_rejects_what_is_not_a_dx7_bank) {
+  DX7_REQUIRE("rom1a");
   Dx7Bank bank;
   CHECK(readDx7Bank(std::vector<uint8_t>(100, 0), bank) == Dx7Status::NotDx7);
   auto bytes = readFile(std::string(VOLT_DX7_DIR) + "/rom1a.syx");
@@ -106,7 +109,94 @@ TEST(dx7_codec_rejects_what_is_not_a_dx7_bank) {
 }
 
 TEST(dx7_codec_masks_and_clamps_garbage) {
+  DX7_REQUIRE("rom1a");
   auto bytes = readFile(std::string(VOLT_DX7_DIR) + "/rom1a.syx");
+  bytes[6 + 0] = 0xFF;          // OP6 R1: high bit set, 127 after masking -> clamped to 99
+  bytes[6 + 110] = 0x7F;        // algorithm byte with junk in bits 5..6 -> 31
+  bytes[6 + 116] = 0x7F;        // LPMS 7, LFW 7 (clamped to 5), LKS 1
+  Dx7Bank bank;
+  readDx7Bank(bytes, bank);
+  const uint8_t* v = bank.voices[0].data();
+  CHECK(v[0] == 99);
+  CHECK(v[134] == 31);
+  CHECK(v[142] == 5 && v[143] == 7 && v[141] == 1);
+}
+
+// ---- Synthetic data: these run without any cartridge on disk -------------------------------------------
+
+namespace {
+// A deterministic, in-range voice: pseudo-random bytes pulled into their DX7 ranges by clampVced.
+Dx7Voice synthVoice(int seed, const char* name) {
+  Dx7Voice v{};
+  uint32_t x = 0x9E3779B9u * (uint32_t)(seed + 1);
+  for (int i = 0; i < 145; ++i) {
+    x = x * 1664525u + 1013904223u;
+    v[i] = (uint8_t)(x >> 24);
+  }
+  clampVced(v);
+  v[134] = (uint8_t)(seed % 32);  // algorithm
+  setDx7Name(v, name);
+  return v;
+}
+Dx7Bank synthBank() {
+  Dx7Bank b;
+  for (int i = 0; i < 32; ++i) {
+    char n[16];
+    std::snprintf(n, sizeof n, "SYNTH %02d", i + 1);
+    b.voices[i] = synthVoice(i, n);
+  }
+  return b;
+}
+}  // namespace
+
+TEST(dx7_codec_synthetic_bank_round_trip_is_byte_identical) {
+  const Dx7Bank bank = synthBank();
+  const auto bytes = writeDx7Bank(bank);
+  CHECK(bytes.size() == 4104);
+  CHECK(bytes[0] == 0xF0 && bytes[1] == 0x43 && bytes[3] == 0x09 && bytes[4] == 0x20 && bytes[5] == 0x00);
+  CHECK(bytes[4103] == 0xF7);
+  Dx7Bank back;
+  CHECK(readDx7Bank(bytes, back) == Dx7Status::Ok);
+  for (int i = 0; i < 32; ++i) {
+    for (int b = 0; b < 145; ++b) CHECK(back.voices[i][b] == bank.voices[i][b]);
+    CHECK(dx7Name(back.voices[i].data()) == dx7Name(bank.voices[i].data()));
+  }
+  CHECK(dx7Name(back.voices[0].data()) == "SYNTH 01");
+  CHECK(dx7Name(back.voices[31].data()) == "SYNTH 32");
+  CHECK(writeDx7Bank(back) == bytes);
+}
+
+TEST(dx7_codec_synthetic_single_voice_round_trip) {
+  const Dx7Voice v = synthVoice(11, "E.PIANO 1");
+  const auto sx = writeDx7Voice(v);
+  CHECK(sx.size() == 163);
+  CHECK(sx[0] == 0xF0 && sx[1] == 0x43 && sx[3] == 0x00 && sx[4] == 0x01 && sx[5] == 0x1B && sx[162] == 0xF7);
+  Dx7Voice back{};
+  CHECK(readDx7Voice(sx, back) == Dx7Status::Ok);
+  CHECK(std::memcmp(back.data(), v.data(), 155) == 0);
+  CHECK(dx7Name(back.data()) == "E.PIANO 1");
+}
+
+TEST(dx7_codec_synthetic_bad_checksum_still_reads_with_a_warning) {
+  auto bytes = writeDx7Bank(synthBank());
+  bytes[4102] ^= 0x11;
+  Dx7Bank bank;
+  CHECK(readDx7Bank(bytes, bank) == Dx7Status::BadChecksum);
+  CHECK(dx7Name(bank.voices[0].data()) == "SYNTH 01");
+}
+
+TEST(dx7_codec_synthetic_rejects_what_is_not_a_dx7_bank) {
+  Dx7Bank bank;
+  CHECK(readDx7Bank(std::vector<uint8_t>(100, 0), bank) == Dx7Status::NotDx7);
+  auto bytes = writeDx7Bank(synthBank());
+  bytes[1] = 0x41;  // Roland
+  CHECK(readDx7Bank(bytes, bank) == Dx7Status::NotDx7);
+  Dx7Voice v{};
+  CHECK(readDx7Voice(std::vector<uint8_t>(10, 0), v) == Dx7Status::NotDx7);
+}
+
+TEST(dx7_codec_synthetic_masks_and_clamps_garbage) {
+  auto bytes = writeDx7Bank(synthBank());
   bytes[6 + 0] = 0xFF;          // OP6 R1: high bit set, 127 after masking -> clamped to 99
   bytes[6 + 110] = 0x7F;        // algorithm byte with junk in bits 5..6 -> 31
   bytes[6 + 116] = 0x7F;        // LPMS 7, LFW 7 (clamped to 5), LKS 1

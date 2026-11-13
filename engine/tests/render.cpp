@@ -11,6 +11,7 @@
 #include <iterator>
 #include <string>
 #include <vector>
+#include "dx7_fixtures.h"
 #include "preset_file.h"
 
 using namespace volt;
@@ -66,9 +67,11 @@ static int stress() {
 static void renderDx7(const std::string& out, std::ofstream& page, std::ofstream& csv) {
   namespace fs = std::filesystem;
   std::vector<fs::path> carts;
-  for (auto& e : fs::directory_iterator(VOLT_DX7_DIR))
-    if (e.path().extension() == ".syx") carts.push_back(e.path());
-  std::sort(carts.begin(), carts.end());
+  for (auto& p : dx7fx::dx7Cartridges()) carts.emplace_back(p);
+  if (carts.empty()) {
+    std::printf("\nNo DX7 cartridges in app/src/main/assets/dx7: skipping the DX7 section.\n");
+    return;
+  }
   fs::create_directories(out + "/dx7");
   page << "<h1>DX7 - cartuchos de f&aacute;brica</h1><p class=d>Frase de teclas, motor FM do app. O n&iacute;vel n&atilde;o "
           "&eacute; nivelado por voz (s&atilde;o os n&iacute;veis originais dos cartuchos).</p>\n";

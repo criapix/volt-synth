@@ -4,6 +4,7 @@
 #include "dsp_probe.h"
 #include "preset_file.h"
 #include "rig.h"
+#include "dx7_fixtures.h"
 #include "test.h"
 
 using namespace volt;
@@ -73,11 +74,9 @@ constexpr double kFmSoundFloor = -67.0;  // dBFS
 }  // namespace
 
 TEST(presets_every_dx7_factory_voice_renders_cleanly) {
+  DX7_REQUIRE_ANY();
   std::vector<std::filesystem::path> carts;
-  for (auto& e : std::filesystem::directory_iterator(VOLT_DX7_DIR))
-    if (e.path().extension() == ".syx") carts.push_back(e.path());
-  std::sort(carts.begin(), carts.end());
-  CHECK(carts.size() == 8);
+  for (auto& p : dx7fx::dx7Cartridges()) carts.emplace_back(p);
   std::vector<double> loud;
   int holding = 0;
   for (const auto& path : carts) {
@@ -108,7 +107,7 @@ TEST(presets_every_dx7_factory_voice_renders_cleanly) {
       }
     }
   }
-  CHECK(loud.size() == 256);
+  CHECK(loud.size() == 32 * carts.size());  // 256 with the full factory set
   if (loud.empty()) return;
   std::sort(loud.begin(), loud.end());
   std::printf("    DX7 loudness: min %.1f, median %.1f, max %.1f dB (%zu voices)\n",

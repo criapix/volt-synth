@@ -1,6 +1,47 @@
 # Volt
 
-Volt é um sintetizador analógico virtual polifônico para Android, tocado por teclado MIDI USB com baixa latência.
+Volt é um sintetizador analógico virtual polifônico para Android, tocado por teclado MIDI USB com baixa latência. Além do motor analógico, tem um motor FM de 6 operadores compatível com o Yamaha DX7, que lê cartuchos `.syx`.
+
+<p align="center">
+  <img src="docs/screenshots/01-osc.png" alt="Volt: aba OSC com o preset Lead Sync" width="860">
+</p>
+
+## Telas
+
+Tema escuro, em paisagem, com controles grandes para o dedo. Capturas do emulador Android.
+
+### Motor analógico
+
+Três osciladores, quatro modelos de filtro, dois envelopes, dois LFOs, poly-mod e seis efeitos.
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/02-filtro.png" alt="Aba FILTRO com a curva de resposta ao vivo"><br><sub><b>FILTRO</b>: modelo, cutoff, ressonância e a curva de resposta desenhada ao vivo.</sub></td>
+    <td width="50%"><img src="docs/screenshots/03-env.png" alt="Aba ENV com os dois envelopes ADSR"><br><sub><b>ENV</b>: envelopes de filtro e de amplitude, com os pontos do desenho arrastáveis.</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/04-fx.png" alt="Aba FX com os efeitos ligados"><br><sub><b>FX</b>: distorção, phaser, flanger, chorus, delay e reverb em série.</sub></td>
+    <td width="50%"><img src="docs/screenshots/05-browser.png" alt="Navegador de presets"><br><sub><b>Presets</b>: 64 de fábrica, os seus, favoritos, busca, importar e exportar.</sub></td>
+  </tr>
+</table>
+
+### Motor FM compatível com o DX7
+
+Seis operadores, 32 algoritmos, envelopes de 4 taxas e 4 níveis, escala de teclado, LFO e envelope de pitch, como no DX7. Os 256 sons dos cartuchos de fábrica estão no navegador, e qualquer cartucho `.syx` de 32 vozes pode ser importado ou exportado. Os efeitos, o arpejador e o MIDI são os mesmos do motor analógico.
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/07-fm-algo.png" alt="Aba ALGO com o algoritmo 5 desenhado"><br><sub><b>ALGO</b>: o algoritmo desenhado (portadoras com contorno laranja, laço de feedback em azul), feedback, transposição e liga/desliga de cada operador.</sub></td>
+    <td width="50%"><img src="docs/screenshots/06-browser-dx7.png" alt="Navegador com o cartucho DX7 ROM1A"><br><sub><b>Cartuchos</b>: ROM1A a ROM4B, 32 vozes cada, com os nomes originais.</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/08-fm-operador.png" alt="Aba OPERADOR, página Envelope"><br><sub><b>OPERADOR · Envelope</b>: desenho das 4 taxas e 4 níveis com pontos arrastáveis.</sub></td>
+    <td width="50%"><img src="docs/screenshots/09-fm-operador-freq.png" alt="Aba OPERADOR, página Freq/Escala"><br><sub><b>OPERADOR · Freq/Escala</b>: razão ou frequência fixa com a leitura da frequência, e escala de teclado.</sub></td>
+  </tr>
+  <tr>
+    <td colspan="2"><img src="docs/screenshots/10-fm-pitch.png" alt="Aba PITCH/LFO"><br><sub><b>PITCH/LFO</b>: envelope de pitch, LFO e o roteamento da roda, do aftertouch e do breath.</sub></td>
+  </tr>
+</table>
 
 ## Estado
 

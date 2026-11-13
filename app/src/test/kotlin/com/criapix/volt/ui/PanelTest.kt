@@ -2,76 +2,111 @@ package com.criapix.volt.ui
 
 import com.criapix.volt.TestParams
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class PanelTest {
-  @Test fun everyParameterIsOnExactlyOneTab() {
-    val placed = Panel.header + Panel.groups.values.flatten().flatMap { it.params }
-    val names = TestParams.params.all.map { it.name }
-    assertEquals(names.sorted(), placed.sorted())
+  private val allNames = TestParams.params.all.map { it.name }
+
+  private fun placed(): List<String> =
+    Panel.header + Panel.families.flatMap { f -> f.cards.flatMap { c -> c.params + listOfNotNull(c.on) } }
+
+  @Test fun everyParameterIsOnExactlyOneCard() {
+    assertEquals(allNames.sorted(), placed().sorted())
   }
 
-  @Test fun groupOfFindsTheGroup() {
-    assertEquals("FILTRO", Panel.groupOf("filter.cutoff")?.title)
-    assertEquals("ENVELOPE DE AMPLITUDE", Panel.groupOf("aenv.attack")?.title)
-    assertEquals(null, Panel.groupOf("no.such"))
+  @Test fun theFamiliesFollowTheVoiceType() {
+    val analog = Panel.familiesFor(false).map { it.id }
+    val fm = Panel.familiesFor(true).map { it.id }
+    assertEquals(listOf("fonte", "filtro", "amp", "mov", "fx", "arp"), analog)
+    assertEquals(listOf("algo", "ops", "pitch", "fx", "arp"), fm)
+    assertTrue((analog + fm).all { id -> Panel.families.any { it.id == id } })
   }
 
-  @Test fun tabOfFindsTheTab() {
-    assertEquals(Tab.FILTER, Panel.tabOf("filter.cutoff"))
-    assertEquals(Tab.ENV, Panel.tabOf("aenv.release"))
-    assertEquals(Tab.MOD, Panel.tabOf("voice.mode"))
-    assertEquals(Tab.OSC, Panel.tabOf("master.volume"))
-    assertEquals(null, Panel.tabOf("no.such"))
+  @Test fun theEffectsAndArpAreSharedByBothVoiceTypes() {
+    assertTrue(Panel.familiesFor(false).containsAll(listOf(Panel.fxFamily, Panel.arpFamily)))
+    assertTrue(Panel.familiesFor(true).containsAll(listOf(Panel.fxFamily, Panel.arpFamily)))
+    assertNull(Panel.fxFamily.fm)
   }
 
-  @Test fun tabsFollowTheVoiceType() {
-    val analog = Panel.tabsFor(false)
-    val fm = Panel.tabsFor(true)
-    assertTrue(analog.none { it in listOf(Tab.ALGO, Tab.OP, Tab.PITCH) })
-    assertTrue(fm.none { it in listOf(Tab.OSC, Tab.FILTER, Tab.ENV, Tab.MOD) })
-    assertEquals(listOf(Tab.ALGO, Tab.OP, Tab.PITCH, Tab.ARP, Tab.FX), fm)
-    assertTrue((analog + fm).all { it in Panel.groups })
+  @Test fun cardOfAndFamilyOfFindWhereAParameterLives() {
+    assertEquals("FILTRO", Panel.cardOf("filter.cutoff")?.title)
+    assertEquals("ENV DE AMPLITUDE", Panel.cardOf("aenv.attack")?.title)
+    assertEquals("filtro", Panel.familyOf("filter.cutoff")?.id)
+    assertEquals("mov", Panel.familyOf("pmod.osc2.pw")?.id)
+    assertEquals("amp", Panel.familyOf("voice.mode")?.id)
+    assertEquals("fonte", Panel.familyOf("master.volume")?.id)
+    assertNull(Panel.cardOf("no.such"))
+    assertNull(Panel.cardOf("engine.type"))  // the header, not a card
   }
 
-  @Test fun fmParametersFindTheirTab() {
-    assertEquals(Tab.OP, Panel.tabOf("fm.op3.r2"))
-    assertEquals(Tab.PITCH, Panel.tabOf("fm.lfo.speed"))
-    assertEquals(Tab.ALGO, Panel.tabOf("fm.op5.on"))
-    assertEquals(null, Panel.tabOf("engine.type"))  // header, not in a tab
+  @Test fun anEffectsSwitchLivesInItsCardHeader() {
+    val card = Panel.cardOf("fx.delay.on")
+    assertEquals("DELAY", card?.title)
+    assertEquals("fx.delay.on", card?.on)
+    assertTrue("fx.delay.on" !in card!!.params)
+    assertEquals("fx", Panel.familyOf("fx.reverb.on")?.id)
   }
 
-  @Test fun eachOperatorsGroupsPlaceAllItsParametersOnce() {
+  @Test fun eachOperatorsCardsPlaceAllItsParametersOnce() {
     for (n in 1..6) {
-      val placed = Panel.operatorEnvelope[n - 1].params + Panel.operatorFrequency[n - 1].params + Panel.operatorScaling[n - 1].params
-      val expected = TestParams.params.all.map { it.name }.filter { it.startsWith("fm.op$n.") && !it.endsWith(".on") }
-      assertEquals(expected.sorted(), placed.sorted())
-      assertEquals(21, placed.size)
-      assertTrue(placed.all { Panel.tabOf(it) == Tab.OP })
+      val cards = Panel.operatorCardsOf(n)
+      assertEquals(3, cards.size)
+      val placedHere = cards.flatMap { it.params }
+      val expected = allNames.filter { it.startsWith("fm.op$n.") && !it.endsWith(".on") }
+      assertEquals(expected.sorted(), placedHere.sorted())
+      assertEquals(21, placedHere.size)
+      assertTrue(cards.all { it.n == n })
+      assertTrue(placedHere.all { Panel.familyOf(it)?.id == "ops" })
     }
   }
 
-  @Test fun operatorPagesHaveTheWidgetsTheScreenExpects() {
-    val env = Panel.operatorEnvelope[0].params.map { ParamUi.of(it) }
-    assertTrue(env.all { it is KnobUi })
-    assertEquals(11, env.size)  // R1-R4, L1-L4, level, velocity, rate scaling
-    assertEquals(listOf("fm.op1.mode"), Panel.operatorFrequency[0].params.filter { ParamUi.of(it) is ChoiceUi })
-    assertEquals(3, Panel.operatorFrequency[0].params.count { ParamUi.of(it) is KnobUi })
-    assertEquals(4, Panel.operatorScaling[0].params.count { ParamUi.of(it) is KnobUi })
-    assertEquals(
-      listOf("Curva E", "Curva D"),
-      Panel.operatorScaling[0].params.filter { ParamUi.of(it) is ChoiceUi }.map { ParamUi.of(it).label },
-    )
+  @Test fun theOperatorSwitchesAreOnTheGlobalCard() {
+    for (n in 1..6) assertEquals("GLOBAL", Panel.cardOf("fm.op$n.on")?.title)
   }
 
-  @Test fun controllersAreOneGroupEachWithRangeAndThreeToggles() {
-    assertEquals(listOf("RODA", "AFTERTOUCH", "BREATH"), Panel.controllers.map { it.title })
-    for (g in Panel.controllers) {
-      assertEquals(1, g.params.count { ParamUi.of(it) is KnobUi })
-      assertEquals(3, g.params.count { ParamUi.of(it) is ToggleUi })
+  @Test fun operatorCardsHaveTheWidgetsTheScreenExpects() {
+    val (freq, env, scale) = Panel.operatorCardsOf(1)
+    assertEquals(listOf("fm.op1.mode"), freq.params.filter { ParamUi.of(it) is ChoiceUi })
+    assertEquals(3, freq.params.count { ParamUi.of(it) is KnobUi })
+    assertEquals(11, env.params.size)  // R1-R4, L1-L4, level, velocity, rate scaling
+    assertTrue(env.params.all { ParamUi.of(it) is KnobUi })
+    assertEquals(6, env.columns)
+    assertEquals(4, scale.params.count { ParamUi.of(it) is KnobUi })
+    assertEquals(listOf("Curva E", "Curva D"), scale.params.filter { ParamUi.of(it) is ChoiceUi }.map { ParamUi.of(it).label })
+  }
+
+  @Test fun theEnvelopeCardsKeepRatesAndLevelsInRowsOfTheirOwn() {
+    val env = Panel.operatorCardsOf(1)[1].params
+    assertEquals(listOf("r1", "r2", "r3", "r4").map { "fm.op1.$it" }, env.take(4))
+    assertEquals(listOf("l1", "l2", "l3", "l4").map { "fm.op1.$it" }, env.drop(6).take(4))
+  }
+
+  @Test fun theControllersCardHasARangeAndThreeSwitchesPerController() {
+    val card = Panel.cardOf("fm.at.range")!!
+    assertEquals("CONTROLADORES", card.title)
+    for (c in listOf("wheel", "at", "breath")) {
+      assertEquals(1, card.params.count { it.startsWith("fm.$c.") && ParamUi.of(it) is KnobUi })
+      assertEquals(3, card.params.count { it.startsWith("fm.$c.") && ParamUi.of(it) is ToggleUi })
     }
-    assertEquals("AFTERTOUCH", Panel.groupOf("fm.at.range")?.title)
-    assertEquals(Tab.PITCH, Panel.tabOf("fm.breath.eg"))
+    assertEquals("pitch", Panel.familyOf("fm.breath.eg")?.id)
+  }
+
+  @Test fun everyCardHasItsDrawingAndAHue() {
+    for (c in Panel.families.flatMap { it.cards }) {
+      assertNotNull(c.title, c.hue)
+      assertTrue("${c.title} has no drawing", c.drawing != Drawing.NONE)
+    }
+  }
+
+  @Test fun aParametersHueIsItsCardsHue() {
+    for (card in Panel.families.flatMap { it.cards }) {
+      for (name in card.params.filter { ParamUi.of(it) is KnobUi }) {
+        if (card.title == "GLOBAL" || card.title == "ALGORITMO") continue
+        assertEquals("$name on ${card.title}", card.hue, Hues.of(name))
+      }
+    }
   }
 }

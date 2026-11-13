@@ -61,10 +61,27 @@ class SynthState(val params: Params, private val out: Synth) : Synth {
   fun markClean() { _dirty.value = false }
   fun markDirty() { _dirty.value = true }
 
-  override fun noteOn(note: Int, velocity: Float) = out.noteOn(note, velocity)
-  override fun noteOff(note: Int) = out.noteOff(note)
-  override fun pitchBend(value: Float) = out.pitchBend(value)
-  override fun modWheel(value: Float) = out.modWheel(value)
-  override fun sustain(on: Boolean) = out.sustain(on)
-  override fun allNotesOff() = out.allNotesOff()
+  /** Watches the performance (notes, wheels, pedal) as it reaches the engine; the screen's live drawings follow it. */
+  interface PerformanceObserver {
+    fun noteOn(note: Int, velocity: Float)
+    fun noteOff(note: Int)
+    fun sustain(on: Boolean)
+    fun allNotesOff()
+    fun pitchBend(value: Float)
+    fun modWheel(value: Float)
+    fun aftertouch(value: Float) {}
+    fun breath(value: Float) {}
+  }
+
+  /** Set once by the screen; called from whichever thread plays (MIDI binder thread or UI), so it must be thread-safe. */
+  @Volatile var observer: PerformanceObserver? = null
+
+  override fun noteOn(note: Int, velocity: Float) { out.noteOn(note, velocity); observer?.noteOn(note, velocity) }
+  override fun noteOff(note: Int) { out.noteOff(note); observer?.noteOff(note) }
+  override fun pitchBend(value: Float) { out.pitchBend(value); observer?.pitchBend(value) }
+  override fun modWheel(value: Float) { out.modWheel(value); observer?.modWheel(value) }
+  override fun sustain(on: Boolean) { out.sustain(on); observer?.sustain(on) }
+  override fun allNotesOff() { out.allNotesOff(); observer?.allNotesOff() }
+  override fun aftertouch(value: Float) { out.aftertouch(value); observer?.aftertouch(value) }
+  override fun breath(value: Float) { out.breath(value); observer?.breath(value) }
 }

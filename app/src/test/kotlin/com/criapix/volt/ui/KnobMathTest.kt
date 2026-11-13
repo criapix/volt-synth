@@ -1,6 +1,7 @@
 package com.criapix.volt.ui
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class KnobMathTest {
@@ -28,5 +29,20 @@ class KnobMathTest {
   @Test fun gridCapsTheSizeAndHandlesEmptyGroups() {
     assertEquals(KnobGrid.MAX, KnobGrid.fit(1, 500f, 500f).knob, 0f)
     assertEquals(KnobGrid.MAX, KnobGrid.fit(0, 10f, 10f).knob, 0f)
+  }
+
+  @Test fun compactGridNeverExceedsItsMaximumAndRespectsFixedColumns() {
+    val fit = KnobGrid.fitCompact(5, 300f, 300f)
+    assertTrue(fit.knob <= KnobGrid.COMPACT_MAX)
+    val fixed = KnobGrid.fitCompact(8, 250f, 200f, columns = 4)
+    assertEquals(4, fixed.columns)
+    assertTrue(fixed.knob <= (250f / 4 - KnobGrid.COMPACT_GAP) + 0.001f)
+  }
+
+  @Test fun compactGridShrinksWithTheHeightItIsGiven() {
+    val tall = KnobGrid.fitCompact(6, 240f, 200f)
+    val short = KnobGrid.fitCompact(6, 240f, 90f)
+    assertTrue(short.knob < tall.knob)
+    assertTrue(KnobGrid.fitCompact(0, 100f, 100f).knob > 0f)
   }
 }

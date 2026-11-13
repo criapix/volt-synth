@@ -30,6 +30,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.withFrameNanos
+import com.criapix.volt.Native
+import com.criapix.volt.midi.Target
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -99,12 +104,28 @@ fun VoltScreen(model: AppModel, io: ScreenIo) {
   val engineType = state.params["engine.type"]!!
   val engineNorm by state.value(engineType.id).collectAsStateWithLifecycle()
   val fm = engineType.toReal(engineNorm) >= 0.5f
-  val tabs = Panel.tabsFor(fm)
-  var savedTab by rememberSaveable { mutableStateOf(Tab.OSC) }
-  val tab = if (savedTab in tabs) savedTab else tabs.first()  // falls back when the voice type changes
-  var flash by remember { mutableStateOf<Tab?>(null) }
+
+  // What the sound is doing now: notes in, envelopes, LFOs, echoes. One frame clock repaints the drawings that read it.
+  val algorithms = remember { Algorithms.decode(Native.fmAlgorithms()) }
+  val live = remember(state) { Live(state, peak = io.peak, algorithms = { algorithms }) }
+  val frame = remember { mutableLongStateOf(0L) }
+  val macros = remember(state, live) { Macros(state) { live.algo } }
+  DisposableEffect(state, live) {
+    state.observer = live
+    onDispose { if (state.observer === live) state.observer = null }
+  }
+  LaunchedEffect(live) {
+    while (true) { withFrameNanos { live.update(); frame.longValue++ } }
+  }
+  LaunchedEffect(current.id, fm) { macros.reset() }
+
+  var view by rememberSaveable { mutableIntStateOf(0) }  // 0 PALCO, 1 PAINEL
+  var family by rememberSaveable { mutableStateOf("fonte") }
+  var operator by rememberSaveable { mutableIntStateOf(1) }
+  var base by rememberSaveable { mutableIntStateOf(48) }
+  var sustain by remember { mutableStateOf(false) }
+  var flash by remember { mutableStateOf<String?>(null) }
   var midiLit by remember { mutableStateOf(false) }
-  var level by remember { mutableFloatStateOf(0f) }
   var voices by remember { mutableIntStateOf(0) }
   var voiceLimit by remember { mutableIntStateOf(16) }
   var browser by remember { mutableStateOf(false) }
@@ -112,18 +133,18 @@ fun VoltScreen(model: AppModel, io: ScreenIo) {
   var settings by remember { mutableStateOf(false) }
   var keyboard by rememberSaveable { mutableStateOf(false) }
 
-  // A MIDI controller moved a parameter on another tab: flash that tab.
+  // A MIDI controller moved a parameter in a family that is not on screen: flash that family tile.
   LaunchedEffect(external.seq) {
-    val t = state.params.all.getOrNull(external.id)?.let { Panel.tabOf(it.name) } ?: return@LaunchedEffect
-    if (t != tab && t in tabs) { flash = t; delay(600); flash = null }
+    val id = state.params.all.getOrNull(external.id)?.let { Panel.familyOf(it.name)?.id } ?: return@LaunchedEffect
+    if (view == 1 && id != family) { flash = id; delay(600); flash = null }
   }
   LaunchedEffect(activity) { if (activity > 0) { midiLit = true; delay(120); midiLit = false } }
   LaunchedEffect(Unit) {
-    var n = 0
     while (true) {
-      level = maxOf(io.peak(), level * 0.85f)  // fast attack, slow fall
-      if (n++ % 8 == 0) { voices = io.voices(); voiceLimit = io.voiceLimit() }
-      delay(33)
+      val v = io.voices(); val l = io.voiceLimit()
+      if (v != voices) voices = v
+      if (l != voiceLimit) voiceLimit = l
+      delay(250)
     }
   }
   LaunchedEffect(learned?.seq) {
@@ -146,46 +167,41 @@ fun VoltScreen(model: AppModel, io: ScreenIo) {
 
   VoltTheme {
     Surface(Modifier.fillMaxSize(), color = VoltColors.background) {
-      CompositionLocalProvider(LocalLearn provides learnUi) {
+      CompositionLocalProvider(LocalLearn provides learnUi, LocalLive provides live, LocalFrame provides frame) {
       Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.displayCutout)) {
         TopBar(
           number = model.number(current.id), name = current.name, category = current.category, dirty = dirty,
-          midiDevices = devices, midiLit = midiLit, voices = voices, voiceLimit = voiceLimit, level = level,
+          midiDevices = devices, midiLit = midiLit, voices = voices, voiceLimit = voiceLimit,
           onPrev = { model.step(-1) }, onNext = { model.step(1) }, onBrowse = { browser = true },
-          onSave = { saving = true }, onPanic = { state.allNotesOff() }, onMenu = { settings = true },
+          onSave = { saving = true },
+          onPanic = { sustain = false; state.sustain(false); state.allNotesOff() },
+          onMenu = { settings = true },
           learnActive = learnActive, onMidi = { io.learn.setActive(!learnActive) },
-          keyboardOpen = keyboard, onKeyboard = { keyboard = !keyboard },
-        )
-        Row(Modifier.fillMaxWidth().height(40.dp).padding(horizontal = 8.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-          MotorSwitch(engineType, engineNorm, state, io.haptics::tick)
-          tabs.forEach { t ->
-            val bg by animateColorAsState(
-              when { t == tab -> VoltColors.accent; t == flash -> VoltColors.accent.copy(alpha = 0.45f); else -> VoltColors.panel },
-              label = "tab",
-            )
-            Box(
-              Modifier.weight(1f).fillMaxHeight().background(bg, RoundedCornerShape(8.dp)).clickable { savedTab = t; io.haptics.tick() },
-              contentAlignment = Alignment.Center,
-            ) {
-              Text(t.title, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = if (t == tab) Color.Black else VoltColors.text)
+          engineSwitch = {
+            LearnTarget(Target.Param(engineType.name)) {
+              SegmentSwitch(listOf("ANALÓGICO", "FM"), if (fm) 1 else 0, listOf(Hues.osc1, Hues.algorithm)) { i ->
+                state.set(engineType.id, engineType.toNorm(i.toFloat())); io.haptics.tick()
+              }
             }
-          }
-        }
+          },
+          viewSwitch = {
+            SegmentSwitch(listOf("PALCO", "PAINEL"), view, listOf(VoltColors.text, VoltColors.text)) { view = it; io.haptics.tick() }
+          },
+          showKeys = view == 1, keyboardOpen = keyboard, onKeyboard = { keyboard = !keyboard },
+        )
         if (learnActive) LearnBanner(
           armed = armed, armedHasBindings = armed != null && bindings.any { it.second.target == armed }, confirmation = confirmation,
           onForget = { armed?.let { io.learn.clear(it) } }, onMap = { midiMap = true }, onDone = { io.learn.setActive(false) },
         )
         Box(Modifier.weight(1f).fillMaxWidth()) {
-          Row(Modifier.fillMaxSize().padding(horizontal = 8.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            when (tab) {
-              Tab.OP -> OperatorTab(state, onStep = io.haptics::tick, modifier = Modifier.fillMaxSize())
-              Tab.PITCH -> PitchTab(state, onStep = io.haptics::tick, modifier = Modifier.fillMaxSize())
-              else -> Panel.groups.getValue(tab).forEach { g ->
-                GroupPanel(g, state, onStep = io.haptics::tick, modifier = Modifier.weight(g.weight).fillMaxHeight())
-              }
-            }
+          if (view == 0) {
+            PalcoScreen(
+              state, macros, fm, base, { base = it }, sustain, { sustain = it; state.sustain(it) }, io.haptics::tick,
+            )
+          } else {
+            PainelScreen(state, fm, family, { family = it }, operator, { operator = it }, flash, io.haptics::tick)
+            KeyboardSlot(keyboard, state, base, { base = it }, onClose = { keyboard = false })
           }
-          KeyboardSlot(keyboard, onNoteOn = { n, v -> state.noteOn(n, v) }, onNoteOff = { n -> state.noteOff(n) }, onClose = { keyboard = false })
         }
       }
       }
@@ -207,36 +223,14 @@ fun VoltScreen(model: AppModel, io: ScreenIo) {
   }
 }
 
-/** The voice-type switch (analog / FM): a small segmented control at the left end of the tab row. */
+/** Its own function so that only the Box scope is in sight (AnimatedVisibility is ambiguous inside a Column). */
 @Composable
-private fun MotorSwitch(param: com.criapix.volt.Param, norm: Float, state: com.criapix.volt.state.SynthState, onStep: () -> kotlin.Unit) {
-  val ui = ParamUi.of(param.name) as ChoiceUi
-  val selected = (param.toReal(norm) - param.min).roundToInt()
-  LearnTarget(com.criapix.volt.midi.Target.Param(param.name)) {
-    Row(Modifier.fillMaxHeight().width(150.dp).border(1.dp, VoltColors.track, RoundedCornerShape(8.dp))) {
-      ui.options.forEachIndexed { i, option ->
-        val on = i == selected
-        Box(
-          Modifier.weight(1f).fillMaxHeight()
-            .background(if (on) VoltColors.accent else Color.Transparent, RoundedCornerShape(8.dp))
-            .clickable { if (!on) { state.set(param.id, param.toNorm(param.min + i)); onStep() } },
-          contentAlignment = Alignment.Center,
-        ) {
-          Text(option, fontSize = 12.sp, lineHeight = 15.sp, maxLines = 1, fontWeight = FontWeight.Bold, color = if (on) Color.Black else VoltColors.text)
-        }
-      }
-    }
-  }
-}
-
-/** Its own function so that only the Box's scope is in sight (AnimatedVisibility is ambiguous inside a Column). */
-@Composable
-private fun BoxScope.KeyboardSlot(visible: Boolean, onNoteOn: (Int, Float) -> kotlin.Unit, onNoteOff: (Int) -> kotlin.Unit, onClose: () -> kotlin.Unit) {
+private fun BoxScope.KeyboardSlot(visible: Boolean, state: com.criapix.volt.state.SynthState, base: Int, onBase: (Int) -> kotlin.Unit, onClose: () -> kotlin.Unit) {
   AnimatedVisibility(
     visible = visible,
     enter = slideInVertically { it }, exit = slideOutVertically { it },
     modifier = Modifier.align(Alignment.BottomCenter),
   ) {
-    KeyboardDrawer(onNoteOn, onNoteOff, onClose, modifier = Modifier.fillMaxWidth().fillMaxHeight(0.62f))
+    KeyboardDrawer(state, base, onBase, onClose, modifier = Modifier.fillMaxWidth().fillMaxHeight(0.62f))
   }
 }

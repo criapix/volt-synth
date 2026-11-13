@@ -9,7 +9,7 @@ import org.junit.Test
 class LearnLabelsTest {
   @Test fun targetsReadLikeTheScreen() {
     assertEquals("Cutoff · FILTRO", targetLabel(Target.Param("filter.cutoff")))
-    assertEquals("Ataque · ENVELOPE DE AMPLITUDE", targetLabel(Target.Param("aenv.attack")))
+    assertEquals("Ataque · ENV DE AMPLITUDE", targetLabel(Target.Param("aenv.attack")))
     assertEquals("Próximo preset", targetLabel(Target.Action(MidiAction.NEXT)))
     assertEquals("no.such (parâmetro removido)", targetLabel(Target.Param("no.such")))
   }

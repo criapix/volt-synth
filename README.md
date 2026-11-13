@@ -3,12 +3,19 @@
 Volt é um sintetizador analógico virtual polifônico para Android, tocado por teclado MIDI USB com baixa latência. Além do motor analógico, tem um motor FM de 6 operadores compatível com o Yamaha DX7, que lê cartuchos `.syx`.
 
 <p align="center">
-  <img src="docs/screenshots/01-osc.png" alt="Volt: aba OSC com o preset Lead Sync" width="860">
+  <img src="docs/screenshots/01-palco.png" alt="Volt: tela PALCO com o preset Lead Sync" width="860">
 </p>
 
 ## Telas
 
 Tema escuro, em paisagem, com controles grandes para o dedo. Capturas do emulador Android.
+
+Duas telas, que se trocam na barra superior (junto com a chave Analógico / FM):
+
+- **PALCO**, para tocar: oito macros (Brilho, Corpo, Ataque, Cauda, Calor, Movimento, Ritmo, Espaço) em volta de um retrato do som e, embaixo, o teclado (a altura do toque dá a velocity), o pitch bend, a roda de modulação, o arpejador, o segurar (pedal de sustain) e a oitava. No motor analógico cada macro move parâmetros de verdade; no FM ela é relativa ao que o preset tem, porque um patch de seis operadores não tem um único "brilho".
+- **PAINEL**, para editar: uma faixa de famílias coloridas, cada uma com uma miniatura viva, e abaixo os cartões da família escolhida. No analógico: Fonte, Filtro, Amp · Voz, Movimento, Efeitos e Arp; no FM: Algoritmo, Operadores, Pitch · LFO, Efeitos e Arp. Os 263 parâmetros do motor estão num cartão ou na barra superior, a no máximo dois toques.
+
+Cada controle mostra o que faz com o som agora, com a representação que combina com ele: o nível de um oscilador brilha conforme o que soa, a afinação fina pulsa na velocidade do batimento, o corte do filtro mostra um ponteiro fantasma onde ele realmente está (depois do envelope e do LFO), os knobs de A, D, S e R acendem no estágio em que a nota está, o drive esquenta a cor, cada efeito tem seu desenho. As cores marcam a família; os seis operadores FM têm uma cor cada, igual no diagrama, nos blocos e nos knobs. O motor ainda não informa seu estado interno, então envelopes, LFOs, arpejador, ecos e cauda do reverb são reconstruídos na tela a partir das notas que chegam e dos parâmetros: é uma aproximação para desenhar, não uma medição do áudio.
 
 ### Motor analógico
 
@@ -16,11 +23,11 @@ Três osciladores, quatro modelos de filtro, dois envelopes, dois LFOs, poly-mod
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/screenshots/02-filtro.png" alt="Aba FILTRO com a curva de resposta ao vivo"><br><sub><b>FILTRO</b>: modelo, cutoff, ressonância e a curva de resposta desenhada ao vivo.</sub></td>
-    <td width="50%"><img src="docs/screenshots/03-env.png" alt="Aba ENV com os dois envelopes ADSR"><br><sub><b>ENV</b>: envelopes de filtro e de amplitude, com os pontos do desenho arrastáveis.</sub></td>
+    <td width="50%"><img src="docs/screenshots/02-painel-fonte.png" alt="PAINEL, família Fonte"><br><sub><b>Fonte</b>: três osciladores, cada um com a própria forma de onda desenhada, e o mixer.</sub></td>
+    <td width="50%"><img src="docs/screenshots/03-painel-filtro.png" alt="PAINEL, família Filtro"><br><sub><b>Filtro</b>: curva de resposta ao vivo com os harmônicos da nota, passa-altas e o envelope do filtro.</sub></td>
   </tr>
   <tr>
-    <td width="50%"><img src="docs/screenshots/04-fx.png" alt="Aba FX com os efeitos ligados"><br><sub><b>FX</b>: distorção, phaser, flanger, chorus, delay e reverb em série.</sub></td>
+    <td width="50%"><img src="docs/screenshots/04-painel-efeitos.png" alt="PAINEL, família Efeitos com os efeitos ligados"><br><sub><b>Efeitos</b>: os seis de uma vez, cada um com o desenho do que faz com a onda.</sub></td>
     <td width="50%"><img src="docs/screenshots/05-browser.png" alt="Navegador de presets"><br><sub><b>Presets</b>: 64 de fábrica, os seus, favoritos, busca, importar e exportar.</sub></td>
   </tr>
 </table>
@@ -31,23 +38,20 @@ Seis operadores, 32 algoritmos, envelopes de 4 taxas e 4 níveis, escala de tecl
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/screenshots/07-fm-algo.png" alt="Aba ALGO com o algoritmo 5 desenhado"><br><sub><b>ALGO</b>: o algoritmo desenhado (portadoras com contorno laranja, laço de feedback em azul), feedback, transposição e liga/desliga de cada operador.</sub></td>
+    <td width="50%"><img src="docs/screenshots/07-fm-algo.png" alt="PAINEL, família Algoritmo"><br><sub><b>Algoritmo</b>: o diagrama com cada operador na sua cor, o laço de feedback, e os interruptores dos operadores. Tocar num operador abre a edição dele.</sub></td>
     <td width="50%"><img src="docs/screenshots/06-browser-dx7.png" alt="Navegador com o cartucho DX7 ROM1A"><br><sub><b>Cartuchos</b>: ROM1A a ROM4B, 32 vozes cada, com os nomes originais.</sub></td>
   </tr>
   <tr>
-    <td width="50%"><img src="docs/screenshots/08-fm-operador.png" alt="Aba OPERADOR, página Envelope"><br><sub><b>OPERADOR · Envelope</b>: desenho das 4 taxas e 4 níveis com pontos arrastáveis.</sub></td>
-    <td width="50%"><img src="docs/screenshots/09-fm-operador-freq.png" alt="Aba OPERADOR, página Freq/Escala"><br><sub><b>OPERADOR · Freq/Escala</b>: razão ou frequência fixa com a leitura da frequência, e escala de teclado.</sub></td>
-  </tr>
-  <tr>
-    <td colspan="2"><img src="docs/screenshots/10-fm-pitch.png" alt="Aba PITCH/LFO"><br><sub><b>PITCH/LFO</b>: envelope de pitch, LFO e o roteamento da roda, do aftertouch e do breath.</sub></td>
+    <td width="50%"><img src="docs/screenshots/08-fm-operadores.png" alt="PAINEL, família Operadores"><br><sub><b>Operadores</b>: seis blocos com o envelope de cada um e, para o escolhido, frequência, envelope e escala de teclado.</sub></td>
+    <td width="50%"><img src="docs/screenshots/10-fm-pitch.png" alt="PAINEL, família Pitch · LFO"><br><sub><b>Pitch · LFO</b>: envelope de pitch, LFO e o roteamento da roda, do aftertouch e do breath.</sub></td>
   </tr>
 </table>
 
 ## Estado
 
-Versão 1.1.0. Motor analógico (planos 1 a 5): motor C++ de 16 vozes (3 osciladores, filtro Ladder / Roland 12 dB / Roland 24 dB / Prophet, 2 envelopes, 2 LFOs, poly-mod, modos poly/mono/legato/unison), saída de áudio Oboe de baixa latência, entrada MIDI USB com mapa de controladores de fábrica, a tela de toque (abas OSC · FILTRO · ENV · MOD · ARP · FX, knobs, curva do filtro e envelopes ao vivo), presets (64 de fábrica nivelados por medição, os seus, navegador, favoritos, importar/exportar, sessão restaurada), MIDI Learn, seis efeitos (distorção, phaser, flanger, chorus, delay, reverb), arpejador, teclado deslizante na tela e polifonia que cai sozinha quando o celular não acompanha (com teto manual de 8, 12 ou 16 vozes em ⋮). Há ainda ícone, "Sobre o Volt" e exportação de log.
+Versão 1.1.0. Motor analógico (planos 1 a 5): motor C++ de 16 vozes (3 osciladores, filtro Ladder / Roland 12 dB / Roland 24 dB / Prophet, 2 envelopes, 2 LFOs, poly-mod, modos poly/mono/legato/unison), saída de áudio Oboe de baixa latência, entrada MIDI USB com mapa de controladores de fábrica, a tela de toque (PALCO para tocar e PAINEL para editar, com famílias coloridas, knobs, desenhos e envelopes ao vivo), presets (64 de fábrica nivelados por medição, os seus, navegador, favoritos, importar/exportar, sessão restaurada), MIDI Learn, seis efeitos (distorção, phaser, flanger, chorus, delay, reverb), arpejador, teclado deslizante na tela e polifonia que cai sozinha quando o celular não acompanha (com teto manual de 8, 12 ou 16 vozes em ⋮). Há ainda ícone, "Sobre o Volt" e exportação de log.
 
-Motor FM de 6 operadores compatível com o DX7 (plano 6; núcleo msfa, extraído do Dexed pelo projeto Synth_Dexed), com os 32 algoritmos, o editor completo (abas ALGO · OPERADOR · PITCH/LFO), leitura e gravação de `.syx` (cartucho de 32 vozes e voz única) e aftertouch e breath vindos do MIDI. O que foi verificado: testes no PC (as 256 vozes dos cartuchos de fábrica soam, sem NaN e sem aperto do limitador, e a saída do motor coincide com a do msfa chamado direto), as telas e a importação e exportação de `.syx` no emulador, e o build do GitHub Actions a partir de um clone novo. No aparelho (Galaxy S25 Ultra com um Yamaha CK61), o autor testou e relatou que está funcionando; **não houve avaliação voz por voz, nem medição de CPU do FM no celular**.
+Motor FM de 6 operadores compatível com o DX7 (plano 6; núcleo msfa, extraído do Dexed pelo projeto Synth_Dexed), com os 32 algoritmos, o editor completo (famílias ALGORITMO · OPERADORES · PITCH · LFO), leitura e gravação de `.syx` (cartucho de 32 vozes e voz única) e aftertouch e breath vindos do MIDI. O que foi verificado: testes no PC (as 256 vozes dos cartuchos de fábrica soam, sem NaN e sem aperto do limitador, e a saída do motor coincide com a do msfa chamado direto), as telas e a importação e exportação de `.syx` no emulador, e o build do GitHub Actions a partir de um clone novo. No aparelho (Galaxy S25 Ultra com um Yamaha CK61), o autor testou e relatou que está funcionando; **não houve avaliação voz por voz, nem medição de CPU do FM no celular**.
 
 O que foi e o que não foi testado: o motor e os 64 presets são medidos por testes no PC (soam, não geram NaN, liberam as vozes, nível dentro de uma janela); a tela foi vista no emulador. **No aparelho, só foram ouvidos os 10 primeiros presets e o caminho CK61 → som (plano 1).** Os outros 54 presets, os efeitos, o arpejador, o teclado na tela, o MIDI Learn e a polifonia sob carga ainda não foram avaliados no celular: veja `docs/DEVICE-TEST.md`, `docs/PRESET-REVIEW.md` e `docs/NOTES.md`.
 

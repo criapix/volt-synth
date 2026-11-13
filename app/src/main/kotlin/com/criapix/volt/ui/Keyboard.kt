@@ -59,53 +59,17 @@ object KeyboardLayout {
     .map { (it + 1f - BLACK_HALF) to white(it, base) + 1 }
 }
 
+/** The keyboard drawer of the PAINEL screen: octave buttons, a close button and the keyboard that lights with the notes. */
 @Composable
-fun KeyboardDrawer(onNoteOn: (Int, Float) -> kotlin.Unit, onNoteOff: (Int) -> kotlin.Unit, onClose: () -> kotlin.Unit, modifier: Modifier = Modifier) {
-  var base by rememberSaveable { mutableIntStateOf(48) }
-  var pressed by remember { mutableStateOf(emptySet<Int>()) }
+fun KeyboardDrawer(state: com.criapix.volt.state.SynthState, base: Int, onBase: (Int) -> kotlin.Unit, onClose: () -> kotlin.Unit, modifier: Modifier = Modifier) {
   Column(modifier.background(VoltColors.panel).padding(6.dp)) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-      TextButton(onClick = { if (base > 24) base -= 12 }) { Text("Oitava −") }
+      TextButton(onClick = { if (base > 24) onBase(base - 12) }) { Text("Oitava −") }
       Text("${noteName(base)} – ${noteName(base + 24)}", fontSize = 13.sp, lineHeight = 16.sp)
-      TextButton(onClick = { if (base < 84) base += 12 }) { Text("Oitava +") }
+      TextButton(onClick = { if (base < 84) onBase(base + 12) }) { Text("Oitava +") }
       Text("toque mais embaixo na tecla para tocar mais forte", fontSize = 11.sp, lineHeight = 14.sp, color = VoltColors.dim, modifier = Modifier.weight(1f))
       TextButton(onClick = onClose) { Text("Fechar") }
     }
-    Canvas(
-      Modifier.fillMaxSize().pointerInput(base) {
-        val playing = HashMap<PointerId, Int>()
-        try {
-          awaitPointerEventScope {
-            while (true) {
-              val ev = awaitPointerEvent()
-              for (c in ev.changes) {
-                val w = size.width.toFloat()
-                val h = size.height.toFloat()
-                val note = if (c.pressed) KeyboardLayout.noteAt(c.position.x, c.position.y, w, h, base) else null
-                val old = playing[c.id]
-                if (note != old) {
-                  if (old != null) { onNoteOff(old); playing.remove(c.id) }
-                  if (note != null) { onNoteOn(note, KeyboardLayout.velocity(c.position.y, h)); playing[c.id] = note }
-                }
-                c.consume()
-              }
-              pressed = playing.values.toSet()
-            }
-          }
-        } finally {
-          playing.values.forEach(onNoteOff)  // octave change or drawer closed while touching: no stuck notes
-          pressed = emptySet()
-        }
-      },
-    ) {
-      val kw = size.width / KeyboardLayout.WHITES
-      for (i in 0 until KeyboardLayout.WHITES) {
-        val note = KeyboardLayout.noteAt(i * kw + kw / 2, size.height - 1f, size.width, size.height, base)
-        drawRect(if (note in pressed) VoltColors.accent else Color(0xFFEDEDED), Offset(i * kw + 1f, 0f), Size(kw - 2f, size.height))
-      }
-      for ((left, note) in KeyboardLayout.blackKeys(base)) {
-        drawRect(if (note in pressed) VoltColors.accent else Color(0xFF111111), Offset(left * kw, 0f), Size(kw * 0.6f, size.height * 0.6f))
-      }
-    }
+    PerformanceKeyboard(state, base, dark = false, modifier = Modifier.fillMaxSize())
   }
 }

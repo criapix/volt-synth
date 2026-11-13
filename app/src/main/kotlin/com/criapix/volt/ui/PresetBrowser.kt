@@ -48,15 +48,20 @@ fun PresetBrowser(model: AppModel, io: ScreenIo, onClose: () -> kotlin.Unit) {
   val presets by model.presets.collectAsStateWithLifecycle()
   val favorites by model.favorites.collectAsStateWithLifecycle()
   val current by model.current.collectAsStateWithLifecycle()
-  var shelf by remember { mutableStateOf<Shelf>(Shelf.All) }
+  var pickedShelf by remember { mutableStateOf<Shelf>(Shelf.All) }
   var query by remember { mutableStateOf("") }
   var editing by remember { mutableStateOf<PresetRef?>(null) }
-  val shown = BrowserFilter.apply(presets, shelf, query, favorites)
   val shelves = remember(presets) { Shelf.forLibrary(presets) }
+  // The picked shelf may have vanished (its last preset was deleted).
+  val shelf = if (pickedShelf in shelves) pickedShelf else Shelf.All
+  val shown = BrowserFilter.apply(presets, shelf, query, favorites)
+  val positions = remember(presets) { model.positions(presets) }
   // A shelf made only of the user's FM presets can be exported as a 32-voice bank.
-  val bankCategory = (shelf as? Shelf.Category)?.key?.takeIf { key ->
-    val inShelf = presets.filter { it.category == key }
-    inShelf.isNotEmpty() && inShelf.all { it.isUser } && inShelf.all { model.isFm(it.id) }
+  val bankCategory = remember(presets, shelf) {
+    (shelf as? Shelf.Category)?.key?.takeIf { key ->
+      val inShelf = presets.filter { it.category == key }
+      inShelf.isNotEmpty() && inShelf.all { it.isUser } && inShelf.all { model.isFm(it.id) }
+    }
   }
 
   Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false)) {
@@ -69,7 +74,7 @@ fun PresetBrowser(model: AppModel, io: ScreenIo, onClose: () -> kotlin.Unit) {
               color = if (s == shelf) Color.Black else VoltColors.text,
               modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp)
                 .background(if (s == shelf) VoltColors.accent else Color.Transparent, RoundedCornerShape(6.dp))
-                .clickable { shelf = s }.padding(10.dp),
+                .clickable { pickedShelf = s }.padding(10.dp),
             )
           }
         }
@@ -80,7 +85,11 @@ fun PresetBrowser(model: AppModel, io: ScreenIo, onClose: () -> kotlin.Unit) {
             TextButton(onClick = io.onExport) { Text("Exportar") }
             if (bankCategory != null) TextButton(onClick = {
               model.exportSyxBank(bankCategory)?.let { (bytes, dropped) ->
-                val done = if (dropped > 0) "Banco salvo; $dropped presets ficaram de fora (máximo 32)" else "Banco .syx salvo"
+                val done = when (dropped) {
+                  0 -> "Banco .syx salvo"
+                  1 -> "Banco salvo; 1 preset ficou de fora (máximo 32)"
+                  else -> "Banco salvo; $dropped presets ficaram de fora (máximo 32)"
+                }
                 io.onExportSyx(bankCategory, bytes, done)
               }
             }) { Text("Exportar banco .syx") }
@@ -104,7 +113,7 @@ fun PresetBrowser(model: AppModel, io: ScreenIo, onClose: () -> kotlin.Unit) {
               ) {
                 Column(Modifier.weight(1f)) {
                   Text(ref.name, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                  Text("${model.number(ref.id).toString().padStart(3, '0')} · ${categoryLabel(ref.category)} · ${if (ref.isUser) "meu" else "fábrica"}", fontSize = 11.sp, color = VoltColors.dim)
+                  Text("${(positions[ref.id] ?: 0).toString().padStart(3, '0')} · ${categoryLabel(ref.category)} · ${if (ref.isUser) "meu" else "fábrica"}", fontSize = 11.sp, color = VoltColors.dim)
                 }
                 Text(
                   if (ref.id in favorites) "★" else "☆", fontSize = 22.sp,

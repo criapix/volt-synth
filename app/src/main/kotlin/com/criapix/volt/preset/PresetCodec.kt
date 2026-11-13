@@ -13,6 +13,8 @@ data class PresetFile(
   val category: String = "",
   /** Permanent parameter name -> real value (Hz, seconds, semitones...). */
   val params: Map<String, Float> = emptyMap(),
+  /** Position (1..32) in the DX7 bank this voice was imported from; 0 when unknown. Orders bank export. */
+  val slot: Int = 0,
 )
 
 @Serializable

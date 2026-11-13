@@ -109,7 +109,7 @@ class PresetLibrary(
   fun exportUser(): String = PresetCodec.encodeBank(all().filter { it.isUser }.map { read(it.id) })
 
   /** Adds every preset in [text] (a preset or a bank) as a new user preset. Names that exist get " (2)", " (3)"... */
-  fun import(text: String): List<PresetRef> = PresetCodec.decodeAny(text).map { create(it.copy(name = uniqueName(it.name))) }
+  fun import(text: String): List<PresetRef> = createAll(PresetCodec.decodeAny(text.removePrefix("﻿")))
 
   /**
    * Adds the presets in a file's [bytes] as new user presets. A file starting with 0xF0 is DX7 sysex (category
@@ -118,11 +118,20 @@ class PresetLibrary(
   fun importBytes(bytes: ByteArray, stem: String): ImportResult {
     if (bytes.firstOrNull() != 0xF0.toByte()) return ImportResult(import(bytes.toString(Charsets.UTF_8)), true)
     val read = Dx7Codec.readAny(bytes, stem)
-    return ImportResult(read.presets.map { create(it.copy(name = uniqueName(it.name))) }, read.checksumOk)
+    return ImportResult(createAll(read.presets), read.checksumOk)
   }
 
-  private fun uniqueName(name: String): String {
-    val taken = all().filter { it.isUser }.map { it.name.lowercase() }.toSet()
+  /** Creates user presets, making names unique against the existing ones and each other (one scan of the library). */
+  private fun createAll(list: List<PresetFile>): List<PresetRef> {
+    val taken = all().filter { it.isUser }.map { it.name.lowercase() }.toMutableSet()
+    return list.map { p ->
+      val name = uniqueName(p.name, taken)
+      taken += name.lowercase()
+      create(p.copy(name = name))
+    }
+  }
+
+  private fun uniqueName(name: String, taken: Set<String>): String {
     if (name.lowercase() !in taken) return name
     var i = 2
     while ("$name ($i)".lowercase() in taken) i++

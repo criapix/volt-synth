@@ -201,4 +201,31 @@ class AppModelTest {
     assertEquals(3, dropped)
     assertEquals(32, Dx7Codec.readBank(full, "mix").presets.size)
   }
+
+  @Test fun exportSyxBankKeepsTheCartridgeOrderAndParameters() {
+    for (rom in listOf("rom1a", "rom2a")) {
+      val m = model().apply { restore() }
+      val original = Dx7Codec.readBank(rom(rom), rom).presets
+      val cat = m.library.importBytes(rom(rom), rom).refs.first().category
+      val back = Dx7Codec.readBank(m.exportSyxBank(cat)!!.first, rom).presets
+      assertEquals(original.size, back.size)
+      original.zip(back).forEachIndexed { i, (a, b) ->
+        assertEquals("voice $i name", a.name, b.name)
+        assertEquals("voice $i params", a.params, b.params)
+      }
+    }
+  }
+
+  @Test fun theLastPresetsBeyond32AreDroppedAndFactoryOnesAreExcluded() {
+    val state = SynthState(p, Silent)
+    val lib = PresetLibrary(DirFactory(factory()), File(tmp.root, "user"), NoFavorites, CartridgeSource { listOf("rom1a" to rom("rom1a")) })
+    val m = AppModel(state, lib, File(tmp.root, "session.json"))
+    val voice = Dx7Codec.readBank(rom("rom1a"), "rom1a").presets[0]
+    // "DX7 ROM1A" is also the factory cartridge category; its 32 factory voices must not leak into the export.
+    repeat(35) { i -> lib.create(voice.copy(name = "N${i.toString().padStart(2, '0')}", category = "DX7 ROM1A", slot = 0)) }
+    val (bytes, dropped) = m.exportSyxBank("DX7 ROM1A")!!
+    assertEquals(3, dropped)
+    val names = Dx7Codec.readBank(bytes, "x").presets.map { it.name }
+    assertEquals(List(32) { "N${it.toString().padStart(2, '0')}" }, names)
+  }
 }

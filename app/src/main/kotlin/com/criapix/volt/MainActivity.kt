@@ -91,13 +91,13 @@ class MainActivity : ComponentActivity() {
       contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { c ->
         if (c.moveToFirst()) c.getString(0) else null
       }
-    }.getOrNull() ?: uri.lastPathSegment?.substringAfterLast('/') ?: "importado"
+    }.getOrNull() ?: "importado"
     return name.substringBeforeLast('.', name).trim().ifEmpty { "importado" }
   }
 
   private fun exportSyx(name: String, bytes: ByteArray, done: String) {
     pendingSyx = bytes to done
-    val safe = name.replace(Regex("[\\/:*?\"<>|]"), "_").trim().ifEmpty { "preset" }
+    val safe = name.replace(Regex("[\\/:*?\"<>|]"), "_").trim().take(40).trim().ifEmpty { "preset" }
     syxLauncher.launch("$safe.syx")
   }
 
@@ -164,7 +164,7 @@ class MainActivity : ComponentActivity() {
       onExportLog = { logLauncher.launch("volt-log.txt") },
       version = runCatching { packageManager.getPackageInfo(packageName, 0).versionName }.getOrNull() ?: "?",
       onExportSyx = ::exportSyx,
-      onImport = { importLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) },
+      onImport = { importLauncher.launch(arrayOf("*/*")) },
     )
     setContent { VoltScreen(model, io) }
 

@@ -38,7 +38,7 @@ object Dx7Codec {
     val u = IntArray(b.size) { b[it].toInt() and 0xFF }
     if (u.size != 4104 || u[0] != 0xF0 || u[1] != 0x43 || (u[2] and 0xF0) != 0 || u[3] != 0x09 || u[4] != 0x20 ||
       u[5] != 0x00 || u[4103] != 0xF7) throw PresetError("Não é um arquivo do DX7")
-    val presets = (0 until 32).map { i -> toPreset(unpackVmem(u, 6 + i * 128), label) }
+    val presets = (0 until 32).map { i -> toPreset(unpackVmem(u, 6 + i * 128), label).copy(slot = i + 1) }
     return Read(presets, checksum(u, 6, 4096) == (u[4102] and 0x7F))
   }
 
